@@ -17,3 +17,5 @@
 Tests/bin/
 Tests/obj/
 .DS_Store
+
+Unity-open.log
