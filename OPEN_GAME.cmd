@@ -7,6 +7,8 @@ set "UNITY_EXE=%ProgramFiles%\Unity\Hub\Editor\6000.6.7f1\Editor\Unity.exe"
 if exist "%UNITY_EXE%" goto launch
 if defined ProgramW6432 set "UNITY_EXE=%ProgramW6432%\Unity\Hub\Editor\6000.6.7f1\Editor\Unity.exe"
 if exist "%UNITY_EXE%" goto launch
+set "UNITY_EXE=D:\6000.6.7f1\Editor\Unity.exe"
+if exist "%UNITY_EXE%" goto launch
 echo Unity 6000.6.7f1 was not found in the standard installation folder.
 echo In Unity Hub: Installs - 6000.6.7f1 - Show in Explorer.
 echo Find Editor\Unity.exe and paste its full path below.

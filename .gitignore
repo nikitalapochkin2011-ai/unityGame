@@ -19,3 +19,7 @@ Tests/obj/
 .DS_Store
 
 Unity-open.log
+
+Tests/**/bin/
+Tests/**/obj/
+__pycache__/

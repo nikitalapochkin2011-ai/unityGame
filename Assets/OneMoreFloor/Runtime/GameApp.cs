@@ -1,7 +1,7 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.EventSystems;
 
 namespace OneMoreFloor
 {
@@ -9,205 +9,239 @@ namespace OneMoreFloor
     {
         public GameSettings Settings;
         GameSession game;
-        RectTransform safe, board, cabin;
-        RectTransform overlay;
-        Text score, occupancy, losses, hint, feedback, record, soundLabel;
-        Text[] floorLabels;
-        Image[][] patience;
-        Text[][] destinations;
-        Text[] riders;
-        int best;
+        GameUI ui;
+        BuildingView building;
+        RectTransform safe, overlay, buildingRoot;
+        CanvasGroup screenFade;
+        Text score, multiplier, occupancy, route, feedback, record, soundLabel, streak, lossesLabel;
+        Image loadCard;
+        Image[] lossMarks, streakMarks;
+        int best, sessionStartBest;
         bool sound;
-        float feedbackTime;
+        float feedbackTime, screenAge;
         Rect lastSafe;
         Vector2Int lastScreen;
         AudioSource audioSource;
-        AudioClip tone;
-        Font font;
-        readonly Color ink = new Color(.12f, .18f, .28f);
-        readonly Color blue = new Color(.23f, .52f, .94f);
-        readonly Color mint = new Color(.25f, .8f, .65f);
+        AudioClip boardTone, deliveryTone, lossTone, tapTone;
+        readonly List<AudioClip> clips = new List<AudioClip>();
+
         void Start()
         {
-            Application.targetFrameRate = 60;
-            Screen.orientation = ScreenOrientation.Portrait;
-            if (Settings == null) Settings = ScriptableObject.CreateInstance<GameSettings>();
+            Application.targetFrameRate=60; Screen.orientation=ScreenOrientation.Portrait;
+            if(Settings==null) Settings=ScriptableObject.CreateInstance<GameSettings>();
             Settings.Rules.Validate();
-            font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            best = PlayerPrefs.GetInt("OneMoreFloor.Best", 0);
-            sound = PlayerPrefs.GetInt("OneMoreFloor.Sound", 1) != 0;
-            audioSource = gameObject.AddComponent<AudioSource>();
-            float[] samples = new float[4410];
-            for (int i = 0; i < samples.Length; i++) samples[i] = Mathf.Sin(2 * Mathf.PI * 660 * i / 44100) * .12f * (1f - (float)i / samples.Length);
-            tone = AudioClip.Create("Feedback", samples.Length, 1, 44100, false); tone.SetData(samples, 0);
+            ui=new GameUI();
+            best=PlayerPrefs.GetInt("OneMoreFloor.Best",0);
+            sound=PlayerPrefs.GetInt("OneMoreFloor.Sound",1)!=0;
+            audioSource=gameObject.AddComponent<AudioSource>(); audioSource.playOnAwake=false;
+            boardTone=Tone("Boarding",new []{440f,554f},.09f,.08f);
+            deliveryTone=Tone("Delivered",new []{523f,659f,784f},.085f,.09f);
+            lossTone=Tone("Lost",new []{294f,247f},.14f,.07f);
+            tapTone=Tone("Tap",new []{400f},.035f,.035f);
             BuildUI(); ShowMenu();
         }
-        RectTransform Box(string name, Transform parent, Vector2 min, Vector2 max, Color? color = null)
+        AudioClip Tone(string name,float[] notes,float noteLength,float volume)
         {
-            var go = new GameObject(name, typeof(RectTransform)); go.transform.SetParent(parent, false);
-            var rect = go.GetComponent<RectTransform>(); rect.anchorMin = min; rect.anchorMax = max;
-            rect.offsetMin = rect.offsetMax = Vector2.zero;
-            if (color.HasValue) { var image = go.AddComponent<Image>(); image.color = color.Value; image.raycastTarget = false; }
-            return rect;
+            const int rate=44100; int noteSamples=(int)(rate*noteLength);
+            var samples=new float[noteSamples*notes.Length];
+            for(int n=0;n<notes.Length;n++)
+                for(int i=0;i<noteSamples;i++)
+                {
+                    float t=(float)i/rate;
+                    float envelope=Mathf.Min(1,t/.008f)*Mathf.Pow(1-(float)i/noteSamples,2);
+                    samples[n*noteSamples+i]=Mathf.Sin(2*Mathf.PI*notes[n]*t)*envelope*volume;
+                }
+            var clip=AudioClip.Create(name,samples.Length,1,rate,false); clip.SetData(samples,0); clips.Add(clip); return clip;
         }
-        Text Label(string name, Transform parent, string value, Vector2 min, Vector2 max, int size = 26, Color? color = null)
-        {
-            var rect = Box(name, parent, min, max); var text = rect.gameObject.AddComponent<Text>();
-            text.font = font; text.text = value; text.fontSize = size; text.color = color ?? ink;
-            text.alignment = TextAnchor.MiddleCenter; text.resizeTextForBestFit = true;
-            text.resizeTextMinSize = 10; text.resizeTextMaxSize = size; text.raycastTarget = false;
-            return text;
-        }
-        Button Button(string name, Transform parent, string value, Vector2 min, Vector2 max, Action action, Color? color = null)
-        {
-            var rect = Box(name, parent, min, max, color ?? blue);
-            rect.GetComponent<Image>().raycastTarget = true;
-            var button = rect.gameObject.AddComponent<Button>(); button.targetGraphic = rect.GetComponent<Image>();
-            button.onClick.AddListener(() => action());
-            Label("Label", rect, value, new Vector2(.04f,.04f), new Vector2(.96f,.96f), 30, Color.white);
-            return button;
-        }
+        void Play(AudioClip clip) { if(sound && audioSource!=null) audioSource.PlayOneShot(clip); }
         void BuildUI()
         {
-            var root = new GameObject("Game UI", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-            root.transform.SetParent(transform, false); var canvas = root.GetComponent<Canvas>(); canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            var scaler = root.GetComponent<CanvasScaler>(); scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(540, 960); scaler.matchWidthOrHeight = .5f;
-            Box("Background", root.transform, Vector2.zero, Vector2.one, new Color(.94f,.96f,.99f));
-            safe = Box("Safe Area", root.transform, Vector2.zero, Vector2.one);
-            Label("Title", safe, "ЕЩЁ ОДИН ЭТАЖ", new Vector2(.04f,.93f), new Vector2(.78f,.99f), 30);
-            Button("Pause", safe, "Ⅱ", new Vector2(.82f,.935f), new Vector2(.96f,.99f), Pause);
-            score = Label("Score", safe, "", new Vector2(.02f,.875f), new Vector2(.5f,.93f), 26);
-            losses = Label("Losses", safe, "", new Vector2(.5f,.875f), new Vector2(.98f,.93f), 24);
-            occupancy = Label("Occupancy", safe, "", new Vector2(.02f,.82f), new Vector2(.5f,.875f), 23);
-            hint = Label("Route", safe, "", new Vector2(.5f,.82f), new Vector2(.98f,.875f), 22);
-            board = Box("Building", safe, new Vector2(.04f,.14f), new Vector2(.96f,.81f), new Color(.86f,.9f,.95f));
-            int floors = Settings.Rules.Floors;
-            floorLabels = new Text[floors]; patience = new Image[floors][]; destinations = new Text[floors][];
-            for (int f = 0; f < floors; f++)
+            var root=new GameObject("One More Floor UI",typeof(Canvas),typeof(CanvasScaler),typeof(GraphicRaycaster));
+            root.transform.SetParent(transform,false);
+            root.GetComponent<Canvas>().renderMode=RenderMode.ScreenSpaceOverlay;
+            var scaler=root.GetComponent<CanvasScaler>(); scaler.uiScaleMode=CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution=new Vector2(600,1060); scaler.matchWidthOrHeight=1;
+            ui.Panel("Evening sky",root.transform,0,0,1,1,GameUI.Hex("BDD4D0"),false);
+            ui.Picture("Distant neighborhood",root.transform,"skyline",0,0,1,.62f,false);
+            ui.Panel("Street",root.transform,0,0,1,.055f,GameUI.Hex("648A89"),false);
+            safe=ui.Rect("Portrait safe area",root.transform,0,0,1,1);
+            ui.Text("Brand",safe,"ЕЩЁ ОДИН ЭТАЖ",.04f,.95f,.79f,.993f,28,GameUI.Ink,TextAnchor.MiddleLeft,true);
+            ui.Text("Subtitle",safe,"МАЛЕНЬКИЙ ДОМ. БОЛЬШИЕ ПЛАНЫ.",.043f,.923f,.8f,.949f,14,GameUI.Hex("4C7478"),TextAnchor.MiddleLeft);
+            ui.Button("Pause",safe,"II",.85f,.936f,.96f,.991f,Pause,GameUI.Ink,28);
+            var scoreCard=ui.Panel("Score card",safe,.04f,.851f,.96f,.918f,GameUI.Cream);
+            ui.Text("Score caption",scoreCard.transform,"ОЧКИ",.04f,.48f,.23f,.94f,13,GameUI.Muted,TextAnchor.MiddleLeft,true);
+            score=ui.Text("Score",scoreCard.transform,"0",.04f,.01f,.4f,.66f,36,GameUI.Ink,TextAnchor.MiddleLeft,true);
+            multiplier=ui.Text("Multiplier",scoreCard.transform,"×1",.77f,.08f,.96f,.92f,34,GameUI.Teal,TextAnchor.MiddleCenter,true);
+            streak=ui.Text("Streak caption",scoreCard.transform,"ДО ×2",.42f,.55f,.75f,.94f,13,GameUI.Muted);
+            streakMarks=new Image[5];
+            for(int i=0;i<5;i++) streakMarks[i]=ui.Panel("Streak dot",scoreCard.transform,.435f+i*.06f,.22f,.475f+i*.06f,.4f,GameUI.Hex("D9D9C9"));
+            var load=ui.Panel("Occupancy card",safe,.04f,.789f,.49f,.842f,GameUI.Hex("DCE6D8")); loadCard=load;
+            occupancy=ui.Text("Occupancy",load.transform,"В лифте  0 / 4",.04f,.1f,.96f,.9f,22,GameUI.Ink,TextAnchor.MiddleCenter,true);
+            var losses=ui.Panel("Lost card",safe,.51f,.789f,.96f,.842f,GameUI.Hex("DCE6D8"));
+            lossesLabel=ui.Text("Lost caption",losses.transform,"УШЛИ",.06f,.15f,.46f,.85f,16,GameUI.Hex("607D7D"),TextAnchor.MiddleLeft,true);
+            lossMarks=new Image[Settings.Rules.LossLimit];
+            for(int i=0;i<lossMarks.Length;i++)
             {
-                int selected = f; float bottom = (float)f / floors, top = (float)(f + 1) / floors;
-                var row = Box("Floor " + (f+1), board, new Vector2(0,bottom), new Vector2(1,top));
-                Box("Line", row, Vector2.zero, new Vector2(1,.02f), Color.white);
-                var button = Button("Select floor", row, (f+1).ToString(), new Vector2(.01f,.13f), new Vector2(.14f,.88f), () => { if (game != null) game.SelectFloor(selected); });
-                floorLabels[f] = button.GetComponentInChildren<Text>();
-                int slots = Mathf.Max(10, Mathf.CeilToInt(Settings.Rules.PatienceSeconds / Settings.Rules.MinimumSpawnSeconds) + 2);
-                int queueRows = Mathf.CeilToInt(slots / 5f);
-                destinations[f] = new Text[slots]; patience[f] = new Image[slots];
-                // Two rows preserve an individual destination and patience bar for every visible passenger.
-                for (int p = 0; p < slots; p++)
-                {
-                    float x = .18f + p % 5 * .092f, y = 1f - (p / 5 + 1f) / queueRows;
-                    var person = Box("Passenger " + p, row, new Vector2(x,y), new Vector2(x+.077f,y+.9f/queueRows), mint);
-                    destinations[f][p] = Label("Destination", person, "", new Vector2(0,.22f), Vector2.one, 22);
-                    var bar = Box("Patience", person, new Vector2(0,0), new Vector2(1,.14f), mint);
-                    patience[f][p] = bar.GetComponent<Image>(); person.gameObject.SetActive(false);
-                }
+                float x=.49f+i*.43f/lossMarks.Length;
+                lossMarks[i]=ui.Picture("Loss mark",losses.transform,"circle",x,.31f,x+.3f/lossMarks.Length,.69f);
             }
-            Box("Shaft", board, new Vector2(.69f,0), new Vector2(.99f,1), new Color(.74f,.8f,.89f));
-            cabin = Box("Elevator", board, new Vector2(.7f,0), new Vector2(.98f,1f/floors), ink);
-            riders = new Text[Settings.Rules.Capacity];
-            for (int i=0;i<riders.Length;i++)
-            {
-                int columns = 2, rows = Mathf.CeilToInt(riders.Length / 2f);
-                float x = (i % columns) * .5f, y = 1f - (i / columns + 1f) / rows;
-                riders[i] = Label("Rider", cabin, "", new Vector2(x,y), new Vector2(x+.5f,y+1f/rows), 26, Color.white);
-            }
-            feedback = Label("Feedback", safe, "", new Vector2(.03f,.075f), new Vector2(.97f,.135f), 26);
-            Label("Help", safe, "Нажмите этаж • Число на пассажире — его цель", new Vector2(.02f,.01f), new Vector2(.98f,.07f), 20);
-            overlay = Box("Overlay", safe, Vector2.zero, Vector2.one, new Color(.94f,.96f,.99f,.98f));
-            overlay.GetComponent<Image>().raycastTarget = true;
+            buildingRoot=ui.Rect("Illustrated apartment building",safe,.04f,.14f,.96f,.735f);
+            building=new BuildingView(ui,buildingRoot,Settings.Rules,SelectFloor);
+            var routeCard=ui.Panel("Route",safe,.04f,.067f,.96f,.117f,GameUI.Ink);
+            route=ui.Text("Route",routeCard.transform,"Выберите этаж",.03f,.08f,.97f,.92f,22,GameUI.Cream,TextAnchor.MiddleCenter,true);
+            feedback=ui.Text("Feedback",safe,"",.04f,.025f,.96f,.065f,20,GameUI.Ink);
+            overlay=ui.Rect("Screen overlay",safe,0,0,1,1);
+            screenFade=overlay.gameObject.AddComponent<CanvasGroup>();
             ApplySafeArea();
         }
-        void ClearOverlay()
+        void ClearOverlay(bool menu=false)
         {
-            // Disable immediately: Destroy completes at the end of the frame.
-            foreach (Transform child in overlay) { child.gameObject.SetActive(false); Destroy(child.gameObject); }
-            overlay.gameObject.SetActive(true);
+            foreach(Transform child in overlay) { child.gameObject.SetActive(false); Destroy(child.gameObject); }
+            overlay.gameObject.SetActive(true); screenAge=0; screenFade.alpha=0;
+            var scrim=ui.Panel("Modal background",overlay,-.2f,-.1f,1.2f,1.1f,
+                menu ? GameUI.Hex("BDD4D0") : new Color(.08f,.18f,.23f,.67f),false);
+            scrim.raycastTarget=true;
+        }
+        RectTransform Modal(string eyebrow,string title)
+        {
+            var card=ui.Panel("Screen card",overlay,.055f,.16f,.945f,.85f,GameUI.Cream).rectTransform;
+            ui.Text("Eyebrow",card,eyebrow,.08f,.86f,.92f,.94f,16,GameUI.Teal,TextAnchor.MiddleCenter,true);
+            ui.Text("Heading",card,title,.06f,.67f,.94f,.87f,43,GameUI.Ink,TextAnchor.MiddleCenter,true);
+            return card;
         }
         void ShowMenu()
         {
-            game = null; ClearOverlay();
-            Label("Title", overlay, "ЕЩЁ ОДИН\nЭТАЖ", new Vector2(.08f,.66f), new Vector2(.92f,.89f), 58);
-            record = Label("Record", overlay, "Рекорд: " + best, new Vector2(.1f,.56f), new Vector2(.9f,.64f), 30);
-            Label("Rules", overlay, "6 этажей. 4 места.\nДоставляйте пассажиров, пока трое не ушли.\nКаждые 5 доставок подряд повышают множитель.", new Vector2(.08f,.33f), new Vector2(.92f,.54f), 25);
-            Button("Play", overlay, "Играть", new Vector2(.18f,.21f), new Vector2(.82f,.31f), NewGame);
-            var b = Button("Sound", overlay, "", new Vector2(.18f,.09f), new Vector2(.82f,.18f), ToggleSound);
-            soundLabel = b.GetComponentInChildren<Text>(); UpdateSoundLabel();
+            game=null; building.Reset(); buildingRoot.gameObject.SetActive(false); ClearOverlay(true);
+            ui.Picture("Menu skyline",overlay,"skyline",-.13f,0,1.13f,.73f,false);
+            ui.Text("House label",overlay,"ДОМ № 6  /  ВАША НОВАЯ СМЕНА",.08f,.917f,.92f,.95f,16,GameUI.Teal,TextAnchor.MiddleCenter,true);
+            ui.Text("Game title",overlay,"Ещё один\nэтаж",.07f,.735f,.93f,.916f,68,GameUI.Ink,TextAnchor.MiddleCenter,true);
+            ui.Text("Tagline",overlay,"Кому-то домой. Кому-то в гости.\nА вам — ещё один рекорд.",.1f,.65f,.9f,.742f,23,GameUI.Hex("476B70"));
+            var hero=ui.Panel("Lobby illustration",overlay,.12f,.333f,.88f,.635f,GameUI.Hex("E8D3B5")).rectTransform;
+            ui.Panel("Lobby floor",hero,.02f,.015f,.98f,.09f,GameUI.Hex("C19B7A"),false);
+            ui.Picture("Lobby window",hero,"window",.045f,.38f,.31f,.89f);
+            ui.Picture("Lobby plant",hero,"plant",.045f,.085f,.23f,.39f);
+            ui.Picture("Lobby elevator",hero,"cabin",.52f,.06f,.94f,.97f);
+            MenuPerson(hero,0,.24f,.09f,.47f,.77f,"4");
+            MenuPerson(hero,1,.40f,.08f,.63f,.74f,"2");
+            MenuPerson(hero,4,.68f,.13f,.87f,.74f,"6");
+            ui.Text("Lobby plaque",hero,"ДОБРО ПОЖАЛОВАТЬ",.04f,.9f,.48f,.98f,12,GameUI.Teal,TextAnchor.MiddleCenter,true);
+            ui.Button("Play",overlay,"Начать смену  →",.12f,.237f,.88f,.313f,NewGame,GameUI.Coral,31);
+            record=ui.Text("Record",overlay,"ЛИЧНЫЙ РЕКОРД   "+best,.12f,.17f,.88f,.224f,23,GameUI.Ink,TextAnchor.MiddleCenter,true);
+            var soundButton=ui.Button("Sound",overlay,"",.27f,.092f,.73f,.146f,ToggleSound,GameUI.Teal,21);
+            soundLabel=soundButton.GetComponentInChildren<Text>(); UpdateSoundLabel();
+            ui.Text("Menu instructions",overlay,"Нажимайте этажи. Перевозите людей.\nНе дайте троим уйти, не дождавшись лифта.",.08f,.012f,.92f,.077f,18,GameUI.Hex("476B70"));
         }
-        void ToggleSound() { sound = !sound; PlayerPrefs.SetInt("OneMoreFloor.Sound", sound ? 1 : 0); PlayerPrefs.Save(); UpdateSoundLabel(); }
-        void UpdateSoundLabel() { if (soundLabel != null) soundLabel.text = sound ? "Звук: вкл." : "Звук: выкл."; }
+        void MenuPerson(Transform parent,int index,float x0,float y0,float x1,float y1,string destination)
+        {
+            ui.Picture("Neighbor",parent,"person_"+index,x0,y0,x1,y1);
+            var bubble=ui.Panel("Neighbor destination",parent,x0+.035f,y1-.005f,x1-.035f,y1+.115f,GameUI.Cream);
+            ui.Text("Destination",bubble.transform,destination,0,0,1,1,24,GameUI.Ink,TextAnchor.MiddleCenter,true);
+        }
+        void ToggleSound()
+        {
+            sound=!sound; PlayerPrefs.SetInt("OneMoreFloor.Sound",sound ? 1 : 0); PlayerPrefs.Save(); UpdateSoundLabel(); Play(tapTone);
+        }
+        void UpdateSoundLabel() { if(soundLabel!=null) soundLabel.text=sound ? "Звук включён" : "Звук выключен"; }
+        void SelectFloor(int floor)
+        {
+            if(game==null || game.State!=PlayState.Playing) return;
+            game.SelectFloor(floor); Play(tapTone);
+        }
         void NewGame()
         {
-            game = new GameSession(Settings.Rules, Environment.TickCount);
-            game.Feedback += message => { feedback.text = message; feedbackTime = 1.8f; if (sound) audioSource.PlayOneShot(tone); };
-            feedback.text = "Выберите этаж"; feedbackTime = 3; overlay.gameObject.SetActive(false); Render();
+            building.Reset(); buildingRoot.gameObject.SetActive(true);
+            game=new GameSession(Settings.Rules,Environment.TickCount); sessionStartBest=best;
+            game.Feedback+=OnFeedback; feedback.text="Нажмите номер этажа — лифт отправится к нему";
+            feedbackTime=5; overlay.gameObject.SetActive(false); Render(0);
+            if(PlayerPrefs.GetInt("OneMoreFloor.Tutorial",0)==0) ShowTutorial();
+        }
+        void ShowTutorial()
+        {
+            game.Pause(); ClearOverlay();
+            var card=Modal("ПЕРВАЯ СМЕНА","Здесь все\nсвои");
+            ui.Text("Tutorial",card,
+                "1. Нажмите на этаж или коридор.\nЛифт заберёт людей по очереди.\n\n2. Цифра над головой — куда ехать.\nПолоска под ногами — терпение.\n\n3. Можно заранее выбрать следующую\nостановку. Не дайте троим уйти!",
+                .07f,.24f,.93f,.67f,23,GameUI.Hex("627D7C"));
+            ui.Button("Understood",card,"Понятно, поехали!",.09f,.065f,.91f,.195f,()=>
+            {
+                PlayerPrefs.SetInt("OneMoreFloor.Tutorial",1); PlayerPrefs.Save();
+                game.Resume(); overlay.gameObject.SetActive(false);
+            },GameUI.Coral,26);
+        }
+        void OnFeedback(string message)
+        {
+            feedback.text=message; feedbackTime=2.2f;
+            if(message.StartsWith("Доставлено")) Play(deliveryTone);
+            else if(message.StartsWith("Пассажир")) Play(lossTone);
+            else if(message.StartsWith("Вошли")) Play(boardTone);
         }
         void Pause()
         {
-            if (game == null || game.State != PlayState.Playing) return;
-            game.Pause(); ClearOverlay();
-            Label("Paused", overlay, "ПАУЗА", new Vector2(.1f,.65f), new Vector2(.9f,.8f), 48);
-            Button("Resume", overlay, "Продолжить", new Vector2(.18f,.45f), new Vector2(.82f,.56f), () => { game.Resume(); overlay.gameObject.SetActive(false); });
-            Button("Restart", overlay, "Заново", new Vector2(.18f,.3f), new Vector2(.82f,.41f), NewGame);
-            Button("Menu", overlay, "В меню", new Vector2(.18f,.15f), new Vector2(.82f,.26f), ShowMenu);
+            if(game==null || game.State!=PlayState.Playing) return;
+            game.Pause(); SaveBest(); ClearOverlay();
+            var card=Modal("ЛИФТ ПОДОЖДЁТ","Небольшой\nперерыв");
+            ui.Text("Pause detail",card,"Пассажиры никуда не торопятся,\nпока игра на паузе.",.08f,.51f,.92f,.65f,23,GameUI.Hex("627D7C"));
+            ui.Button("Continue",card,"Продолжить",.09f,.345f,.91f,.47f,()=>{ game.Resume(); overlay.gameObject.SetActive(false); },GameUI.Coral);
+            ui.Button("Restart",card,"Начать заново",.09f,.19f,.91f,.305f,NewGame);
+            ui.Button("Menu",card,"В главное меню",.09f,.055f,.91f,.155f,ShowMenu,GameUI.Hex("708E8C"),23);
+        }
+        void SaveBest()
+        {
+            if(game!=null && game.Score>best) { best=game.Score; PlayerPrefs.SetInt("OneMoreFloor.Best",best); PlayerPrefs.Save(); }
         }
         void EndGame()
         {
-            best = Math.Max(best, game.Score); PlayerPrefs.SetInt("OneMoreFloor.Best", best); PlayerPrefs.Save(); ClearOverlay();
-            Label("Game Over", overlay, "СМЕНА ОКОНЧЕНА", new Vector2(.06f,.72f), new Vector2(.94f,.84f), 40);
-            Label("Results", overlay, "Очки: " + game.Score + "\nДоставлено: " + game.Delivered + "\nРекорд: " + best, new Vector2(.08f,.47f), new Vector2(.92f,.69f), 32);
-            Button("Retry", overlay, "Ещё раз", new Vector2(.18f,.3f), new Vector2(.82f,.41f), NewGame);
-            Button("Menu", overlay, "В меню", new Vector2(.18f,.15f), new Vector2(.82f,.26f), ShowMenu);
+            bool newRecord=game.Score>sessionStartBest; SaveBest(); ClearOverlay();
+            var card=Modal(newRecord ? "НОВЫЙ ЛИЧНЫЙ РЕКОРД!" : "СПАСИБО ЗА СМЕНУ","На сегодня\nвсё!");
+            ui.Text("Final score",card,game.Score.ToString(),.1f,.49f,.9f,.68f,68,GameUI.Teal,TextAnchor.MiddleCenter,true);
+            ui.Text("Results",card,"Доставлено: "+game.Delivered+"    •    Рекорд: "+best,.06f,.4f,.94f,.49f,22,GameUI.Hex("627D7C"));
+            ui.Button("Retry",card,"Ещё одну смену  →",.09f,.22f,.91f,.355f,NewGame,GameUI.Coral);
+            ui.Button("Menu",card,"В главное меню",.09f,.07f,.91f,.18f,ShowMenu);
         }
         void Update()
         {
             ApplySafeArea();
-            if (game == null) return;
-            var before = game.State; game.Tick(Time.unscaledDeltaTime);
-            if (before == PlayState.Playing)
+            if(overlay!=null && overlay.gameObject.activeSelf)
+            { screenAge+=Time.unscaledDeltaTime; screenFade.alpha=Mathf.Clamp01(screenAge/.18f); }
+            if(game==null) return;
+            var before=game.State;
+            game.Tick(Time.unscaledDeltaTime);
+            if(before==PlayState.Playing)
             {
-                feedbackTime -= Time.unscaledDeltaTime; if (feedbackTime <= 0) feedback.text = "";
-                Render();
+                float dt=Mathf.Min(Time.unscaledDeltaTime,.25f);
+                feedbackTime-=dt; if(feedbackTime<=0) feedback.text="Число над головой — нужный пассажиру этаж";
+                Render(dt);
             }
-            if (before != PlayState.GameOver && game.State == PlayState.GameOver) EndGame();
+            if(before!=PlayState.GameOver && game.State==PlayState.GameOver) EndGame();
         }
-        void Render()
+        void Render(float dt)
         {
-            score.text = "Очки: " + game.Score + "  ×" + game.Multiplier;
-            losses.text = "Ушли: " + game.Lost + "/" + game.Rules.LossLimit;
-            occupancy.text = "В лифте: " + game.Lift.Riders.Count + "/" + game.Rules.Capacity;
-            hint.text = game.Lift.Moving ? "Едем → " + (game.Lift.TargetFloor+1) : "Этаж " + (game.Lift.CurrentFloor+1);
-            if (game.Lift.NextFloor.HasValue) hint.text += " • далее " + (game.Lift.NextFloor.Value+1);
-            float y = game.Lift.Position / game.Rules.Floors;
-            cabin.anchorMin = new Vector2(.7f,y); cabin.anchorMax = new Vector2(.98f,y+1f/game.Rules.Floors);
-            for (int i=0;i<riders.Length;i++) riders[i].text = i < game.Lift.Riders.Count ? "● " + (game.Lift.Riders[i].Destination+1) : "·";
-            for (int f=0;f<game.Rules.Floors;f++)
-            {
-                floorLabels[f].color = game.Lift.NextFloor == f ? Color.yellow : Color.white;
-                var queue = game.Queues.Floors[f];
-                for (int p=0;p<destinations[f].Length;p++)
-                {
-                    var text = destinations[f][p]; text.transform.parent.gameObject.SetActive(p < queue.Count);
-                    if (p >= queue.Count) continue;
-                    text.text = (queue[p].Destination+1).ToString();
-                    float ratio = Mathf.Clamp01(queue[p].Remaining / game.Rules.PatienceSeconds);
-                    patience[f][p].rectTransform.anchorMax = new Vector2(ratio,.14f);
-                    patience[f][p].color = Color.Lerp(new Color(1,.25f,.25f), new Color(.05f,.55f,.35f), ratio);
-                }
-            }
+            score.text=game.Score.ToString(); multiplier.text="×"+game.Multiplier;
+            streak.text=game.Multiplier==3 ? "МАКСИМУМ" : "ДО ×"+(game.Multiplier+1);
+            for(int i=0;i<streakMarks.Length;i++) streakMarks[i].color=game.Multiplier==3 || i<game.Streak%5 ? GameUI.Gold : GameUI.Hex("D9D9C9");
+            for(int i=0;i<lossMarks.Length;i++) lossMarks[i].color=i<game.Lost ? GameUI.Coral : GameUI.Hex("ADC2B8");
+            occupancy.text="В лифте  "+game.Lift.Riders.Count+" / "+game.Rules.Capacity;
+            loadCard.color=game.Lift.Riders.Count==game.Rules.Capacity ? GameUI.Gold : GameUI.Hex("DCE6D8");
+            lossesLabel.text="УШЛИ "+game.Lost+"/"+game.Rules.LossLimit;
+            route.text=game.Lift.Moving ? "Едем на "+(game.Lift.TargetFloor+1)+" этаж" : "Остановка: "+(game.Lift.CurrentFloor+1)+" этаж";
+            if(game.Lift.NextFloor.HasValue) route.text+="   •   Затем: "+(game.Lift.NextFloor.Value+1);
+            building.Render(game,dt);
         }
         void ApplySafeArea()
         {
-            if (safe == null || Screen.width == 0 || Screen.height == 0) return;
-            Rect area = Screen.safeArea;
-            if (area == lastSafe && lastScreen == new Vector2Int(Screen.width,Screen.height)) return;
-            lastSafe = area; lastScreen = new Vector2Int(Screen.width,Screen.height);
-            safe.anchorMin = new Vector2(area.xMin/Screen.width,area.yMin/Screen.height);
-            safe.anchorMax = new Vector2(area.xMax/Screen.width,area.yMax/Screen.height);
+            if(safe==null || Screen.width==0 || Screen.height==0) return;
+            var area=Screen.safeArea;
+            if(area==lastSafe && lastScreen==new Vector2Int(Screen.width,Screen.height)) return;
+            lastSafe=area; lastScreen=new Vector2Int(Screen.width,Screen.height);
+            // Keep a portrait game readable even in a wide Editor Game window/tablet.
+            float width=Mathf.Min(area.width,area.height*600f/1060f);
+            float left=area.x+(area.width-width)*.5f;
+            safe.anchorMin=new Vector2(left/Screen.width,area.yMin/Screen.height);
+            safe.anchorMax=new Vector2((left+width)/Screen.width,area.yMax/Screen.height);
         }
-        void OnApplicationPause(bool paused) { if (paused) Pause(); }
-        void OnApplicationFocus(bool focused) { if (!focused) Pause(); }
-        void OnDestroy() { if (tone != null) Destroy(tone); }
+        void OnApplicationPause(bool paused) { if(paused) { SaveBest(); Pause(); } }
+        void OnApplicationFocus(bool focused) { if(!focused) { SaveBest(); Pause(); } }
+        void OnApplicationQuit() { SaveBest(); }
+        void OnDestroy() { foreach(var clip in clips) if(clip!=null) Destroy(clip); }
     }
 }
