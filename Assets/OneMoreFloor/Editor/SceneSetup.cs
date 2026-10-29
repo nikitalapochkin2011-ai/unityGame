@@ -8,7 +8,7 @@ namespace OneMoreFloor.Editor
 {
     public static class SceneSetup
     {
-        const string ScenePath = "Assets/OneMoreFloor/Scenes/Game.unity";
+        public const string ScenePath = "Assets/OneMoreFloor/Scenes/Game.unity";
         const string SettingsPath = "Assets/OneMoreFloor/GameSettings.asset";
         [MenuItem("Ещё один этаж/Создать или открыть игровую сцену")]
         public static void CreateScene()
@@ -38,10 +38,7 @@ namespace OneMoreFloor.Editor
             var scenes = new System.Collections.Generic.List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
             if (!scenes.Exists(s => s.path == ScenePath)) scenes.Add(new EditorBuildSettingsScene(ScenePath, true));
             EditorBuildSettings.scenes = scenes.ToArray();
-            PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
-            PlayerSettings.companyName = "Independent Studio"; PlayerSettings.productName = "Ещё один этаж";
-            PlayerSettings.SetApplicationIdentifier(UnityEditor.Build.NamedBuildTarget.Android, "com.independentstudio.onemorefloor");
-            PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel26;
+            AndroidSetup.ApplyPlayerSettings();
             AssetDatabase.SaveAssets();
             Debug.Log("Сцена готова. Нажмите Play. Настройки: " + SettingsPath);
         }

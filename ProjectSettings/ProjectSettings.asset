@@ -6,7 +6,7 @@ PlayerSettings:
   serializedVersion: 28
   productGUID: 884957ef52ec4737a91e55d89c82a75a
   companyName: Independent Studio
-  productName: One More Floor
+  productName: Ещё один этаж
   defaultScreenWidth: 540
   defaultScreenHeight: 960
   defaultScreenWidthWeb: 540
@@ -16,9 +16,9 @@ PlayerSettings:
   usePlayerLog: 1
   resizableWindow: 1
   runInBackground: 0
-  bundleVersion: 0.1.0
+  bundleVersion: 1.0.0
   applicationIdentifier:
-    Android: com.independentstudio.onemorefloor
+    Android: com.nikitalapochkin.onemorefloor
     Standalone: com.independentstudio.onemorefloor
     iPhone: com.independentstudio.onemorefloor
   buildNumber:
@@ -29,6 +29,8 @@ PlayerSettings:
   AndroidTargetSdkVersion: 0
   AndroidPreferredInstallLocation: 1
   AndroidTargetArchitectures: 2
+  scriptingBackend:
+    Android: 1
   allowedAutorotateToPortrait: 1
   allowedAutorotateToPortraitUpsideDown: 0
   allowedAutorotateToLandscapeRight: 0

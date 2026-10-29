@@ -32,3 +32,9 @@ C:\Program Files\Unity\Hub\Editor\6000.6.7f1\Editor\Unity.exe
 Код игровой логики проверен отдельно. Импорт в Unity 6000.6.7f1,
 автоматическое создание сцены, Windows-команда и Android-сборка в среде
 разработки не выполнялись: Unity Editor и Windows здесь отсутствуют.
+
+ПОДГОТОВКА ANDROID
+1. В Hub установите Android Build Support вместе с SDK & NDK Tools и OpenJDK.
+2. В Unity: Ещё один этаж → Android → Подготовить проект для Android.
+3. Подождите переключения платформы; прочитайте отчёт настроек.
+Подробности: Docs/ANDROID-FIRST-STEPS.md. Пароль аккаунта не нужен.
