@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!129 &1
+PlayerSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 28
+  productGUID: 884957ef52ec4737a91e55d89c82a75a
+  companyName: Independent Studio
+  productName: One More Floor
+  defaultScreenWidth: 540
+  defaultScreenHeight: 960
+  defaultScreenWidthWeb: 540
+  defaultScreenHeightWeb: 960
+  defaultIsNativeResolution: 1
+  defaultInterfaceOrientation: 0
+  usePlayerLog: 1
+  resizableWindow: 1
+  runInBackground: 0
+  bundleVersion: 0.1.0
+  applicationIdentifier:
+    Android: com.independentstudio.onemorefloor
+    Standalone: com.independentstudio.onemorefloor
+    iPhone: com.independentstudio.onemorefloor
+  buildNumber:
+    Standalone: 0
+    iPhone: 0
+  AndroidBundleVersionCode: 1
+  AndroidMinSdkVersion: 26
+  AndroidTargetSdkVersion: 0
+  AndroidPreferredInstallLocation: 1
+  AndroidTargetArchitectures: 2
+  allowedAutorotateToPortrait: 1
+  allowedAutorotateToPortraitUpsideDown: 0
+  allowedAutorotateToLandscapeRight: 0
+  allowedAutorotateToLandscapeLeft: 0
+  activeInputHandler: 0
