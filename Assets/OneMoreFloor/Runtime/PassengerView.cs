@@ -39,15 +39,14 @@ namespace OneMoreFloor
         {
             target = center; size = dimensions;
             var parent=(RectTransform)Root.parent;
-            bool crowded=dimensions.y*parent.rect.height<65;
             float badgeWidth=Mathf.Clamp(dimensions.x*parent.rect.width*.94f,24,32);
-            badge.rectTransform.anchorMin=badge.rectTransform.anchorMax=new Vector2(.5f,crowded ? .58f : .7f);
-            badge.rectTransform.sizeDelta=new Vector2(badgeWidth,crowded ? 23 : 28);
-            destination.fontSize=crowded ? 18 : 22;
-            GameUI.Place(portrait.rectTransform,0,.06f,1,crowded ? .55f : .67f);
+            badge.rectTransform.anchorMin=badge.rectTransform.anchorMax=new Vector2(.5f,.7f);
+            badge.rectTransform.sizeDelta=new Vector2(badgeWidth,28);
+            destination.fontSize=22;
+            GameUI.Place(portrait.rectTransform,0,.06f,1,.67f);
             if (riding && WasRiding && initialized) position.y = center.y;
             WasRiding = riding;
-            if (!initialized) { position = target + new Vector2(-.025f,0); initialized = true; }
+            if (!initialized) { position = target + new Vector2(-.008f,0); initialized = true; }
             destination.text = (passenger.Destination+1).ToString();
             badge.color = riding ? GameUI.Gold : GameUI.Cream;
             patienceTrack.gameObject.SetActive(!riding);

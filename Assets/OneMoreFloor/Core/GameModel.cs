@@ -6,6 +6,7 @@ namespace OneMoreFloor
     [Serializable]
     public class GameRules
     {
+        public const int MaxWaitingPerFloor = 7;
         public int Floors = 6, Capacity = 4, LossLimit = 3, DeliveryPoints = 10;
         public float SecondsPerFloor = 1.25f, StopSeconds = 0.65f;
         public float PatienceSeconds = 32f, InitialSpawnSeconds = 5f, MinimumSpawnSeconds = 1.5f;
@@ -67,15 +68,33 @@ namespace OneMoreFloor
     }
     public sealed class PassengerQueues
     {
-        public readonly List<Passenger>[] Floors;
+        readonly List<Passenger>[] queues;
+        public IReadOnlyList<IReadOnlyList<Passenger>> Floors { get; private set; }
         public PassengerQueues(int count)
         {
-            Floors = new List<Passenger>[count];
-            for (int i = 0; i < count; i++) Floors[i] = new List<Passenger>();
+            queues = new List<Passenger>[count];
+            var views = new IReadOnlyList<Passenger>[count];
+            for (int i = 0; i < count; i++)
+            {
+                queues[i] = new List<Passenger>(GameRules.MaxWaitingPerFloor);
+                views[i] = queues[i].AsReadOnly();
+            }
+            Floors = Array.AsReadOnly(views);
+        }
+        public bool TryEnqueue(int floor, Passenger passenger)
+        {
+            if (floor < 0 || floor >= queues.Length || passenger == null) return false;
+            var queue = queues[floor];
+            if (queue.Count >= GameRules.MaxWaitingPerFloor) return false;
+            queue.Add(passenger); return true;
+        }
+        internal Passenger TakeFirst(int floor)
+        {
+            var queue = queues[floor]; var passenger = queue[0]; queue.RemoveAt(0); return passenger;
         }
         internal void Age(float dt, Action lost, Func<bool> ended)
         {
-            foreach (var queue in Floors)
+            foreach (var queue in queues)
                 for (int i = 0; i < queue.Count;)
                 {
                     queue[i].Remaining -= dt;
@@ -94,14 +113,25 @@ namespace OneMoreFloor
             var difficulty = game.Difficulty;
             countdown = Math.Min(countdown, difficulty.SpawnInterval) - dt;
             if (countdown > 0) return;
-            int floor = random.Next(difficulty.ActiveFloors);
+            // Draw uniformly from floors with a free waiting slot. A full building
+            // skips this scheduled arrival without creating an invisible passenger/loss.
+            int available = 0;
+            for (int f = 0; f < difficulty.ActiveFloors; f++)
+                if (game.Queues.Floors[f].Count < GameRules.MaxWaitingPerFloor) available++;
+            countdown += difficulty.SpawnInterval;
+            if (available == 0) return;
+            int choice = random.Next(available), floor = 0;
+            for (int f = 0; f < difficulty.ActiveFloors; f++)
+            {
+                if (game.Queues.Floors[f].Count >= GameRules.MaxWaitingPerFloor) continue;
+                if (choice-- == 0) { floor = f; break; }
+            }
             int min = Math.Max(0, floor - difficulty.MaximumRouteDistance);
             int max = Math.Min(difficulty.ActiveFloors - 1, floor + difficulty.MaximumRouteDistance);
             // Select uniformly from the reachable floors, excluding the origin, without retries.
             int destination = random.Next(min, max);
             if (destination >= floor) destination++;
-            game.Queues.Floors[floor].Add(new Passenger(destination, game.Rules.PatienceSeconds));
-            countdown += difficulty.SpawnInterval;
+            game.Queues.TryEnqueue(floor, new Passenger(destination, game.Rules.PatienceSeconds));
         }
     }
     public enum PlayState { Playing, Paused, GameOver }
@@ -158,7 +188,7 @@ namespace OneMoreFloor
                 }
             var queue = Queues.Floors[Lift.CurrentFloor];
             while (queue.Count > 0 && Lift.Riders.Count < Rules.Capacity)
-            { Lift.Riders.Add(queue[0]); queue.RemoveAt(0); boarded++; }
+            { Lift.Riders.Add(Queues.TakeFirst(Lift.CurrentFloor)); boarded++; }
             if (delivered > 0) Emit("Доставлено: " + delivered + "  ×" + Multiplier);
             else if (boarded > 0) Emit("Вошли: " + boarded);
             else Emit("Этаж " + (Lift.CurrentFloor + 1));

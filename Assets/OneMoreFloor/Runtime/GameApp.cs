@@ -92,7 +92,7 @@ namespace OneMoreFloor
                 float x=.49f+i*.43f/lossMarks.Length;
                 lossMarks[i]=ui.Picture("Loss mark",losses.transform,"circle",x,.31f,x+.3f/lossMarks.Length,.69f);
             }
-            buildingRoot=ui.Rect("Illustrated apartment building",safe,.04f,.14f,.96f,.735f);
+            buildingRoot=ui.Rect("Illustrated apartment building",safe,.005f,.14f,.995f,.735f);
             building=new BuildingView(ui,buildingRoot,Settings.Rules,SelectFloor);
             var routeCard=ui.Panel("Route",safe,.04f,.067f,.96f,.117f,GameUI.Ink);
             route=ui.Text("Route",routeCard.transform,"Выберите этаж",.03f,.08f,.97f,.92f,22,GameUI.Cream,TextAnchor.MiddleCenter,true);

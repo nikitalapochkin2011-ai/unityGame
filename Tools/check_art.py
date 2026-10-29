@@ -4,14 +4,14 @@ from PIL import Image
 import re
 root=Path(__file__).resolve().parents[1]
 art=root/'Assets/OneMoreFloor/Resources/Art'
-expected=['panel','circle','triangle','window','plant','skyline','cabin','door','lobby_cabin','gear']+[f'person_{i}' for i in range(8)]+['roof']
+expected=['panel','circle','triangle','window','plant','skyline','cabin','door','lobby_cabin','gear','hallway']+[f'person_{i}' for i in range(8)]+['roof']
 for name in expected:
     p=art/(name+'.png')
     with Image.open(p) as im:
         im.load()
         assert im.mode=='RGBA',p
         assert im.width<=2048 and im.height<=2048,p
-        assert im.getextrema()[3][0]==0, f'{name} must have a transparent background'
+        if name!='hallway': assert im.getextrema()[3][0]==0, f'{name} must have a transparent background'
     meta=Path(str(p)+'.meta').read_text()
     assert 'spriteMode: 1' in meta and 'textureType: 8' in meta,p
     assert 'spritePixelsToUnits: 200' in meta,p

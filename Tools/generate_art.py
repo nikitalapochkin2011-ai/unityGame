@@ -157,6 +157,72 @@ def gear(r,e,p,l):
     p(points,'white');e((25,25,103,103),'white');e((46,46,82,82),(0,0,0,0))
 art('gear',(128,128),gear)
 
+def hallway(r,e,p,l):
+    # One cohesive interior used on every floor: stone, oak, brass and sage.
+    # Coordinates describe the full hall; people occupy the clear foreground.
+    r((0,0,800,200),'#ede4d2',4)
+    for y in range(8,122):
+        value=int(239-12*(y-8)/114)
+        r((4,y,796,y+1),(value,value-9,value-24,255))
+    # Ceiling cornice and its warm recessed lighting.
+    r((0,0,800,8),'#8b9992');r((0,8,800,14),'#f9f0db')
+    r((18,15,782,18),'#d8c9ad');r((24,19,776,22),'#fff4c7')
+    # Oak wainscot with consistent raised panels.
+    r((0,114,800,174),'#a28264');r((0,111,800,117),'#dcc7a4')
+    for x in range(9,790,65):
+        r((x,123,x+54,162),'#8e735b',3)
+        r((x+3,125,x+51,159),'#ae8e6d',2)
+        l([(x+6,128),(x+46,128)],'#c7aa84',1)
+    # Stone floor drawn in perspective, with a warm brass threshold.
+    r((0,170,800,200),'#c7c3b2')
+    for x in range(-120,920,100):
+        p([(x+20,172),(x+24,172),(x-7,200),(x-12,200)],'#a8afa6')
+    l([(0,183),(800,183)],'#dfddcd',1)
+    r((0,167,800,172),'#f5e4c8');r((0,172,800,174),'#927956')
+    # Two oak apartment doors, with recesses, brass plates and handles.
+    for x in (42,627):
+        r((x-7,33,x+112,172),'#7c7668',4)
+        r((x-3,29,x+108,169),'#cfbea0',3)
+        r((x+4,34,x+101,167),'#6e7060',3)
+        r((x+9,38,x+96,165),'#859182',2)
+        r((x+16,49,x+88,105),'#697c70',3)
+        r((x+20,53,x+84,101),'#7e8e7c',2)
+        r((x+16,113,x+88,154),'#697c70',3)
+        r((x+20,117,x+84,150),'#7e8e7c',2)
+        r((x+36,40,x+66,48),'#dfc88d',2)
+        r((x+80,100,x+85,116),'#d9c38f',2)
+        r((x+73,103,x+87,107),'#f0dda8',2)
+        e((x+48,62,x+53,67),'#c8bb91')
+    # Tall arched window and linen curtains in the centre-left.
+    r((238,29,383,117),'#b39c7e',10);r((243,32,378,112),'#fff0d5',8)
+    r((250,38,371,108),'#a6c4c0',5)
+    p([(251,39),(303,39),(251,97)],'#e1ebe0')
+    r((307,35,313,110),'#f1e8d2');r((248,73,373,78),'#efe6ce')
+    p([(249,37),(274,37),(263,103),(249,105)],'#bd9a7d')
+    p([(348,37),(373,37),(373,105),(360,103)],'#bd9a7d')
+    r((232,110,389,117),'#f9edce',3)
+    # Gallery of two botanical prints, with quiet colours and deep frames.
+    for x in (433,509):
+        r((x+2,38,x+58,100),'#9d896f',3)
+        r((x,34,x+56,96),'#c0a36d',2);r((x+5,39,x+51,91),'#faf0da',1)
+        l([(x+28,83),(x+28,49)],'#6e8e78',2)
+        for yy,side in [(54,-1),(63,1),(72,-1)]:
+            e((x+24+side*9,yy,x+35+side*9,yy+10),'#8ca487')
+    # Matching wall sconces and their soft light pools.
+    for x in (182,587):
+        e((x-23,35,x+23,95),'#fff0c730')
+        r((x-3,47,x+3,91),'#8c805f',2)
+        r((x-11,43,x+11,67),'#f8e6b4',4)
+        r((x-12,65,x+12,69),'#c9ae73',2)
+    # A console with a small planter, behind the queue rather than in its path.
+    r((433,125,563,131),'#614f43',2);r((440,131,446,168),'#78614c',1);r((551,131,557,168),'#78614c',1)
+    r((473,109,499,125),'#ad795d',2)
+    l([(486,110),(486,84)],'#567e67',2)
+    for x,y in [(477,92),(489,87),(474,102),(494,98)]:e((x-5,y-5,x+6,y+6),'#789a76')
+    # A narrow woven rug under the gallery, fully behind the character feet.
+    r((396,177,604,190),'#a8aaa0',3);r((402,179,598,188),'#d3c9b1',2)
+art('hallway',(800,200),hallway)
+
 def roof(r,e,p,l):
     r((10,36,590,90),'#35515c',8);r((0,22,600,46),'#e5c398',7)
     r((22,49,578,82),'#203e4d',6)
