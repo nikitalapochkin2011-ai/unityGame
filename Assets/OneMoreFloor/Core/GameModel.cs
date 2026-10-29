@@ -9,13 +9,16 @@ namespace OneMoreFloor
         public int Floors = 6, Capacity = 4, LossLimit = 3, DeliveryPoints = 10;
         public float SecondsPerFloor = 1.25f, StopSeconds = 0.65f;
         public float PatienceSeconds = 32f, InitialSpawnSeconds = 5f, MinimumSpawnSeconds = 1.5f;
-        public float RampSeconds = 180f;
+        public int DifficultyScoreCap = 450, StartingFloors = 3, StartingRouteDistance = 1;
         public void Validate()
         {
             Floors = Math.Max(2, Floors); Capacity = Math.Max(1, Capacity); LossLimit = Math.Max(1, LossLimit);
             SecondsPerFloor = Math.Max(.1f, SecondsPerFloor); StopSeconds = Math.Max(.1f, StopSeconds);
             PatienceSeconds = Math.Max(1, PatienceSeconds); MinimumSpawnSeconds = Math.Max(.2f, MinimumSpawnSeconds);
-            InitialSpawnSeconds = Math.Max(MinimumSpawnSeconds, InitialSpawnSeconds); RampSeconds = Math.Max(1, RampSeconds);
+            InitialSpawnSeconds = Math.Max(MinimumSpawnSeconds, InitialSpawnSeconds);
+            DifficultyScoreCap = Math.Max(1, DifficultyScoreCap);
+            StartingFloors = Math.Max(2, Math.Min(Floors, StartingFloors));
+            StartingRouteDistance = Math.Max(1, Math.Min(StartingFloors - 1, StartingRouteDistance));
             DeliveryPoints = Math.Max(1, DeliveryPoints);
         }
     }
@@ -88,14 +91,17 @@ namespace OneMoreFloor
         public PassengerSpawner(int seed) { random = new Random(seed); }
         internal void Tick(float dt, GameSession game)
         {
-            countdown -= dt;
+            var difficulty = game.Difficulty;
+            countdown = Math.Min(countdown, difficulty.SpawnInterval) - dt;
             if (countdown > 0) return;
-            int floor = random.Next(game.Rules.Floors);
-            int destination = random.Next(game.Rules.Floors - 1);
+            int floor = random.Next(difficulty.ActiveFloors);
+            int min = Math.Max(0, floor - difficulty.MaximumRouteDistance);
+            int max = Math.Min(difficulty.ActiveFloors - 1, floor + difficulty.MaximumRouteDistance);
+            // Select uniformly from the reachable floors, excluding the origin, without retries.
+            int destination = random.Next(min, max);
             if (destination >= floor) destination++;
             game.Queues.Floors[floor].Add(new Passenger(destination, game.Rules.PatienceSeconds));
-            float t = Math.Min(1, game.Elapsed / game.Rules.RampSeconds);
-            countdown += game.Rules.InitialSpawnSeconds + (game.Rules.MinimumSpawnSeconds - game.Rules.InitialSpawnSeconds) * t;
+            countdown += difficulty.SpawnInterval;
         }
     }
     public enum PlayState { Playing, Paused, GameOver }
@@ -112,6 +118,7 @@ namespace OneMoreFloor
         public int Streak { get; private set; }
         public int Multiplier { get { return Math.Min(3, 1 + Streak / 5); } }
         public float Elapsed { get; private set; }
+        public DifficultyState Difficulty { get { return DifficultyCurve.AtScore(Rules, Score); } }
         public event Action<string> Feedback;
         public GameSession(GameRules rules, int seed)
         {

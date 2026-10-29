@@ -1,4 +1,5 @@
 """Original game artwork. Optional authoring tool; Pillow is not a game dependency."""
+import math
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter
 ROOT = Path(__file__).resolve().parents[1] / 'Assets/OneMoreFloor/Resources/Art'
@@ -94,25 +95,66 @@ def skyline(r,e,p,l):
         r((x,600-h,x+w,600),'#87aaa8',4)
 art('skyline',(1000,600),skyline)
 
-def cabin(r,e,p,l):
-    r((1,1,239,319),'#142d3b',16);r((8,7,232,310),'#c6c0a9',12)
-    r((17,20,223,303),'#294a57',9)
-    r((25,46,215,287),'#48727b',5)
-    p([(27,49),(117,49),(27,240)],'#9bc5c21c')
-    r((25,247,215,258),'#c0aa7b',3);r((25,287,215,300),'#d1b681',3)
-    r((66,10,174,40),'#172f3c',7)
-    r((53,49,187,55),'#f8e5ad',3)
-art('cabin',(240,320),cabin)
+def cabin_painter(width,height):
+    def paint(r,e,p,l):
+        def box(a,b,c,d,color,radius=0): r((a*width,b*height,c*width,d*height),color,radius)
+        def shape(points,color): p([(x*width,y*height) for x,y in points],color)
+        # A straight, recessed stainless-steel frame, not an inflated rounded box.
+        box(.003,.003,.997,.997,'#172a34',7)
+        box(.012,.013,.988,.985,'#a8b1b2',5)
+        for i in range(96):
+            shade=178+int(32*math.sin(i/95*math.pi))
+            box(.022+i*.00996,.018,.032+i*.00996,.97,(shade,shade+4,min(255,shade+5),255))
+        box(.069,.145,.935,.947,'#233b43',2)
+        # Interior perspective, wall seams and recessed ceiling strip.
+        shape([(.078,.155),(.925,.155),(.857,.235),(.147,.235)],'#bcc8c7')
+        shape([(.078,.155),(.147,.235),(.147,.85),(.078,.94)],'#75898e')
+        shape([(.925,.155),(.857,.235),(.857,.85),(.925,.94)],'#627980')
+        box(.147,.235,.857,.85,'#9eb0b2',2)
+        for x in [.324,.502,.680]:box(x,.235,x+.003,.85,'#7d969c')
+        box(.186,.256,.813,.275,'#d0dcda',1)
+        shape([(.147,.85),(.857,.85),(.925,.94),(.078,.94)],'#495d64')
+        for x in [.28,.5,.72]:shape([(x,.85),(x+.008,.85),(x+.03,.94),(x+.02,.94)],'#6e8287')
+        box(.135,.71,.868,.725,'#546c74',2)
+        box(.135,.704,.868,.714,'#e4e9e4',2)
+        box(.24,.17,.76,.19,'#fff4cf',2)
+        box(.326,.032,.674,.128,'#1a2c33',3)
+        box(.339,.046,.661,.111,'#102129',2)
+        # A small control panel beside the doors.
+        box(.94,.38,.969,.72,'#5c737a',2)
+        for y in [.42,.49,.56,.63]:
+            e((.949*width,y*height,.962*width,(y+.012)*height),'#e8e9da')
+        box(.075,.942,.931,.956,'#dce3df',1)
+        box(.075,.96,.931,.972,'#586d73',1)
+        # Fasteners and highlights make the frame read as metal at phone scale.
+        for x in [.042,.956]:
+            for y in [.045,.94]:e((x*width,y*height,(x+.009)*width,(y+.012)*height),'#516a72')
+    return paint
+art('cabin',(600,400),cabin_painter(600,400))
+art('lobby_cabin',(320,520),cabin_painter(320,520))
 
 def door(r,e,p,l):
-    r((0,0,119,279),'#c7ccbd',6)
-    r((6,8,113,270),'#213c4825',4)
-    r((10,14,109,262),'#accbca32',3)
-    p([(12,17),(64,17),(12,210)],'#eaf6e325')
-    r((4,8,7,270),'#eef1d5',1);r((111,8,115,270),'#536f74',1)
-    r((9,198,110,202),'#d1bb90',1)
-    r((105,122,110,155),'#f2d8a4',2)
-art('door',(120,280),door)
+    # Full-height glass, thin metal stiles and a visible centre joint.
+    r((0,0,159,339),'#566e77',2)
+    r((3,2,156,337),'#d1dbd9',1)
+    r((7,7,152,313),(158,204,215,20),1)
+    p([(10,10),(52,10),(145,304),(114,304)],(237,250,251,16))
+    l([(12,9),(151,9)],'#f1f5ef',1)
+    l([(6,7),(6,314)],'#ecf1eb',1)
+    l([(155,7),(155,329)],'#344d58',2)
+    r((144,143,148,192),'#c2d1cf',2)
+    r((7,315,152,333),'#aabbbc',1)
+    l([(10,320),(149,320)],'#d8e1dc',1)
+art('door',(160,340),door)
+
+def gear(r,e,p,l):
+    points=[]
+    for i in range(80):
+        angle=2*math.pi*i/80
+        radius=57 if i%8 in [0,1,2,3] else 46
+        points.append((64+math.cos(angle)*radius,64+math.sin(angle)*radius))
+    p(points,'white');e((25,25,103,103),'white');e((46,46,82,82),(0,0,0,0))
+art('gear',(128,128),gear)
 
 def roof(r,e,p,l):
     r((10,36,590,90),'#35515c',8);r((0,22,600,46),'#e5c398',7)

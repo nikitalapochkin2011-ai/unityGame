@@ -11,12 +11,15 @@ namespace OneMoreFloor
         GameSession game;
         GameUI ui;
         BuildingView building;
-        RectTransform safe, overlay, buildingRoot;
+        RectTransform safe, overlay, buildingRoot, settingsLayer;
         CanvasGroup screenFade;
-        Text score, multiplier, occupancy, route, feedback, record, soundLabel, streak, lossesLabel;
-        Image loadCard;
+        Text score, multiplier, occupancy, route, feedback, record, soundLabel, streak, lossesLabel, difficultyLabel;
+        Image loadCard, soundTrack;
+        RectTransform soundThumb;
         Image[] lossMarks, streakMarks;
-        int best, sessionStartBest;
+        int best, sessionStartBest, lastDifficultyLevel, tutorialPage;
+        const int TutorialVersion = 2;
+        bool tutorialStartsGame;
         bool sound;
         float feedbackTime, screenAge;
         Rect lastSafe;
@@ -65,9 +68,10 @@ namespace OneMoreFloor
             ui.Picture("Distant neighborhood",root.transform,"skyline",0,0,1,.62f,false);
             ui.Panel("Street",root.transform,0,0,1,.055f,GameUI.Hex("648A89"),false);
             safe=ui.Rect("Portrait safe area",root.transform,0,0,1,1);
-            ui.Text("Brand",safe,"ЕЩЁ ОДИН ЭТАЖ",.04f,.95f,.79f,.993f,28,GameUI.Ink,TextAnchor.MiddleLeft,true);
-            ui.Text("Subtitle",safe,"МАЛЕНЬКИЙ ДОМ. БОЛЬШИЕ ПЛАНЫ.",.043f,.923f,.8f,.949f,14,GameUI.Hex("4C7478"),TextAnchor.MiddleLeft);
-            ui.Button("Pause",safe,"II",.85f,.936f,.96f,.991f,Pause,GameUI.Ink,28);
+            ui.Text("Brand",safe,"ЕЩЁ ОДИН ЭТАЖ",.04f,.95f,.68f,.993f,26,GameUI.Ink,TextAnchor.MiddleLeft,true);
+            difficultyLabel=ui.Text("Difficulty",safe,"СПОКОЙНОЕ УТРО",.043f,.923f,.7f,.949f,14,GameUI.Hex("4C7478"),TextAnchor.MiddleLeft);
+            ui.Button("Pause",safe,"II",.71f,.936f,.82f,.991f,Pause,GameUI.Ink,28);
+            ui.IconButton("Settings",safe,"gear",.85f,.936f,.96f,.991f,ShowSettings,GameUI.Ink);
             var scoreCard=ui.Panel("Score card",safe,.04f,.851f,.96f,.918f,GameUI.Cream);
             ui.Text("Score caption",scoreCard.transform,"ОЧКИ",.04f,.48f,.23f,.94f,13,GameUI.Muted,TextAnchor.MiddleLeft,true);
             score=ui.Text("Score",scoreCard.transform,"0",.04f,.01f,.4f,.66f,36,GameUI.Ink,TextAnchor.MiddleLeft,true);
@@ -92,7 +96,7 @@ namespace OneMoreFloor
             feedback=ui.Text("Feedback",safe,"",.04f,.025f,.96f,.065f,20,GameUI.Ink);
             overlay=ui.Rect("Screen overlay",safe,0,0,1,1);
             screenFade=overlay.gameObject.AddComponent<CanvasGroup>();
-            ApplySafeArea();
+            BuildSettings(); ApplySafeArea();
         }
         void ClearOverlay(bool menu=false)
         {
@@ -102,33 +106,33 @@ namespace OneMoreFloor
                 menu ? GameUI.Hex("BDD4D0") : new Color(.08f,.18f,.23f,.67f),false);
             scrim.raycastTarget=true;
         }
-        RectTransform Modal(string eyebrow,string title)
+        RectTransform Modal(string eyebrow,string title,Transform parent=null)
         {
-            var card=ui.Panel("Screen card",overlay,.055f,.16f,.945f,.85f,GameUI.Cream).rectTransform;
+            var card=ui.Panel("Screen card",parent ?? overlay,.055f,.16f,.945f,.85f,GameUI.Cream).rectTransform;
             ui.Text("Eyebrow",card,eyebrow,.08f,.86f,.92f,.94f,16,GameUI.Teal,TextAnchor.MiddleCenter,true);
             ui.Text("Heading",card,title,.06f,.67f,.94f,.87f,43,GameUI.Ink,TextAnchor.MiddleCenter,true);
             return card;
         }
         void ShowMenu()
         {
-            game=null; building.Reset(); buildingRoot.gameObject.SetActive(false); ClearOverlay(true);
+            game=null; building.Reset(); buildingRoot.gameObject.SetActive(false); settingsLayer.gameObject.SetActive(false); ClearOverlay(true);
             ui.Picture("Menu skyline",overlay,"skyline",-.13f,0,1.13f,.73f,false);
-            ui.Text("House label",overlay,"ДОМ № 6  /  ВАША НОВАЯ СМЕНА",.08f,.917f,.92f,.95f,16,GameUI.Teal,TextAnchor.MiddleCenter,true);
+            ui.Text("House label",overlay,"ДОМ № 6  /  ВАША НОВАЯ СМЕНА",.08f,.925f,.79f,.96f,16,GameUI.Teal,TextAnchor.MiddleCenter,true);
+            ui.IconButton("Menu settings",overlay,"gear",.84f,.935f,.95f,.99f,ShowSettings,GameUI.Ink);
             ui.Text("Game title",overlay,"Ещё один\nэтаж",.07f,.735f,.93f,.916f,68,GameUI.Ink,TextAnchor.MiddleCenter,true);
             ui.Text("Tagline",overlay,"Кому-то домой. Кому-то в гости.\nА вам — ещё один рекорд.",.1f,.65f,.9f,.742f,23,GameUI.Hex("476B70"));
             var hero=ui.Panel("Lobby illustration",overlay,.12f,.333f,.88f,.635f,GameUI.Hex("E8D3B5")).rectTransform;
             ui.Panel("Lobby floor",hero,.02f,.015f,.98f,.09f,GameUI.Hex("C19B7A"),false);
             ui.Picture("Lobby window",hero,"window",.045f,.38f,.31f,.89f);
             ui.Picture("Lobby plant",hero,"plant",.045f,.085f,.23f,.39f);
-            ui.Picture("Lobby elevator",hero,"cabin",.52f,.06f,.94f,.97f);
+            ui.Picture("Lobby elevator",hero,"lobby_cabin",.52f,.06f,.94f,.97f);
             MenuPerson(hero,0,.24f,.09f,.47f,.77f,"4");
             MenuPerson(hero,1,.40f,.08f,.63f,.74f,"2");
             MenuPerson(hero,4,.68f,.13f,.87f,.74f,"6");
             ui.Text("Lobby plaque",hero,"ДОБРО ПОЖАЛОВАТЬ",.04f,.9f,.48f,.98f,12,GameUI.Teal,TextAnchor.MiddleCenter,true);
-            ui.Button("Play",overlay,"Начать смену  →",.12f,.237f,.88f,.313f,NewGame,GameUI.Coral,31);
-            record=ui.Text("Record",overlay,"ЛИЧНЫЙ РЕКОРД   "+best,.12f,.17f,.88f,.224f,23,GameUI.Ink,TextAnchor.MiddleCenter,true);
-            var soundButton=ui.Button("Sound",overlay,"",.27f,.092f,.73f,.146f,ToggleSound,GameUI.Teal,21);
-            soundLabel=soundButton.GetComponentInChildren<Text>(); UpdateSoundLabel();
+            ui.Button("Play",overlay,"Начать смену  →",.12f,.237f,.88f,.313f,StartShift,GameUI.Coral,31);
+            ui.Button("Learn",overlay,"Как играть?  Обучение",.12f,.162f,.88f,.218f,()=>ShowTutorial(false),GameUI.Teal,23);
+            record=ui.Text("Record",overlay,"ЛИЧНЫЙ РЕКОРД   "+best,.12f,.101f,.88f,.15f,23,GameUI.Ink,TextAnchor.MiddleCenter,true);
             ui.Text("Menu instructions",overlay,"Нажимайте этажи. Перевозите людей.\nНе дайте троим уйти, не дождавшись лифта.",.08f,.012f,.92f,.077f,18,GameUI.Hex("476B70"));
         }
         void MenuPerson(Transform parent,int index,float x0,float y0,float x1,float y1,string destination)
@@ -139,9 +143,56 @@ namespace OneMoreFloor
         }
         void ToggleSound()
         {
-            sound=!sound; PlayerPrefs.SetInt("OneMoreFloor.Sound",sound ? 1 : 0); PlayerPrefs.Save(); UpdateSoundLabel(); Play(tapTone);
+            sound=!sound; PlayerPrefs.SetInt("OneMoreFloor.Sound",sound ? 1 : 0); PlayerPrefs.Save();
+            if(!sound) audioSource.Stop();
+            UpdateSoundLabel(); Play(tapTone);
         }
-        void UpdateSoundLabel() { if(soundLabel!=null) soundLabel.text=sound ? "Звук включён" : "Звук выключен"; }
+        void UpdateSoundLabel()
+        {
+            if(soundLabel!=null) soundLabel.text=sound ? "Звук включён" : "Звук выключен";
+            if(soundTrack!=null) soundTrack.color=sound ? GameUI.Teal : GameUI.Hex("91A39C");
+            if(soundThumb!=null) GameUI.Place(soundThumb,sound ? .55f : .05f,.1f,sound ? .95f : .45f,.9f);
+        }
+        void BuildSettings()
+        {
+            settingsLayer=ui.Rect("Settings overlay",safe,0,0,1,1);
+            var scrim=ui.Panel("Settings scrim",settingsLayer,-.2f,-.1f,1.2f,1.1f,new Color(.08f,.18f,.23f,.76f),false);
+            scrim.raycastTarget=true;
+            var card=Modal("УСТРОЙТЕСЬ ПОУДОБНЕЕ","Настройки",settingsLayer);
+            ui.Picture("Settings gear",card,"gear",.41f,.54f,.59f,.68f).color=GameUI.Teal;
+            ui.Text("Settings description",card,"Все звуки игры можно отключить.\nВаш выбор сохранится после выхода.",.08f,.405f,.92f,.54f,23,GameUI.Hex("627D7C"));
+            var toggle=ui.Button("Sound switch",card,"",.09f,.245f,.91f,.365f,ToggleSound,GameUI.Hex("E0E9DB"),25);
+            soundLabel=toggle.GetComponentInChildren<Text>(); soundLabel.color=GameUI.Ink; soundLabel.alignment=TextAnchor.MiddleLeft;
+            GameUI.Place(soundLabel.rectTransform,.06f,.1f,.69f,.9f);
+            soundTrack=ui.Panel("Switch track",toggle.transform,.73f,.29f,.94f,.71f,GameUI.Teal);
+            soundThumb=ui.Picture("Switch thumb",soundTrack.transform,"circle",.55f,.1f,.95f,.9f).rectTransform;
+            UpdateSoundLabel();
+            ui.Button("Settings close",card,"Готово",.09f,.075f,.91f,.19f,()=>settingsLayer.gameObject.SetActive(false),GameUI.Coral);
+            settingsLayer.gameObject.SetActive(false);
+        }
+        void ShowSettings()
+        {
+            // Opening settings during play always leads back to an explicit pause screen.
+            // Closing them after the app was backgrounded must never silently resume the shift.
+            Pause(); UpdateSoundLabel(); settingsLayer.gameObject.SetActive(true);
+        }
+        void StartShift()
+        {
+            if(PlayerPrefs.GetInt("OneMoreFloor.TutorialVersion",0)<TutorialVersion) ShowTutorialOffer();
+            else NewGame();
+        }
+        void ShowTutorialOffer()
+        {
+            ClearOverlay(true);
+            var card=Modal("РАДЫ ВАС ВИДЕТЬ","Первый раз\nв нашем доме?");
+            ui.Text("Offer detail",card,"Покажем, что означают цифры,\nкак управлять лифтом и набирать очки.\nВсего четыре коротких шага.",.08f,.43f,.92f,.65f,25,GameUI.Hex("627D7C"));
+            ui.Button("Take tutorial",card,"Пройти обучение",.09f,.25f,.91f,.38f,()=>ShowTutorial(true),GameUI.Coral);
+            ui.Button("Skip tutorial",card,"Сразу играть",.09f,.09f,.91f,.21f,()=>{ MarkTutorial(); NewGame(); },GameUI.Teal);
+        }
+        void MarkTutorial()
+        {
+            PlayerPrefs.SetInt("OneMoreFloor.TutorialVersion",TutorialVersion); PlayerPrefs.Save();
+        }
         void SelectFloor(int floor)
         {
             if(game==null || game.State!=PlayState.Playing) return;
@@ -149,24 +200,54 @@ namespace OneMoreFloor
         }
         void NewGame()
         {
-            building.Reset(); buildingRoot.gameObject.SetActive(true);
+            building.Reset(); buildingRoot.gameObject.SetActive(true); settingsLayer.gameObject.SetActive(false); lastDifficultyLevel=1;
             game=new GameSession(Settings.Rules,Environment.TickCount); sessionStartBest=best;
             game.Feedback+=OnFeedback; feedback.text="Нажмите номер этажа — лифт отправится к нему";
             feedbackTime=5; overlay.gameObject.SetActive(false); Render(0);
-            if(PlayerPrefs.GetInt("OneMoreFloor.Tutorial",0)==0) ShowTutorial();
         }
-        void ShowTutorial()
+        void ShowTutorial(bool startAfter)
         {
-            game.Pause(); ClearOverlay();
-            var card=Modal("ПЕРВАЯ СМЕНА","Здесь все\nсвои");
-            ui.Text("Tutorial",card,
-                "1. Нажмите на этаж или коридор.\nЛифт заберёт людей по очереди.\n\n2. Цифра над головой — куда ехать.\nПолоска под ногами — терпение.\n\n3. Можно заранее выбрать следующую\nостановку. Не дайте троим уйти!",
-                .07f,.24f,.93f,.67f,23,GameUI.Hex("627D7C"));
-            ui.Button("Understood",card,"Понятно, поехали!",.09f,.065f,.91f,.195f,()=>
+            tutorialStartsGame=startAfter; tutorialPage=0; RenderTutorial();
+        }
+        void RenderTutorial()
+        {
+            ClearOverlay(true);
+            string[] titles={ "Знакомьтесь: соседи", "Вы управляете лифтом", "Копите очки", "Дом оживает" };
+            var card=Modal("ОБУЧЕНИЕ  "+(tutorialPage+1)+" / 4",titles[tutorialPage]);
+            string detail;
+            if(tutorialPage==0)
             {
-                PlayerPrefs.SetInt("OneMoreFloor.Tutorial",1); PlayerPrefs.Save();
-                game.Resume(); overlay.gameObject.SetActive(false);
-            },GameUI.Coral,26);
+                ui.Picture("Tutorial neighbor",card,"person_0",.38f,.42f,.62f,.625f);
+                var badge=ui.Panel("Tutorial destination",card,.455f,.625f,.545f,.67f,GameUI.Cream);
+                ui.Text("Destination",badge.transform,"3",0,0,1,1,25,GameUI.Teal,TextAnchor.MiddleCenter,true);
+                detail="Цифра 3 над головой — нужен третий этаж.\nПолоска под ногами — терпение.\nВнутри лифта терпение не уменьшается.";
+                ui.Panel("Tutorial patience",card,.4f,.405f,.6f,.416f,GameUI.Teal,false);
+            }
+            else if(tutorialPage==1)
+            {
+                ui.Picture("Tutorial lift",card,"cabin",.2f,.43f,.8f,.665f);
+                detail="Нажимайте номер этажа или коридор.\nВ лифте "+Settings.Rules.Capacity+" места: люди выходят, затем входят.\nВо время поездки можно выбрать следующую\nостановку — последнее нажатие её заменяет.";
+            }
+            else if(tutorialPage==2)
+            {
+                int points=Settings.Rules.DeliveryPoints;
+                ui.Text("Scoring example",card,points+" → "+(points*2)+" → "+(points*3),.12f,.46f,.88f,.65f,48,GameUI.Teal,TextAnchor.MiddleCenter,true);
+                detail="Доставьте человека на нужный этаж: +"+points+" очков.\nКаждые 5 доставок подряд повышают множитель: \n×1 → ×2 → ×3. Ушедший сбрасывает серию.\nПосле "+Settings.Rules.LossLimit+" уходов смена закончится.";
+            }
+            else
+            {
+                ui.Text("Difficulty example",card,"1–"+Settings.Rules.StartingFloors+"  →  1–"+Settings.Rules.Floors,.12f,.46f,.88f,.65f,45,GameUI.Teal,TextAnchor.MiddleCenter,true);
+                detail="Больше очков — больше пассажиров.\nСначала маршруты короткие на нижних этажах.\nПотом люди появляются выше и едут дальше.\nТемп растёт плавно, но имеет предел.";
+            }
+            ui.Text("Tutorial explanation",card,detail,.06f,.22f,.94f,.405f,23,GameUI.Hex("627D7C"));
+            for(int i=0;i<4;i++) ui.Picture("Tutorial page",card,"circle",.39f+i*.06f,.177f,.42f+i*.06f,.195f).color=i==tutorialPage ? GameUI.Coral : GameUI.Hex("C1CFC3");
+            if(tutorialPage>0) ui.Button("Previous",card,"Назад",.07f,.04f,.32f,.145f,()=>{tutorialPage--; RenderTutorial();},GameUI.Hex("708E8C"),21);
+            else ui.Button("Exit tutorial",card,"В меню",.07f,.04f,.32f,.145f,ShowMenu,GameUI.Hex("708E8C"),21);
+            ui.Button("Next",card,tutorialPage<3 ? "Дальше →" : (tutorialStartsGame ? "Начать смену" : "Понятно!"),.35f,.04f,.93f,.145f,()=>
+            {
+                if(tutorialPage<3) { tutorialPage++; RenderTutorial(); }
+                else { MarkTutorial(); if(tutorialStartsGame) NewGame(); else ShowMenu(); }
+            },GameUI.Coral,24);
         }
         void OnFeedback(string message)
         {
@@ -181,9 +262,10 @@ namespace OneMoreFloor
             game.Pause(); SaveBest(); ClearOverlay();
             var card=Modal("ЛИФТ ПОДОЖДЁТ","Небольшой\nперерыв");
             ui.Text("Pause detail",card,"Пассажиры никуда не торопятся,\nпока игра на паузе.",.08f,.51f,.92f,.65f,23,GameUI.Hex("627D7C"));
-            ui.Button("Continue",card,"Продолжить",.09f,.345f,.91f,.47f,()=>{ game.Resume(); overlay.gameObject.SetActive(false); },GameUI.Coral);
-            ui.Button("Restart",card,"Начать заново",.09f,.19f,.91f,.305f,NewGame);
-            ui.Button("Menu",card,"В главное меню",.09f,.055f,.91f,.155f,ShowMenu,GameUI.Hex("708E8C"),23);
+            ui.Button("Continue",card,"Продолжить",.09f,.365f,.91f,.48f,()=>{ game.Resume(); overlay.gameObject.SetActive(false); },GameUI.Coral);
+            ui.Button("Pause settings",card,"Настройки",.09f,.23f,.91f,.33f,ShowSettings,GameUI.Teal,24);
+            ui.Button("Restart",card,"Заново",.09f,.085f,.49f,.19f,NewGame,GameUI.Hex("708E8C"),21);
+            ui.Button("Menu",card,"В меню",.52f,.085f,.91f,.19f,ShowMenu,GameUI.Hex("708E8C"),21);
         }
         void SaveBest()
         {
@@ -217,6 +299,13 @@ namespace OneMoreFloor
         void Render(float dt)
         {
             score.text=game.Score.ToString(); multiplier.text="×"+game.Multiplier;
+            var difficulty=game.Difficulty;
+            difficultyLabel.text="СЛОЖНОСТЬ "+difficulty.Level+"/6   •   ПАССАЖИРЫ: ЭТАЖИ 1–"+difficulty.ActiveFloors;
+            if(difficulty.Level>lastDifficultyLevel)
+            {
+                lastDifficultyLevel=difficulty.Level;
+                feedback.text="Дом оживает! Пассажиров становится больше"; feedbackTime=3;
+            }
             streak.text=game.Multiplier==3 ? "МАКСИМУМ" : "ДО ×"+(game.Multiplier+1);
             for(int i=0;i<streakMarks.Length;i++) streakMarks[i].color=game.Multiplier==3 || i<game.Streak%5 ? GameUI.Gold : GameUI.Hex("D9D9C9");
             for(int i=0;i<lossMarks.Length;i++) lossMarks[i].color=i<game.Lost ? GameUI.Coral : GameUI.Hex("ADC2B8");

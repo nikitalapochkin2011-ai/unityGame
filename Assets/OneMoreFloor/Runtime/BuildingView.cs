@@ -10,7 +10,7 @@ namespace OneMoreFloor
         readonly GameRules rules;
         readonly RectTransform actors, cabin, doors, leftDoor, rightDoor;
         readonly Text cabinDisplay;
-        readonly Image[] callLights, rooms;
+        readonly Image[] callLights, rooms, windows;
         readonly Text[] queueCounts;
         readonly Dictionary<Passenger, PassengerView> people = new Dictionary<Passenger, PassengerView>();
         readonly HashSet<Passenger> present = new HashSet<Passenger>();
@@ -31,7 +31,7 @@ namespace OneMoreFloor
             ui.Panel("Elevator shaft",root,.675f,.008f,.946f,.992f,GameUI.Hex("1B3542"),false);
             ui.Panel("Left guide rail",root,.681f,.01f,.69f,.99f,GameUI.Hex("6F8585"),false);
             ui.Panel("Right guide rail",root,.931f,.01f,.94f,.99f,GameUI.Hex("6F8585"),false);
-            callLights = new Image[rules.Floors]; rooms = new Image[rules.Floors]; queueCounts = new Text[rules.Floors];
+            callLights = new Image[rules.Floors]; rooms = new Image[rules.Floors]; windows = new Image[rules.Floors]; queueCounts = new Text[rules.Floors];
             for (int f=0; f<rules.Floors; f++)
             {
                 int floor = f;
@@ -42,7 +42,7 @@ namespace OneMoreFloor
                 var tap = room.gameObject.AddComponent<Button>(); tap.targetGraphic = room; tap.onClick.AddListener(()=>select(floor));
                 ui.Panel("Skirting",row,.153f,.055f,.648f,.12f,GameUI.Hex("B69274"),false);
                 ui.Panel("Floor edge",row,.145f,.01f,.962f,.055f,GameUI.Hex("F7E6CA"),false);
-                ui.Picture("Apartment window",row,"window",.175f,.31f,.355f,.91f);
+                windows[f] = ui.Picture("Apartment window",row,"window",.175f,.31f,.355f,.91f);
                 ui.Panel("Picture frame",row,.445f,.59f,.535f,.88f,GameUI.Hex("AE8565"));
                 ui.Panel("Print paper",row,.455f,.615f,.525f,.855f,GameUI.Cream);
                 ui.Panel("Print sunset",row,.47f,.68f,.511f,.79f,GameUI.Gold);
@@ -56,6 +56,7 @@ namespace OneMoreFloor
             cabin = ui.Rect("Moving elevator",root,.659f,0,.962f,1f/rules.Floors);
             ui.Picture("Cabin",cabin,"cabin",0,.025f,1,.99f,false);
             cabinDisplay = ui.Text("Cabin floor display",cabin,"1",.29f,.87f,.71f,.98f,18,GameUI.Gold,TextAnchor.MiddleCenter,true);
+            cabinDisplay.resizeTextMinSize=9;
             actors = ui.Rect("People",root,0,0,1,1);
             doors = ui.Rect("Moving glass doors",root,.689f,.065f/rules.Floors,.933f,.855f/rules.Floors);
             doors.gameObject.AddComponent<RectMask2D>();
@@ -101,11 +102,12 @@ namespace OneMoreFloor
             cabinDisplay.text=(game.Lift.Moving ? "→ " : "")+(game.Lift.Moving ? game.Lift.TargetFloor+1 : game.Lift.CurrentFloor+1);
             for(int f=0;f<rules.Floors;f++)
             {
-                var queue=game.Queues.Floors[f];
+                var queue=game.Queues.Floors[f]; bool active=f<game.Difficulty.ActiveFloors;
                 bool selected=game.Lift.NextFloor==f || (game.Lift.Moving && game.Lift.TargetFloor==f);
                 callLights[f].color=selected ? GameUI.Coral : (game.Lift.CurrentFloor==f && !game.Lift.Moving ? GameUI.Teal : GameUI.Hex("355563"));
-                rooms[f].color = selected ? GameUI.Hex("F0DEBF") : (f%2==0 ? GameUI.Hex("EAD7BB") : GameUI.Hex("E3CCAD"));
-                queueCounts[f].text=queue.Count==0 ? "" : "ЖДУТ: "+queue.Count;
+                rooms[f].color = !active ? GameUI.Hex("BDB8A9") : (selected ? GameUI.Hex("F0DEBF") : (f%2==0 ? GameUI.Hex("EAD7BB") : GameUI.Hex("E3CCAD")));
+                windows[f].color=active ? Color.white : new Color(.7f,.75f,.75f,.65f);
+                queueCounts[f].text=queue.Count==0 ? (active ? "" : "ПОЗЖЕ") : "ЖДУТ: "+queue.Count;
                 int rows=queue.Count>5 ? 2 : 1;
                 int columns=Mathf.Max(5,Mathf.CeilToInt(queue.Count/(float)rows));
                 float spacing=.445f/columns;

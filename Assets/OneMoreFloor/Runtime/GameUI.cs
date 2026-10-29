@@ -54,6 +54,14 @@ namespace OneMoreFloor
             text.resizeTextForBestFit = true; text.resizeTextMinSize = 12; text.resizeTextMaxSize = size;
             text.raycastTarget = false; text.supportRichText = false; return text;
         }
+        public Button IconButton(string name, Transform parent, string asset, float x0, float y0, float x1, float y1,
+            System.Action action, Color? background = null)
+        {
+            var button = Button(name,parent,"",x0,y0,x1,y1,action,background);
+            var icon = Picture(name+" icon",button.transform,asset,.2f,.2f,.8f,.8f);
+            icon.color = Cream;
+            return button;
+        }
         public Button Button(string name, Transform parent, string label, float x0, float y0, float x1, float y1,
             System.Action action, Color? background = null, int size = 28)
         {
