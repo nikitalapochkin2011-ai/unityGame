@@ -14,7 +14,8 @@ for name in expected:
         assert im.getextrema()[3][0]==0, f'{name} must have a transparent background'
     meta=Path(str(p)+'.meta').read_text()
     assert 'spriteMode: 1' in meta and 'textureType: 8' in meta,p
-assert 'spriteBorder: {x: 24, y: 24, z: 24, w: 24}' in (art/'panel.png.meta').read_text()
+    assert 'spritePixelsToUnits: 200' in meta,p
+assert 'spriteBorder: {x: 48, y: 48, z: 48, w: 48}' in (art/'panel.png.meta').read_text()
 guids={}
 for p in (root/'Assets').rglob('*.meta'):
     guid=re.search(r'^guid: ([0-9a-f]{32})$',p.read_text(),re.M)

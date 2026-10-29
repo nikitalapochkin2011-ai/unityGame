@@ -23,3 +23,8 @@ Unity-open.log
 Tests/**/bin/
 Tests/**/obj/
 __pycache__/
+
+# Generated from bundled licensed fonts by TypographySetup.
+Assets/OneMoreFloor/Resources/Fonts/* SDF.asset*
+Assets/TextMesh Pro/
+Assets/TextMesh Pro.meta

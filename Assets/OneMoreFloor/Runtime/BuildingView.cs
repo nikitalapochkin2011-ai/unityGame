@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
+using Text = TMPro.TMP_Text;
 
 namespace OneMoreFloor
 {
@@ -56,7 +58,7 @@ namespace OneMoreFloor
             cabin = ui.Rect("Moving elevator",root,.659f,0,.962f,1f/rules.Floors);
             ui.Picture("Cabin",cabin,"cabin",0,.025f,1,.99f,false);
             cabinDisplay = ui.Text("Cabin floor display",cabin,"1",.29f,.87f,.71f,.98f,18,GameUI.Gold,TextAnchor.MiddleCenter,true);
-            cabinDisplay.resizeTextMinSize=9;
+            cabinDisplay.fontSizeMin=10;
             actors = ui.Rect("People",root,0,0,1,1);
             doors = ui.Rect("Moving glass doors",root,.689f,.065f/rules.Floors,.933f,.855f/rules.Floors);
             doors.gameObject.AddComponent<RectMask2D>();
@@ -115,7 +117,7 @@ namespace OneMoreFloor
                 {
                     var view=View(queue[i]);
                     float x=.185f+spacing*.5f+(i%columns)*spacing;
-                    float y=(f+.09f+(i/columns)*.43f)*floorHeight;
+                    float y=(f+(rows==1 ? .08f : .025f)+(i/columns)*.485f)*floorHeight;
                     view.Set(queue[i],new Vector2(x,y),new Vector2(Mathf.Min(.08f,spacing*.94f),floorHeight*(rows==1 ? .79f : .45f)),false,queue[i].Remaining/rules.PatienceSeconds);
                 }
             }

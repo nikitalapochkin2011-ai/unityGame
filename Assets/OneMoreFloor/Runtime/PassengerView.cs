@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
+using Text = TMPro.TMP_Text;
 
 namespace OneMoreFloor
 {
@@ -23,18 +25,26 @@ namespace OneMoreFloor
             this.appearance = appearance;
             Root = ui.Rect("Passenger " + appearance,parent,0,0,0,0);
             opacity = Root.gameObject.AddComponent<CanvasGroup>(); opacity.blocksRaycasts = false; opacity.interactable = false;
-            portrait = ui.Picture("Person",Root,"person_"+(appearance%8),0,.06f,1,.8f);
+            portrait = ui.Picture("Person",Root,"person_"+(appearance%8),0,.06f,1,.67f);
             // Destination always belongs to the person and stays above their head.
-            badge = ui.Panel("Destination bubble",Root,.15f,.79f,.85f,1,GameUI.Cream);
-            var tip = ui.Picture("Bubble tip",Root,"triangle",.43f,.75f,.6f,.82f);
-            tip.color = GameUI.Cream; tip.rectTransform.localEulerAngles = new Vector3(0,0,-90);
+            badge = ui.Panel("Destination bubble",Root,.5f,.7f,.5f,.7f,GameUI.Cream);
+            badge.rectTransform.pivot=new Vector2(.5f,0);
+            badge.rectTransform.sizeDelta=new Vector2(30,28);
             destination = ui.Text("Destination",badge.transform,"",0,0,1,1,23,GameUI.Ink,TextAnchor.MiddleCenter,true);
+            destination.enableAutoSizing=false; destination.fontSize=22;
             patienceTrack = ui.Panel("Patience track",Root,.09f,.015f,.91f,.055f,GameUI.Ink).rectTransform;
             patience = ui.Panel("Patience",patienceTrack,0,0,1,1,GameUI.Teal,false);
         }
         public void Set(Passenger passenger, Vector2 center, Vector2 dimensions, bool riding, float patienceRatio)
         {
             target = center; size = dimensions;
+            var parent=(RectTransform)Root.parent;
+            bool crowded=dimensions.y*parent.rect.height<65;
+            float badgeWidth=Mathf.Clamp(dimensions.x*parent.rect.width*.94f,24,32);
+            badge.rectTransform.anchorMin=badge.rectTransform.anchorMax=new Vector2(.5f,crowded ? .58f : .7f);
+            badge.rectTransform.sizeDelta=new Vector2(badgeWidth,crowded ? 23 : 28);
+            destination.fontSize=crowded ? 18 : 22;
+            GameUI.Place(portrait.rectTransform,0,.06f,1,crowded ? .55f : .67f);
             if (riding && WasRiding && initialized) position.y = center.y;
             WasRiding = riding;
             if (!initialized) { position = target + new Vector2(-.025f,0); initialized = true; }

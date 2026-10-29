@@ -13,6 +13,7 @@ namespace OneMoreFloor.Editor
 
         static FirstOpenSetup()
         {
+            AssetDatabase.importPackageCompleted += name => EditorApplication.delayCall += Prepare;
             EditorApplication.delayCall += Prepare;
         }
 
@@ -24,6 +25,7 @@ namespace OneMoreFloor.Editor
                 EditorApplication.delayCall += Prepare;
                 return;
             }
+            if (!TypographySetup.EnsureReady()) return;
             if (File.Exists(ScenePath) || SessionState.GetBool(AttemptKey, false)) return;
             SessionState.SetBool(AttemptKey, true);
             var active = SceneManager.GetActiveScene();

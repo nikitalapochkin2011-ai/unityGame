@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
+using Text = TMPro.TMP_Text;
 
 namespace OneMoreFloor
 {
@@ -9,7 +11,13 @@ namespace OneMoreFloor
     {
         public static readonly Color Ink = Hex("203E4D"), Teal = Hex("387D7A"), Coral = Hex("D66C54");
         public static readonly Color Cream = Hex("FFF2DC"), Muted = Hex("7F999C"), Gold = Hex("E5B965");
-        readonly Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        readonly TMP_FontAsset regularFont = Resources.Load<TMP_FontAsset>("Fonts/GameSans SDF");
+        readonly TMP_FontAsset boldFont = Resources.Load<TMP_FontAsset>("Fonts/GameSans Bold SDF");
+        public GameUI()
+        {
+            if(regularFont==null || boldFont==null)
+                throw new System.InvalidOperationException("Шрифты ещё не подготовлены. Остановите Play и выполните: Ещё один этаж → Подготовить качественный текст.");
+        }
         readonly Dictionary<string, Sprite> art = new Dictionary<string, Sprite>();
         public static Color Hex(string value) { Color color; ColorUtility.TryParseHtmlString("#" + value, out color); return color; }
         public Sprite Art(string name)
@@ -48,11 +56,28 @@ namespace OneMoreFloor
         public Text Text(string name, Transform parent, string value, float x0, float y0, float x1, float y1,
             int size = 26, Color? color = null, TextAnchor alignment = TextAnchor.MiddleCenter, bool bold = false)
         {
-            var rect = Rect(name,parent,x0,y0,x1,y1); var text = rect.gameObject.AddComponent<Text>();
-            text.font = font; text.text = value; text.color = color ?? Ink; text.fontSize = size;
-            text.fontStyle = bold ? FontStyle.Bold : FontStyle.Normal; text.alignment = alignment;
-            text.resizeTextForBestFit = true; text.resizeTextMinSize = 12; text.resizeTextMaxSize = size;
-            text.raycastTarget = false; text.supportRichText = false; return text;
+            var rect = Rect(name,parent,x0,y0,x1,y1); var text = rect.gameObject.AddComponent<TextMeshProUGUI>();
+            text.font = bold ? boldFont : regularFont; text.text = value; text.color = color ?? Ink; text.fontSize = size;
+            text.alignment = Alignment(alignment);
+            text.enableAutoSizing = true; text.fontSizeMin = Mathf.Max(12,size*.72f); text.fontSizeMax = size;
+            text.raycastTarget = false; text.richText = false; text.margin = Vector4.zero;
+            text.overflowMode = TextOverflowModes.Overflow;
+            return text;
+        }
+        static TextAlignmentOptions Alignment(TextAnchor value)
+        {
+            switch(value)
+            {
+                case TextAnchor.UpperLeft: return TextAlignmentOptions.TopLeft;
+                case TextAnchor.UpperCenter: return TextAlignmentOptions.Top;
+                case TextAnchor.UpperRight: return TextAlignmentOptions.TopRight;
+                case TextAnchor.MiddleLeft: return TextAlignmentOptions.Left;
+                case TextAnchor.MiddleRight: return TextAlignmentOptions.Right;
+                case TextAnchor.LowerLeft: return TextAlignmentOptions.BottomLeft;
+                case TextAnchor.LowerCenter: return TextAlignmentOptions.Bottom;
+                case TextAnchor.LowerRight: return TextAlignmentOptions.BottomRight;
+                default: return TextAlignmentOptions.Center;
+            }
         }
         public Button IconButton(string name, Transform parent, string asset, float x0, float y0, float x1, float y1,
             System.Action action, Color? background = null)

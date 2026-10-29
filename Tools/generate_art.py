@@ -4,7 +4,8 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter
 ROOT = Path(__file__).resolve().parents[1] / 'Assets/OneMoreFloor/Resources/Art'
 ROOT.mkdir(parents=True, exist_ok=True)
-S=3
+S=4
+OUTPUT_SCALE=2
 
 def art(name, size, painter):
     im=Image.new('RGBA',(size[0]*S,size[1]*S)); d=ImageDraw.Draw(im)
@@ -16,7 +17,7 @@ def art(name, size, painter):
     def poly(points, fill): d.polygon([(int(x*S),int(y*S)) for x,y in points],fill)
     def line(points, fill, w=1): d.line([(int(x*S),int(y*S)) for x,y in points],fill,w*S,joint='curve')
     painter(rect,ellipse,poly,line)
-    im.resize(size,Image.Resampling.LANCZOS).save(ROOT/(name+'.png'))
+    im.resize((size[0]*OUTPUT_SCALE,size[1]*OUTPUT_SCALE),Image.Resampling.LANCZOS).save(ROOT/(name+'.png'))
 
 # Antialiased nine-slice UI pieces: the transparent corner radius is 24 px.
 art('panel',(96,96),lambda r,e,p,l:r((0,0,95,95),'white',24))

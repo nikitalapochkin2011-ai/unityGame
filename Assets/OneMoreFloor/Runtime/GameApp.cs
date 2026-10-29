@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
+using Text = TMPro.TMP_Text;
 
 namespace OneMoreFloor
 {
@@ -61,7 +63,8 @@ namespace OneMoreFloor
         {
             var root=new GameObject("One More Floor UI",typeof(Canvas),typeof(CanvasScaler),typeof(GraphicRaycaster));
             root.transform.SetParent(transform,false);
-            root.GetComponent<Canvas>().renderMode=RenderMode.ScreenSpaceOverlay;
+            var canvas=root.GetComponent<Canvas>(); canvas.renderMode=RenderMode.ScreenSpaceOverlay; canvas.pixelPerfect=true;
+            canvas.additionalShaderChannels|=AdditionalCanvasShaderChannels.TexCoord1;
             var scaler=root.GetComponent<CanvasScaler>(); scaler.uiScaleMode=CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution=new Vector2(600,1060); scaler.matchWidthOrHeight=1;
             ui.Panel("Evening sky",root.transform,0,0,1,1,GameUI.Hex("BDD4D0"),false);
@@ -162,7 +165,7 @@ namespace OneMoreFloor
             ui.Picture("Settings gear",card,"gear",.41f,.54f,.59f,.68f).color=GameUI.Teal;
             ui.Text("Settings description",card,"Все звуки игры можно отключить.\nВаш выбор сохранится после выхода.",.08f,.405f,.92f,.54f,23,GameUI.Hex("627D7C"));
             var toggle=ui.Button("Sound switch",card,"",.09f,.245f,.91f,.365f,ToggleSound,GameUI.Hex("E0E9DB"),25);
-            soundLabel=toggle.GetComponentInChildren<Text>(); soundLabel.color=GameUI.Ink; soundLabel.alignment=TextAnchor.MiddleLeft;
+            soundLabel=toggle.GetComponentInChildren<Text>(); soundLabel.color=GameUI.Ink; soundLabel.alignment=TextAlignmentOptions.Left;
             GameUI.Place(soundLabel.rectTransform,.06f,.1f,.69f,.9f);
             soundTrack=ui.Panel("Switch track",toggle.transform,.73f,.29f,.94f,.71f,GameUI.Teal);
             soundThumb=ui.Picture("Switch thumb",soundTrack.transform,"circle",.55f,.1f,.95f,.9f).rectTransform;

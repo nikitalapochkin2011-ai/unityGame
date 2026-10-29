@@ -13,6 +13,7 @@ namespace OneMoreFloor.Editor
         [MenuItem("Ещё один этаж/Создать или открыть игровую сцену")]
         public static void CreateScene()
         {
+            if (!TypographySetup.EnsureReady()) return;
             if (AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath) != null)
             {
                 if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) EditorSceneManager.OpenScene(ScenePath);
