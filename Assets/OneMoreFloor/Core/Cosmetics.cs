@@ -43,10 +43,17 @@ namespace OneMoreFloor
         }
         // Resolve and apply once, before presentation. Existing save format remains compatible.
         public SpinReward Spin(bool free,long utcSeconds,Random random)
+        { return SpinInternal(free,utcSeconds,random,false); }
+#if UNITY_EDITOR || OMF_TESTS
+        // Editor-only session sandbox: no cost or cooldown; callers must not persist it.
+        public SpinReward SpinPreview(long utcSeconds,Random random)
+        { return SpinInternal(true,utcSeconds,random,true); }
+#endif
+        SpinReward SpinInternal(bool free,long utcSeconds,Random random,bool preview)
         {
-            if(Complete || utcSeconds<0 || utcSeconds>253402214399L || (free ? FreeIn(utcSeconds)>0 : Coins<SpinCost)) return null;
+            if(utcSeconds<0 || utcSeconds>253402214399L || (!preview && (Complete || (free ? FreeIn(utcSeconds)>0 : Coins<SpinCost)))) return null;
             SpinReward reward;
-            if(random.Next(100)<50)
+            if(Complete || random.Next(100)<50)
             {
                 // Conditional coin distribution: 60% in 20..29, 40% in 30..50, inclusive.
                 int amount=random.Next(100)<60 ? 20+random.Next(10) : 30+random.Next(21);
@@ -60,7 +67,7 @@ namespace OneMoreFloor
                 for(int i=0;i<30;i++) if((owned & (1<<i))==0 && pick--==0) { id=i; break; }
                 reward=new SpinReward(id,0);
             }
-            if(free) NextFree=utcSeconds+Cooldown; else Coins-=SpinCost;
+            if(!preview) { if(free) NextFree=utcSeconds+Cooldown; else Coins-=SpinCost; }
             if(reward.IsCoins) Coins=(int)Math.Min(int.MaxValue,(long)Coins+reward.CoinAmount);
             else owned|=1<<reward.CosmeticId;
             return reward;

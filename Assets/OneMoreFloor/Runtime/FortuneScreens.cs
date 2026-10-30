@@ -9,6 +9,23 @@ namespace OneMoreFloor
     public sealed partial class GameApp
     {
         Cosmetics cosmetics;
+        bool wheelTestMode;
+#if UNITY_EDITOR
+        public static string WheelTestPreference { get { return "OneMoreFloor.WheelTest."+Application.dataPath; } }
+#endif
+        void InitializeWheelTesting()
+        {
+#if UNITY_EDITOR
+            wheelTestMode=UnityEditor.EditorPrefs.GetBool(WheelTestPreference,false);
+#endif
+        }
+        SpinReward RollWheel(bool free)
+        {
+#if UNITY_EDITOR
+            if(wheelTestMode) return cosmetics.SpinPreview(UtcNow,cosmeticRandom);
+#endif
+            return cosmetics.Spin(free,UtcNow,cosmeticRandom);
+        }
         readonly System.Random cosmeticRandom=new System.Random();
         RectTransform wheelDisk;
         Text freeCountdown,wheelWallet;
@@ -16,7 +33,7 @@ namespace OneMoreFloor
         bool spinning;
         float countdownTick;
         static long UtcNow { get { return DateTimeOffset.UtcNow.ToUnixTimeSeconds(); } }
-        void SaveCosmetics() { CosmeticStore.Save(cosmetics); }
+        void SaveCosmetics() { if(!wheelTestMode) CosmeticStore.Save(cosmetics); }
         string ItemName(int id) { return Loc.T("cosmetic."+(id%10)); }
         string Category(int kind) { return Loc.T("collection.kind."+kind); }
         string RewardName(int id) { return Category(id/10)+": "+ItemName(id); }
@@ -29,7 +46,7 @@ namespace OneMoreFloor
             ui.Panel("Velvet backdrop",overlay,-.2f,-.1f,1.2f,1.1f,GameUI.Hex("192D36"),false);
             ui.Text("Title",overlay,Loc.T("wheel.title"),.04f,.925f,.96f,.99f,36,GameUI.Gold,TextAnchor.MiddleCenter,true);
             wheelWallet=Wallet(overlay,true);
-            ui.Text("Wheel help",overlay,Loc.T("wheel.detail"),.06f,.79f,.94f,.88f,19,GameUI.Cream);
+            ui.Text("Wheel help",overlay,(wheelTestMode ? "ТЕСТ: бесконечные вращения. Награды и выбор оформлений не сохраняются." : Loc.T("wheel.detail")),.06f,.79f,.94f,.88f,19,GameUI.Cream);
             // A square viewport keeps the wheel circular at all portrait safe-area sizes.
             var slot=ui.Rect("Wheel slot",overlay,.14f,.415f,.86f,.78f);
             var viewport=ui.Rect("Wheel viewport",slot,0,0,1,1);
@@ -78,9 +95,9 @@ namespace OneMoreFloor
         {
             if(freeCountdown==null) return;
             long left=cosmetics.FreeIn(UtcNow);
-            freeCountdown.text=cosmetics.Complete ? Loc.T("wheel.complete") : left==0 ? Loc.T("wheel.free") : Loc.T("wheel.wait",string.Format(System.Globalization.CultureInfo.InvariantCulture,"{0:00}:{1:00}:{2:00}",left/3600,left/60%60,left%60));
-            freeSpin.interactable=!spinning && !cosmetics.Complete && left==0;
-            paidSpin.interactable=!spinning && !cosmetics.Complete && cosmetics.Coins>=Cosmetics.SpinCost;
+            freeCountdown.text=wheelTestMode ? "ТЕСТ • Бесконечные вращения" : cosmetics.Complete ? Loc.T("wheel.complete") : left==0 ? Loc.T("wheel.free") : Loc.T("wheel.wait",string.Format(System.Globalization.CultureInfo.InvariantCulture,"{0:00}:{1:00}:{2:00}",left/3600,left/60%60,left%60));
+            freeSpin.interactable=!spinning && (wheelTestMode || (!cosmetics.Complete && left==0));
+            paidSpin.interactable=!spinning && !wheelTestMode && !cosmetics.Complete && cosmetics.Coins>=Cosmetics.SpinCost;
         }
         void UpdateWheel()
         {
@@ -92,7 +109,7 @@ namespace OneMoreFloor
         {
             if(spinning) return;
             int previousBalance=cosmetics.Coins;
-            var reward=cosmetics.Spin(free,UtcNow,cosmeticRandom);
+            var reward=RollWheel(free);
             if(reward==null) { RefreshWheel(); return; }
             // Persist before animation: backgrounding or quitting never loses the awarded item.
             SaveCosmetics();

@@ -36,7 +36,7 @@ namespace OneMoreFloor
             if(Settings==null) Settings=ScriptableObject.CreateInstance<GameSettings>();
             Settings.Prepare();
             progress=new CampaignProgress(PlayerPrefs.GetInt("OneMoreFloor.Campaign.Completed",0));
-            cosmetics=CosmeticStore.Load();
+            cosmetics=CosmeticStore.Load(); InitializeWheelTesting();
             Loc.Initialize(); ui=new GameUI();
             best=PlayerPrefs.GetInt("OneMoreFloor.Best",0);
             sound=PlayerPrefs.GetInt("OneMoreFloor.Sound",1)!=0;

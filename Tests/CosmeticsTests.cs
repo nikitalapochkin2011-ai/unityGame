@@ -101,6 +101,15 @@ static class CosmeticsTests
                 int sector=FortuneWheelLayout.SectorFor(award,new Sequence(variant));
                 Check(sector>=0 && sector<12 && FortuneWheelLayout.KindAt(sector)==(id<0 ? -1 : id/10),"pointer lands on actual prize category "+id+"/"+variant);
             }
+        var sandbox=Cosmetics.Load("1|0|1049601|0|0|0|999999");
+        string realSave=sandbox.Save();
+        var preview=sandbox.SpinPreview(100,new DecorationRoll());
+        Check(preview!=null && !preview.IsCoins && sandbox.Coins==0 && sandbox.NextFree==999999,"editor preview ignores timer and charges no coins");
+        for(int i=0;i<26;i++) Check(sandbox.SpinPreview(100,new DecorationRoll())!=null,"editor preview remains repeatable at the same time");
+        Check(sandbox.Complete,"preview can test entire collection");
+        Check(sandbox.SpinPreview(100,new Sequence(0,0)).IsCoins,"preview continues with coins after full collection");
+        Check(Cosmetics.Load(realSave).Coins==0 && !Cosmetics.Load(realSave).Complete && Cosmetics.Load(realSave).NextFree==999999,"preview leaves original snapshot unchanged");
+        Check(Cosmetics.Load(realSave).Spin(true,100,new Random(5))==null,"normal spins still enforce original timer");
         Console.WriteLine(passed+" cosmetics checks passed.");
     }
 }
