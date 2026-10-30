@@ -177,5 +177,6 @@ class Program
         Console.WriteLine(passed + " legacy checks passed; stress frames: " + simulated);
         CampaignTests.MainChecks();
         LocalizationTests.Run();
+        CosmeticsTests.Run();
     }
 }

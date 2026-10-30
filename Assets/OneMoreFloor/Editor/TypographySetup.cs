@@ -15,8 +15,23 @@ namespace OneMoreFloor.Editor
     {
         const string Folder="Assets/OneMoreFloor/Resources/Fonts/";
         static bool importing, preparing, reported;
-        public static bool Ready { get { return Font("GameLatin SDF")!=null && Font("GameLatin Bold SDF")!=null &&
-            Font("GameHan SDF")!=null && Font("GameHan Bold SDF")!=null; } }
+        public static bool Ready
+        {
+            get
+            {
+                var text=AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/OneMoreFloor/Resources/Localization/Strings.txt");
+                if(text==null) return false;
+                var catalog=new TextCatalog(text.text);
+                return Covers(Font("GameLatin SDF"),LatinCoverage(catalog)) && Covers(Font("GameLatin Bold SDF"),LatinCoverage(catalog)) &&
+                    Covers(Font("GameHan SDF"),catalog.Characters(true)) && Covers(Font("GameHan Bold SDF"),catalog.Characters(true));
+            }
+        }
+        static bool Covers(TMP_FontAsset font,string characters)
+        {
+            if(font==null) return false;
+            foreach(char character in characters) if(!font.HasCharacter(character)) return false;
+            return true;
+        }
         static TMP_FontAsset Font(string name) { return AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(Folder+name+".asset"); }
         static TypographySetup()
         {
@@ -96,23 +111,22 @@ namespace OneMoreFloor.Editor
         {
             string path=Folder+assetName+".asset";
             var existing=AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(path);
-            if(existing!=null) return existing;
             var source=AssetDatabase.LoadAssetAtPath<UnityEngine.Font>(Folder+sourceName);
             if(source==null) throw new InvalidOperationException("Missing bundled font: "+sourceName);
-            var font=TMP_FontAsset.CreateFontAsset(source,sampling,8,GlyphRenderMode.SDFAA,atlas,atlas,AtlasPopulationMode.Dynamic,true);
+            var font=existing ?? TMP_FontAsset.CreateFontAsset(source,sampling,8,GlyphRenderMode.SDFAA,atlas,atlas,AtlasPopulationMode.Dynamic,true);
             if(font==null) throw new InvalidOperationException("Unable to create SDF font: "+sourceName);
             font.name=assetName;
             string missing;
             if(!font.TryAddCharacters(characters,out missing))
                 throw new InvalidOperationException("Missing required glyphs in "+sourceName+": "+missing);
-            AssetDatabase.CreateAsset(font,path);
+            if(existing==null) AssetDatabase.CreateAsset(font,path);
             font.material.name=assetName+" Material";
-            AssetDatabase.AddObjectToAsset(font.material,font);
+            if(!AssetDatabase.Contains(font.material)) AssetDatabase.AddObjectToAsset(font.material,font);
             for(int i=0;i<font.atlasTextures.Length;i++)
             {
                 var texture=font.atlasTextures[i]; texture.name=assetName+" Atlas "+i;
                 texture.filterMode=FilterMode.Bilinear;
-                AssetDatabase.AddObjectToAsset(texture,font);
+                if(!AssetDatabase.Contains(texture)) AssetDatabase.AddObjectToAsset(texture,font);
             }
             EditorUtility.SetDirty(font);
             return font;

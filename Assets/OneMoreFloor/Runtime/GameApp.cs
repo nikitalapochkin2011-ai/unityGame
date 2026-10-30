@@ -36,6 +36,7 @@ namespace OneMoreFloor
             if(Settings==null) Settings=ScriptableObject.CreateInstance<GameSettings>();
             Settings.Prepare();
             progress=new CampaignProgress(PlayerPrefs.GetInt("OneMoreFloor.Campaign.Completed",0));
+            cosmetics=CosmeticStore.Load();
             Loc.Initialize(); ui=new GameUI();
             best=PlayerPrefs.GetInt("OneMoreFloor.Best",0);
             sound=PlayerPrefs.GetInt("OneMoreFloor.Sound",1)!=0;
@@ -71,6 +72,7 @@ namespace OneMoreFloor
             ui.Panel("Evening sky",root.transform,0,0,1,1,GameUI.Hex("BDD4D0"),false);
             ui.Picture("Distant neighborhood",root.transform,"skyline",0,0,1,.62f,false);
             ui.Panel("Street",root.transform,0,0,1,.055f,GameUI.Hex("648A89"),false);
+            CosmeticStyle.Background(ui,root.transform,cosmetics.Selected(CosmeticKind.Background));
             safe=ui.Rect("Portrait safe area",root.transform,0,0,1,1);
             ui.Text("Brand",safe,Loc.T("app.title"),.04f,.95f,.68f,.993f,26,GameUI.Ink,TextAnchor.MiddleLeft,true);
             difficultyLabel=ui.Text("Difficulty",safe,"",.043f,.923f,.7f,.949f,14,GameUI.Hex("4C7478"),TextAnchor.MiddleLeft);
@@ -94,7 +96,7 @@ namespace OneMoreFloor
                 lossMarks[i]=ui.Picture("Loss mark",losses.transform,"circle",x,.31f,x+.3f/lossMarks.Length,.69f);
             }
             buildingRoot=ui.Rect("Illustrated apartment building",safe,.005f,.14f,.995f,.735f);
-            building=new BuildingView(ui,buildingRoot,Settings.Rules,SelectFloor);
+            building=new BuildingView(ui,buildingRoot,Settings.Rules,SelectFloor,cosmetics.Selected(CosmeticKind.Floor),cosmetics.Selected(CosmeticKind.Lift));
             var routeCard=ui.Panel("Route",safe,.04f,.067f,.96f,.117f,GameUI.Ink);
             route=ui.Text("Route",routeCard.transform,Loc.T("route.choose"),.03f,.08f,.97f,.92f,22,GameUI.Cream,TextAnchor.MiddleCenter,true);
             feedback=ui.Text("Feedback",safe,"",.04f,.025f,.96f,.065f,20,GameUI.Ink);
@@ -121,15 +123,16 @@ namespace OneMoreFloor
         {
             game=null; coachRoot.gameObject.SetActive(false); building.Reset(); buildingRoot.gameObject.SetActive(false); settingsLayer.gameObject.SetActive(false); ClearOverlay(true);
             ui.Picture("Menu skyline",overlay,"skyline",-.13f,0,1.13f,.73f,false);
+            CosmeticStyle.Background(ui,overlay,cosmetics.Selected(CosmeticKind.Background));
             ui.Text("House label",overlay,Loc.T("menu.house"),.08f,.925f,.79f,.96f,16,GameUI.Teal,TextAnchor.MiddleCenter,true);
             ui.IconButton("Menu settings",overlay,"gear",.84f,.935f,.95f,.99f,ShowSettings,GameUI.Ink);
             ui.Text("Game title",overlay,Loc.T("app.menuTitle"),.07f,.735f,.93f,.916f,68,GameUI.Ink,TextAnchor.MiddleCenter,true);
             ui.Text("Tagline",overlay,Loc.T("menu.tagline"),.1f,.65f,.9f,.742f,23,GameUI.Hex("476B70"));
-            var hero=ui.Panel("Lobby illustration",overlay,.12f,.333f,.88f,.635f,GameUI.Hex("E8D3B5")).rectTransform;
+            var hero=ui.Panel("Lobby illustration",overlay,.12f,.333f,.88f,.635f,(cosmetics.Selected(CosmeticKind.Floor)==0 ? GameUI.Hex("E8D3B5") : CosmeticStyle.Tint(cosmetics.Selected(CosmeticKind.Floor)))).rectTransform;
             ui.Panel("Lobby floor",hero,.02f,.015f,.98f,.09f,GameUI.Hex("C19B7A"),false);
             ui.Picture("Lobby window",hero,"window",.045f,.38f,.31f,.89f);
             ui.Picture("Lobby plant",hero,"plant",.045f,.085f,.23f,.39f);
-            ui.Picture("Lobby elevator",hero,"lobby_cabin",.52f,.06f,.94f,.97f);
+            ui.Picture("Lobby elevator",hero,"lobby_cabin",.52f,.06f,.94f,.97f).color=CosmeticStyle.Tint(cosmetics.Selected(CosmeticKind.Lift));
             MenuPerson(hero,0,.24f,.09f,.47f,.77f,"4");
             MenuPerson(hero,1,.40f,.08f,.63f,.74f,"2");
             MenuPerson(hero,4,.68f,.13f,.87f,.74f,"6");
@@ -138,7 +141,8 @@ namespace OneMoreFloor
             ui.Button("Learn",overlay,Loc.T("menu.learn"),.12f,.162f,.88f,.218f,()=>ShowTutorial(false),GameUI.Teal,23);
             record=ui.Text("Record",overlay,Loc.T("menu.completed",progress.Completed,Campaign.LevelCount),.12f,.101f,.88f,.15f,23,GameUI.Ink,TextAnchor.MiddleCenter,true);
             ui.Text("Best score",overlay,Loc.T("menu.best",best),.12f,.075f,.88f,.104f,18,GameUI.Teal);
-            ui.Text("Menu instructions",overlay,Loc.T("menu.instructions"),.08f,.012f,.92f,.077f,18,GameUI.Hex("476B70"));
+            ui.Button("Wheel",overlay,Loc.T("wheel.title"),.04f,.012f,.49f,.069f,()=>ShowWheel(),GameUI.Coral,19);
+            ui.Button("Collection",overlay,Loc.T("collection.title"),.51f,.012f,.96f,.069f,()=>ShowCollection(),GameUI.Teal,19);
         }
         void MenuPerson(Transform parent,int index,float x0,float y0,float x1,float y1,string destination)
         {
@@ -261,7 +265,8 @@ namespace OneMoreFloor
                 case FeedbackKind.BoxBlocked: key="feedback.box"; break;
                 default: key="feedback.floor"; break;
             }
-            feedback.text=Loc.T(key,message.Count,message.Multiplier); feedbackTime=2.2f;
+            feedback.text=Loc.T(key,message.Count,message.Multiplier);
+            feedbackTime=2.2f;
         }
         void Pause()
         {
@@ -293,12 +298,20 @@ namespace OneMoreFloor
         }
         void Update()
         {
-            ApplySafeArea();
+            ApplySafeArea(); UpdateWheel();
             if(overlay!=null && overlay.gameObject.activeSelf)
             { screenAge+=Time.unscaledDeltaTime; screenFade.alpha=Mathf.Clamp01(screenAge/.18f); }
             if(game==null) return;
             var before=game.State;
+            int deliveredBefore=game.Delivered;
             game.Tick(Time.unscaledDeltaTime);
+            // The winning stop emits Won instead of Delivered. Count the model delta so
+            // its passengers also roll for coins, exactly once, including multi-frame ticks.
+            int coinsEarned=cosmetics.OnDelivered(game.Delivered-deliveredBefore,cosmeticRandom);
+            if(coinsEarned>0)
+            {
+                SaveCosmetics(); feedback.text+=" · "+Loc.T("wheel.drop",coinsEarned); feedbackTime=2.2f;
+            }
             if(before==PlayState.Playing)
             {
                 float dt=Mathf.Min(Time.unscaledDeltaTime,.25f);

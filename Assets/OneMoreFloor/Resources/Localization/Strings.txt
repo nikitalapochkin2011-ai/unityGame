@@ -156,3 +156,31 @@ level.47	Old friends	Добрые знакомые	Eski dostlar	Viejos amigos	Li
 level.48	From lobby to roof	От первого до крыши	Girişten çatıya	Del vestíbulo al tejado	Vom Eingang bis zum Dach	Du hall au toit	从一楼到屋顶
 level.49	A party in the courtyard	Праздник во дворе	Avluda şenlik	Fiesta en el patio	Ein Fest im Hof	La fête dans la cour	院子里的聚会
 level.50	Fifty stories	Пятьдесят историй	Elli hikâye	Cincuenta historias	Fünfzig Geschichten	Cinquante histoires	五十个故事
+wheel.title	Fortune wheel	Колесо фортуны	Şans çarkı	Ruleta de la suerte	Glücksrad	Roue de la fortune	幸运转盘
+collection.title	Collection	Коллекция	Koleksiyon	Colección	Sammlung	Collection	收藏
+wheel.coins	Coins: {0}	Монеты: {0}	Para: {0}	Monedas: {0}	Münzen: {0}	Pièces : {0}	金币：{0}
+wheel.detail	One new style per spin. Free every 24 hours. Each delivered passenger has a 12% chance to give 1 coin.	Каждое вращение — новое оформление. Бесплатно раз в 24 часа. Шанс получить 1 монету за пассажира — 12%.	Her dönüşte yeni bir stil. 24 saatte bir ücretsiz. Teslim edilen her yolcu %12 şansla 1 para verir.	Un estilo nuevo por giro. Gratis cada 24 horas. Cada pasajero entregado tiene un 12% de dar 1 moneda.	Ein neuer Stil pro Dreh. Alle 24 Stunden kostenlos. Jeder beförderte Fahrgast gibt mit 12% Chance 1 Münze.	Un nouveau style par tour. Gratuit toutes les 24 heures. Chaque passager livré a 12% de chance de donner 1 pièce.	每次获得新外观。每24小时免费一次。每送达一位乘客有12%的机会获得1金币。
+wheel.legend	Gold: {0} · Green: {1} · Blue: {2}	Золото: {0} · Зелень: {1} · Синий: {2}	Altın: {0} · Yeşil: {1} · Mavi: {2}	Oro: {0} · Verde: {1} · Azul: {2}	Gold: {0} · Grün: {1} · Blau: {2}	Or : {0} · Vert : {1} · Bleu : {2}	金：{0} · 绿：{1} · 蓝：{2}
+wheel.free	Free spin	Бесплатное вращение	Ücretsiz çevir	Giro gratis	Kostenlos drehen	Tour gratuit	免费旋转
+wheel.paid	Spin — {0} coins	Вращать — {0} монет	Çevir — {0} para	Girar — {0} monedas	Drehen — {0} Münzen	Tourner — {0} pièces	旋转 — {0}金币
+wheel.wait	Free in {0}	Бесплатно через {0}	Ücretsiz: {0} sonra	Gratis en {0}	Kostenlos in {0}	Gratuit dans {0}	免费倒计时：{0}
+wheel.complete	Collection complete!	Коллекция собрана!	Koleksiyon tamamlandı!	¡Colección completa!	Sammlung vollständig!	Collection complète !	收藏已集齐！
+wheel.reward	Unlocked: {0}	Открыто: {0}	Açıldı: {0}	Desbloqueado: {0}	Freigeschaltet: {0}	Débloqué : {0}	已解锁：{0}
+collection.kind.0	Skies	Фоны	Gökyüzü	Fondos	Himmel	Ciels	背景
+collection.kind.1	Floors	Этажи	Katlar	Pisos	Etagen	Étages	楼层
+collection.kind.2	Lifts	Лифты	Asansörler	Ascensores	Aufzüge	Ascenseurs	电梯
+collection.selected	Selected	Выбрано	Seçili	Elegido	Ausgewählt	Choisi	已选择
+collection.select	Select	Выбрать	Seç	Elegir	Auswählen	Choisir	选择
+collection.locked	Locked	Закрыто	Kilitli	Bloqueado	Gesperrt	Verrouillé	未解锁
+collection.detail	Styles only change appearance. Unlock them on the wheel.	Оформления меняют только вид. Открывайте их в колесе.	Stiller sadece görünümü değiştirir. Çarkta açılır.	Los estilos solo cambian el aspecto. Se obtienen en la ruleta.	Stile ändern nur das Aussehen. Am Glücksrad freischalten.	Les styles changent seulement le décor. À gagner sur la roue.	外观只改变画面，通过转盘解锁。
+wheel.drop	+{0} coin	+{0} монет	+{0} para	+{0} moneda	+{0} Münze	+{0} pièce	+{0}金币
+cosmetic.0	Classic	Классика	Klasik	Clásico	Klassisch	Classique	经典
+cosmetic.1	Glacier	Ледник	Buzul	Glaciar	Gletscher	Glacier	冰川
+cosmetic.2	Rose	Роза	Gül	Rosa	Rose	Rose	玫瑰
+cosmetic.3	Garden	Сад	Bahçe	Jardín	Garten	Jardin	花园
+cosmetic.4	Lavender	Лаванда	Lavanta	Lavanda	Lavendel	Lavande	薰衣草
+cosmetic.5	Amber	Янтарь	Kehribar	Ámbar	Bernstein	Ambre	琥珀
+cosmetic.6	Lagoon	Лагуна	Lagun	Laguna	Lagune	Lagon	泻湖
+cosmetic.7	Twilight	Сумерки	Alacakaranlık	Crepúsculo	Dämmerung	Crépuscule	暮色
+cosmetic.8	Copper	Медь	Bakır	Cobre	Kupfer	Cuivre	铜色
+cosmetic.9	Moonlight	Лунный свет	Ay ışığı	Luz de luna	Mondlicht	Clair de lune	月光
