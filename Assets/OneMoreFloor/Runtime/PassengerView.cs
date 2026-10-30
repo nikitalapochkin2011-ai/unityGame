@@ -15,6 +15,7 @@ namespace OneMoreFloor
         readonly CanvasGroup opacity;
         readonly Image portrait, badge, patience;
         readonly RectTransform patienceTrack;
+        readonly RectTransform box;
         readonly Text destination;
         readonly int appearance;
         Vector2 position, target, size;
@@ -26,6 +27,13 @@ namespace OneMoreFloor
             Root = ui.Rect("Passenger " + appearance,parent,0,0,0,0);
             opacity = Root.gameObject.AddComponent<CanvasGroup>(); opacity.blocksRaycasts = false; opacity.interactable = false;
             portrait = ui.Picture("Person",Root,"person_"+(appearance%8),0,.06f,1,.67f);
+            // A parcel held in front of the torso. In the lift it occupies a second slot.
+            box=ui.Panel("Cardboard parcel",Root,.18f,.16f,.96f,.41f,GameUI.Hex("C08B52")).rectTransform;
+            ui.Panel("Parcel face",box,.035f,.05f,.965f,.90f,GameUI.Hex("DCAF71"),false);
+            ui.Panel("Packing tape",box,.43f,.04f,.58f,.96f,GameUI.Hex("F4DA9F"),false);
+            ui.Panel("Parcel top fold",box,.03f,.76f,.97f,.80f,GameUI.Hex("A77544"),false);
+            ui.Panel("Delivery label",box,.08f,.18f,.34f,.53f,GameUI.Cream,false);
+            box.gameObject.SetActive(false);
             // Destination always belongs to the person and stays above their head.
             badge = ui.Panel("Destination bubble",Root,.5f,.7f,.5f,.7f,GameUI.Cream);
             badge.rectTransform.pivot=new Vector2(.5f,0);
@@ -40,10 +48,13 @@ namespace OneMoreFloor
             target = center; size = dimensions;
             var parent=(RectTransform)Root.parent;
             float badgeWidth=Mathf.Clamp(dimensions.x*parent.rect.width*.94f,24,32);
-            badge.rectTransform.anchorMin=badge.rectTransform.anchorMax=new Vector2(.5f,.7f);
+            bool wide=riding && passenger.HasBox;
+            badge.rectTransform.anchorMin=badge.rectTransform.anchorMax=new Vector2(wide ? .25f : .5f,.7f);
             badge.rectTransform.sizeDelta=new Vector2(badgeWidth,28);
             destination.fontSize=22;
-            GameUI.Place(portrait.rectTransform,0,.06f,1,.67f);
+            GameUI.Place(portrait.rectTransform,0,.06f,wide ? .5f : 1,.67f);
+            box.gameObject.SetActive(passenger.HasBox);
+            GameUI.Place(box,wide ? .39f : .18f,.16f,.96f,.41f);
             if (riding && WasRiding && initialized) position.y = center.y;
             WasRiding = riding;
             if (!initialized) { position = target + new Vector2(-.008f,0); initialized = true; }

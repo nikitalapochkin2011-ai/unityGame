@@ -14,12 +14,13 @@ namespace OneMoreFloor
         readonly Text cabinDisplay;
         readonly Image[] callLights, rooms;
         readonly Text[] queueCounts;
+        readonly Text[] lockedLabels;
+        readonly Button[] callButtons, hallButtons;
         readonly Dictionary<Passenger, PassengerView> people = new Dictionary<Passenger, PassengerView>();
         readonly HashSet<Passenger> present = new HashSet<Passenger>();
         readonly List<Passenger> removed = new List<Passenger>();
         readonly List<PassengerView> departures = new List<PassengerView>();
         readonly List<FloatingLabel> labels = new List<FloatingLabel>();
-        int appearance;
         float doorOpen;
         sealed class FloatingLabel { public Text Text; public Vector2 Position; public float Time; }
 
@@ -34,6 +35,7 @@ namespace OneMoreFloor
             ui.Panel("Left guide rail",root,.736f,.01f,.742f,.99f,GameUI.Hex("6F8585"),false);
             ui.Panel("Right guide rail",root,.971f,.01f,.978f,.99f,GameUI.Hex("6F8585"),false);
             callLights = new Image[rules.Floors]; rooms = new Image[rules.Floors]; queueCounts = new Text[rules.Floors];
+            lockedLabels=new Text[rules.Floors]; callButtons=new Button[rules.Floors]; hallButtons=new Button[rules.Floors];
             for (int f=0; f<rules.Floors; f++)
             {
                 int floor = f;
@@ -42,11 +44,14 @@ namespace OneMoreFloor
                 var room = ui.Picture("Unified hallway interior",row,"hallway",BuildingLayout.HallLeft,.055f,BuildingLayout.HallRight,.97f,false);
                 rooms[f] = room; room.raycastTarget = true;
                 var tap = room.gameObject.AddComponent<Button>(); tap.targetGraphic = room; tap.onClick.AddListener(()=>select(floor));
+                hallButtons[f]=tap;
                 ui.Panel("Brass lift threshold",row,.704f,.055f,.716f,.88f,GameUI.Hex("C8B183"),false);
                 ui.Panel("Floor edge",row,.071f,.01f,.999f,.055f,GameUI.Hex("E5D4B5"),false);
                 var call = ui.Button("Call "+(f+1),row,(f+1).ToString(),.01f,.29f,.063f,.83f,()=>select(floor),GameUI.Hex("355563"),28);
                 callLights[f] = call.GetComponent<Image>();
+                callButtons[f]=call;
                 queueCounts[f] = ui.Text("Waiting count",row,"",.003f,.09f,.069f,.27f,12,GameUI.Hex("D1DACD"));
+                lockedLabels[f]=ui.Text("Locked floor",row,"",.17f,.37f,.63f,.66f,19,GameUI.Ink,TextAnchor.MiddleCenter,true);
             }
             cabin = ui.Rect("Moving elevator",root,BuildingLayout.LiftLeft,0,BuildingLayout.LiftRight,1f/rules.Floors);
             ui.Picture("Cabin",cabin,"cabin",0,.025f,1,.99f,false);
@@ -67,14 +72,14 @@ namespace OneMoreFloor
             foreach (var view in people.Values) view.Destroy(); people.Clear();
             foreach (var view in departures) view.Destroy(); departures.Clear();
             foreach (var label in labels) { label.Text.gameObject.SetActive(false); Object.Destroy(label.Text.gameObject); } labels.Clear();
-            appearance=0; doorOpen=0;
+            doorOpen=0;
         }
         PassengerView View(Passenger passenger)
         {
             PassengerView result;
             if (!people.TryGetValue(passenger,out result))
             {
-                result=new PassengerView(ui,actors,appearance++); people.Add(passenger,result);
+                result=new PassengerView(ui,actors,passenger.Appearance); people.Add(passenger,result);
             }
             present.Add(passenger); return result;
         }
@@ -98,24 +103,29 @@ namespace OneMoreFloor
             for(int f=0;f<rules.Floors;f++)
             {
                 var queue=game.Queues.Floors[f]; bool active=f<game.Difficulty.ActiveFloors;
+                callButtons[f].interactable=hallButtons[f].interactable=active;
+                lockedLabels[f].gameObject.SetActive(!active);
+                lockedLabels[f].text="Этаж "+(f+1)+" • с уровня "+(f<3 ? 1 : f);
                 bool selected=game.Lift.NextFloor==f || (game.Lift.Moving && game.Lift.TargetFloor==f);
                 callLights[f].color=selected ? GameUI.Coral : (game.Lift.CurrentFloor==f && !game.Lift.Moving ? GameUI.Teal : GameUI.Hex("355563"));
-                rooms[f].color = !active ? new Color(.72f,.76f,.74f,1) : (selected ? new Color(1,.98f,.92f,1) : Color.white);
-                queueCounts[f].text=active ? queue.Count+"/"+GameRules.MaxWaitingPerFloor : "—";
-                queueCounts[f].color=queue.Count==GameRules.MaxWaitingPerFloor ? GameUI.Gold : GameUI.Hex("D1DACD");
+                rooms[f].color = !active ? new Color(.48f,.55f,.53f,1) : (selected ? new Color(1,.98f,.92f,1) : Color.white);
+                queueCounts[f].text=active ? queue.Count+"/"+game.QueueLimit : "—";
+                queueCounts[f].color=queue.Count>=game.QueueLimit ? GameUI.Gold : GameUI.Hex("D1DACD");
                 for(int i=0;i<queue.Count;i++)
                 {
                     var view=View(queue[i]);
                     float x=BuildingLayout.WaitingX(i);
                     float y=(f+.08f)*floorHeight;
-                    view.Set(queue[i],new Vector2(x,y),new Vector2(BuildingLayout.PersonWidth,floorHeight*BuildingLayout.PersonHeight),false,queue[i].Remaining/rules.PatienceSeconds);
+                    view.Set(queue[i],new Vector2(x,y),new Vector2(BuildingLayout.PersonWidth,floorHeight*BuildingLayout.PersonHeight),false,queue[i].Remaining/game.PassengerPatience);
                 }
             }
+            int occupiedSlot=0;
             for(int i=0;i<game.Lift.Riders.Count;i++)
             {
-                var p=game.Lift.Riders[i]; float spacing=.217f/rules.Capacity;
-                View(p).Set(p,new Vector2(.749f+spacing*(i+.5f),liftY+.105f*floorHeight),
-                    new Vector2(Mathf.Min(.065f,spacing*.98f),floorHeight*.72f),true,1);
+                var p=game.Lift.Riders[i];
+                View(p).Set(p,new Vector2(BuildingLayout.RiderX(occupiedSlot,p.SpaceRequired,rules.Capacity),liftY+.105f*floorHeight),
+                    new Vector2(BuildingLayout.RiderWidth(p.SpaceRequired,rules.Capacity),floorHeight*.72f),true,1);
+                occupiedSlot+=p.SpaceRequired;
             }
             removed.Clear();
             foreach(var pair in people)

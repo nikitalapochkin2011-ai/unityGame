@@ -26,13 +26,21 @@ namespace OneMoreFloor
     public sealed class Passenger
     {
         public int Destination { get; private set; }
+        public bool HasBox { get; private set; }
+        public int SpaceRequired { get { return HasBox ? 2 : 1; } }
+        public int Appearance { get; private set; }
         public float Remaining { get; internal set; }
-        public Passenger(int destination, float patience) { Destination = destination; Remaining = patience; }
+        public Passenger(int destination, float patience, bool hasBox=false, int appearance=0)
+        { Destination = destination; Remaining = patience; HasBox=hasBox; Appearance=Math.Max(0,appearance)%8; }
     }
     public sealed class Elevator
     {
         readonly GameRules rules;
         public readonly List<Passenger> Riders = new List<Passenger>();
+        public int OccupiedSpaces
+        {
+            get { int count=0; foreach(var passenger in Riders) count+=passenger.SpaceRequired; return count; }
+        }
         public int CurrentFloor { get; private set; }
         public int TargetFloor { get; private set; }
         public int? NextFloor { get; private set; }
@@ -106,10 +114,12 @@ namespace OneMoreFloor
     public sealed class PassengerSpawner
     {
         readonly Random random;
+        public int Spawned { get; private set; }
         float countdown = 1.5f;
         public PassengerSpawner(int seed) { random = new Random(seed); }
         internal void Tick(float dt, GameSession game)
         {
+            if(game.Level!=null && (Spawned>=game.SpawnBudget || (game.IsGuiding && Spawned>0))) return;
             var difficulty = game.Difficulty;
             countdown = Math.Min(countdown, difficulty.SpawnInterval) - dt;
             if (countdown > 0) return;
@@ -117,13 +127,13 @@ namespace OneMoreFloor
             // skips this scheduled arrival without creating an invisible passenger/loss.
             int available = 0;
             for (int f = 0; f < difficulty.ActiveFloors; f++)
-                if (game.Queues.Floors[f].Count < GameRules.MaxWaitingPerFloor) available++;
-            countdown += difficulty.SpawnInterval;
+                if (game.Queues.Floors[f].Count < game.QueueLimit) available++;
+            countdown += difficulty.SpawnInterval * (game.Level==null ? 1 : .85f+(float)random.NextDouble()*.30f);
             if (available == 0) return;
             int choice = random.Next(available), floor = 0;
             for (int f = 0; f < difficulty.ActiveFloors; f++)
             {
-                if (game.Queues.Floors[f].Count >= GameRules.MaxWaitingPerFloor) continue;
+                if (game.Queues.Floors[f].Count >= game.QueueLimit) continue;
                 if (choice-- == 0) { floor = f; break; }
             }
             int min = Math.Max(0, floor - difficulty.MaximumRouteDistance);
@@ -131,16 +141,26 @@ namespace OneMoreFloor
             // Select uniformly from the reachable floors, excluding the origin, without retries.
             int destination = random.Next(min, max);
             if (destination >= floor) destination++;
-            game.Queues.TryEnqueue(floor, new Passenger(destination, game.Rules.PatienceSeconds));
+            bool box=game.Level!=null && game.Rules.Capacity>=2 && random.NextDouble()<game.Level.BoxChance;
+            int appearance=game.Level==null ? Spawned%8 : random.Next(8);
+            if(game.Queues.TryEnqueue(floor,new Passenger(destination,game.PassengerPatience,box,appearance))) Spawned++;
         }
     }
-    public enum PlayState { Playing, Paused, GameOver }
+    public enum PlayState { Playing, Paused, GameOver, Won }
     public sealed class GameSession
     {
         public readonly GameRules Rules;
         public readonly Elevator Lift;
         public readonly PassengerQueues Queues;
         readonly PassengerSpawner spawner;
+        public readonly LevelDefinition Level;
+        public readonly int LevelNumber;
+        public int SpawnBudget { get { return Level==null ? int.MaxValue : Level.DeliveryGoal+Rules.LossLimit-1; } }
+        public int Spawned { get { return spawner.Spawned; } }
+        public int QueueLimit { get { return Level==null ? GameRules.MaxWaitingPerFloor : Level.QueueLimit; } }
+        public float PassengerPatience { get { return Level==null ? Rules.PatienceSeconds : Level.PatienceSeconds; } }
+        public bool IsGuiding { get { return Level!=null && Level.Guided && Delivered==0; } }
+        public bool Finished { get { return State==PlayState.GameOver || State==PlayState.Won; } }
         public PlayState State { get; private set; }
         public int Score { get; private set; }
         public int Delivered { get; private set; }
@@ -148,14 +168,21 @@ namespace OneMoreFloor
         public int Streak { get; private set; }
         public int Multiplier { get { return Math.Min(3, 1 + Streak / 5); } }
         public float Elapsed { get; private set; }
-        public DifficultyState Difficulty { get { return DifficultyCurve.AtScore(Rules, Score); } }
+        public DifficultyState Difficulty { get { return Level==null ? DifficultyCurve.AtScore(Rules,Score) : Campaign.Difficulty(Level,LevelNumber,Delivered); } }
         public event Action<string> Feedback;
-        public GameSession(GameRules rules, int seed)
+        public GameSession(GameRules rules, int seed, LevelDefinition level=null, int levelNumber=1)
         {
-            Rules = rules; rules.Validate(); Lift = new Elevator(rules);
+            Rules = rules; rules.Validate();
+            Level=level==null ? null : level.Copy(); if(Level!=null) Level.Validate(rules.Floors);
+            LevelNumber=Math.Max(1,Math.Min(Campaign.LevelCount,levelNumber)); Lift = new Elevator(rules);
             Queues = new PassengerQueues(rules.Floors); spawner = new PassengerSpawner(seed);
         }
-        public void SelectFloor(int floor) { if (State == PlayState.Playing) Lift.Select(floor); }
+        public void SelectFloor(int floor)
+        {
+            if(State!=PlayState.Playing) return;
+            if(Level!=null && (floor<0 || floor>=Level.ActiveFloors)) return;
+            Lift.Select(floor);
+        }
         public void Pause() { if (State == PlayState.Playing) State = PlayState.Paused; }
         public void Resume() { if (State == PlayState.Paused) State = PlayState.Playing; }
         public void Tick(float dt)
@@ -166,7 +193,7 @@ namespace OneMoreFloor
             while (dt > .00001f && State == PlayState.Playing)
             {
                 float step = Math.Min(dt, .02f); dt -= step; Elapsed += step;
-                Queues.Age(step, LosePassenger, () => State == PlayState.GameOver);
+                if(!IsGuiding) Queues.Age(step, LosePassenger, () => Finished);
                 if (State == PlayState.GameOver) break;
                 spawner.Tick(step, this);
                 if (Lift.Tick(step)) ServiceFloor();
@@ -186,12 +213,18 @@ namespace OneMoreFloor
                     Lift.Riders.RemoveAt(i); Score += Rules.DeliveryPoints * Multiplier;
                     Streak++; Delivered++; delivered++;
                 }
+            if(Level!=null && Delivered>=Level.DeliveryGoal)
+            {
+                State=PlayState.Won; Emit("Уровень пройден!"); return;
+            }
             var queue = Queues.Floors[Lift.CurrentFloor];
-            while (queue.Count > 0 && Lift.Riders.Count < Rules.Capacity)
+            while (queue.Count>0 && Lift.OccupiedSpaces+queue[0].SpaceRequired<=Rules.Capacity)
             { Lift.Riders.Add(Queues.TakeFirst(Lift.CurrentFloor)); boarded++; }
             if (delivered > 0) Emit("Доставлено: " + delivered + "  ×" + Multiplier);
             else if (boarded > 0) Emit("Вошли: " + boarded);
             else Emit("Этаж " + (Lift.CurrentFloor + 1));
+            if(queue.Count>0 && queue[0].HasBox && Rules.Capacity-Lift.OccupiedSpaces==1)
+                Emit("Для коробки нужны 2 свободных места");
         }
         void Emit(string message) { if (Feedback != null) Feedback(message); }
     }

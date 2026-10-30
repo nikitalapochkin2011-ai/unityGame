@@ -7,7 +7,7 @@ using Text = TMPro.TMP_Text;
 
 namespace OneMoreFloor
 {
-    public sealed class GameApp : MonoBehaviour
+    public sealed partial class GameApp : MonoBehaviour
     {
         public GameSettings Settings;
         GameSession game;
@@ -19,7 +19,7 @@ namespace OneMoreFloor
         Image loadCard, soundTrack;
         RectTransform soundThumb;
         Image[] lossMarks, streakMarks;
-        int best, sessionStartBest, lastDifficultyLevel, tutorialPage;
+        int best, tutorialPage;
         const int TutorialVersion = 2;
         bool tutorialStartsGame;
         bool sound;
@@ -34,7 +34,8 @@ namespace OneMoreFloor
         {
             Application.targetFrameRate=60; Screen.orientation=ScreenOrientation.Portrait;
             if(Settings==null) Settings=ScriptableObject.CreateInstance<GameSettings>();
-            Settings.Rules.Validate();
+            Settings.Prepare();
+            progress=new CampaignProgress(PlayerPrefs.GetInt("OneMoreFloor.Campaign.Completed",0));
             ui=new GameUI();
             best=PlayerPrefs.GetInt("OneMoreFloor.Best",0);
             sound=PlayerPrefs.GetInt("OneMoreFloor.Sound",1)!=0;
@@ -99,7 +100,7 @@ namespace OneMoreFloor
             feedback=ui.Text("Feedback",safe,"",.04f,.025f,.96f,.065f,20,GameUI.Ink);
             overlay=ui.Rect("Screen overlay",safe,0,0,1,1);
             screenFade=overlay.gameObject.AddComponent<CanvasGroup>();
-            BuildSettings(); ApplySafeArea();
+            BuildCoach(); BuildSettings(); ApplySafeArea();
         }
         void ClearOverlay(bool menu=false)
         {
@@ -118,12 +119,12 @@ namespace OneMoreFloor
         }
         void ShowMenu()
         {
-            game=null; building.Reset(); buildingRoot.gameObject.SetActive(false); settingsLayer.gameObject.SetActive(false); ClearOverlay(true);
+            game=null; coachRoot.gameObject.SetActive(false); building.Reset(); buildingRoot.gameObject.SetActive(false); settingsLayer.gameObject.SetActive(false); ClearOverlay(true);
             ui.Picture("Menu skyline",overlay,"skyline",-.13f,0,1.13f,.73f,false);
             ui.Text("House label",overlay,"ДОМ № 6  /  ВАША НОВАЯ СМЕНА",.08f,.925f,.79f,.96f,16,GameUI.Teal,TextAnchor.MiddleCenter,true);
             ui.IconButton("Menu settings",overlay,"gear",.84f,.935f,.95f,.99f,ShowSettings,GameUI.Ink);
             ui.Text("Game title",overlay,"Ещё один\nэтаж",.07f,.735f,.93f,.916f,68,GameUI.Ink,TextAnchor.MiddleCenter,true);
-            ui.Text("Tagline",overlay,"Кому-то домой. Кому-то в гости.\nА вам — ещё один рекорд.",.1f,.65f,.9f,.742f,23,GameUI.Hex("476B70"));
+            ui.Text("Tagline",overlay,"Кому-то домой. Кому-то в гости.\nА вам — пять маленьких историй.",.1f,.65f,.9f,.742f,23,GameUI.Hex("476B70"));
             var hero=ui.Panel("Lobby illustration",overlay,.12f,.333f,.88f,.635f,GameUI.Hex("E8D3B5")).rectTransform;
             ui.Panel("Lobby floor",hero,.02f,.015f,.98f,.09f,GameUI.Hex("C19B7A"),false);
             ui.Picture("Lobby window",hero,"window",.045f,.38f,.31f,.89f);
@@ -133,10 +134,11 @@ namespace OneMoreFloor
             MenuPerson(hero,1,.40f,.08f,.63f,.74f,"2");
             MenuPerson(hero,4,.68f,.13f,.87f,.74f,"6");
             ui.Text("Lobby plaque",hero,"ДОБРО ПОЖАЛОВАТЬ",.04f,.9f,.48f,.98f,12,GameUI.Teal,TextAnchor.MiddleCenter,true);
-            ui.Button("Play",overlay,"Начать смену  →",.12f,.237f,.88f,.313f,StartShift,GameUI.Coral,31);
+            ui.Button("Play",overlay,"Выбрать уровень  →",.12f,.237f,.88f,.313f,StartShift,GameUI.Coral,31);
             ui.Button("Learn",overlay,"Как играть?  Обучение",.12f,.162f,.88f,.218f,()=>ShowTutorial(false),GameUI.Teal,23);
-            record=ui.Text("Record",overlay,"ЛИЧНЫЙ РЕКОРД   "+best,.12f,.101f,.88f,.15f,23,GameUI.Ink,TextAnchor.MiddleCenter,true);
-            ui.Text("Menu instructions",overlay,"Нажимайте этажи. Перевозите людей.\nНе дайте троим уйти, не дождавшись лифта.",.08f,.012f,.92f,.077f,18,GameUI.Hex("476B70"));
+            record=ui.Text("Record",overlay,"ПРОЙДЕНО УРОВНЕЙ: "+progress.Completed+" / 5",.12f,.101f,.88f,.15f,23,GameUI.Ink,TextAnchor.MiddleCenter,true);
+            ui.Text("Best score",overlay,"Личный рекорд: "+best,.12f,.075f,.88f,.104f,18,GameUI.Teal);
+            ui.Text("Menu instructions",overlay,"Начните с обучения на первом уровне.\nНовые этажи открываются по мере прохождения.",.08f,.012f,.92f,.077f,18,GameUI.Hex("476B70"));
         }
         void MenuPerson(Transform parent,int index,float x0,float y0,float x1,float y1,string destination)
         {
@@ -179,19 +181,7 @@ namespace OneMoreFloor
             // Closing them after the app was backgrounded must never silently resume the shift.
             Pause(); UpdateSoundLabel(); settingsLayer.gameObject.SetActive(true);
         }
-        void StartShift()
-        {
-            if(PlayerPrefs.GetInt("OneMoreFloor.TutorialVersion",0)<TutorialVersion) ShowTutorialOffer();
-            else NewGame();
-        }
-        void ShowTutorialOffer()
-        {
-            ClearOverlay(true);
-            var card=Modal("РАДЫ ВАС ВИДЕТЬ","Первый раз\nв нашем доме?");
-            ui.Text("Offer detail",card,"Покажем, что означают цифры,\nкак управлять лифтом и набирать очки.\nВсего четыре коротких шага.",.08f,.43f,.92f,.65f,25,GameUI.Hex("627D7C"));
-            ui.Button("Take tutorial",card,"Пройти обучение",.09f,.25f,.91f,.38f,()=>ShowTutorial(true),GameUI.Coral);
-            ui.Button("Skip tutorial",card,"Сразу играть",.09f,.09f,.91f,.21f,()=>{ MarkTutorial(); NewGame(); },GameUI.Teal);
-        }
+        void StartShift() { ShowLevels(); }
         void MarkTutorial()
         {
             PlayerPrefs.SetInt("OneMoreFloor.TutorialVersion",TutorialVersion); PlayerPrefs.Save();
@@ -203,9 +193,12 @@ namespace OneMoreFloor
         }
         void NewGame()
         {
-            building.Reset(); buildingRoot.gameObject.SetActive(true); settingsLayer.gameObject.SetActive(false); lastDifficultyLevel=1;
-            game=new GameSession(Settings.Rules,Environment.TickCount); sessionStartBest=best;
-            game.Feedback+=OnFeedback; feedback.text="Нажмите номер этажа — лифт отправится к нему";
+            var level=Settings.Levels[currentLevel-1];
+            if(level.BoxChance>0 && PlayerPrefs.GetInt("OneMoreFloor.BoxExplained",0)==0)
+            { ShowBoxIntroduction(); return; }
+            building.Reset(); buildingRoot.gameObject.SetActive(true); settingsLayer.gameObject.SetActive(false);
+            game=new GameSession(Settings.Rules,NewSeed(),level,currentLevel);
+            game.Feedback+=OnFeedback; feedback.text="Доставьте "+level.DeliveryGoal+" человек, чтобы пройти уровень";
             feedbackTime=5; overlay.gameObject.SetActive(false); Render(0);
         }
         void ShowTutorial(bool startAfter)
@@ -215,7 +208,7 @@ namespace OneMoreFloor
         void RenderTutorial()
         {
             ClearOverlay(true);
-            string[] titles={ "Знакомьтесь: соседи", "Вы управляете лифтом", "Копите очки", "Дом оживает" };
+            string[] titles={ "Знакомьтесь: соседи", "Вы управляете лифтом", "Копите очки", "Пять историй в одном доме" };
             var card=Modal("ОБУЧЕНИЕ  "+(tutorialPage+1)+" / 4",titles[tutorialPage]);
             string detail;
             if(tutorialPage==0)
@@ -239,17 +232,17 @@ namespace OneMoreFloor
             }
             else
             {
-                ui.Text("Difficulty example",card,"1–"+Settings.Rules.StartingFloors+"  →  1–"+Settings.Rules.Floors,.12f,.46f,.88f,.65f,45,GameUI.Teal,TextAnchor.MiddleCenter,true);
-                detail="Больше очков — больше пассажиров.\nСначала маршруты короткие на нижних этажах.\nПотом люди появляются выше и едут дальше.\nТемп растёт плавно, но имеет предел.";
+                ui.Text("Difficulty example",card,"3  →  4  →  5  →  6",.12f,.46f,.88f,.65f,45,GameUI.Teal,TextAnchor.MiddleCenter,true);
+                detail="Уровень пройден — открывается следующий.\nНа уровнях 1–2 доступны три этажа, затем до шести.\nС уровня 3 сосед с коробкой занимает два места.\nЭтажи и типы пассажиров выбираются случайно.";
             }
             ui.Text("Tutorial explanation",card,detail,.06f,.22f,.94f,.405f,23,GameUI.Hex("627D7C"));
             for(int i=0;i<4;i++) ui.Picture("Tutorial page",card,"circle",.39f+i*.06f,.177f,.42f+i*.06f,.195f).color=i==tutorialPage ? GameUI.Coral : GameUI.Hex("C1CFC3");
             if(tutorialPage>0) ui.Button("Previous",card,"Назад",.07f,.04f,.32f,.145f,()=>{tutorialPage--; RenderTutorial();},GameUI.Hex("708E8C"),21);
             else ui.Button("Exit tutorial",card,"В меню",.07f,.04f,.32f,.145f,ShowMenu,GameUI.Hex("708E8C"),21);
-            ui.Button("Next",card,tutorialPage<3 ? "Дальше →" : (tutorialStartsGame ? "Начать смену" : "Понятно!"),.35f,.04f,.93f,.145f,()=>
+            ui.Button("Next",card,tutorialPage<3 ? "Дальше →" : (tutorialStartsGame ? "К уровням" : "Понятно!"),.35f,.04f,.93f,.145f,()=>
             {
                 if(tutorialPage<3) { tutorialPage++; RenderTutorial(); }
-                else { MarkTutorial(); if(tutorialStartsGame) NewGame(); else ShowMenu(); }
+                else { MarkTutorial(); if(tutorialStartsGame) ShowLevels(); else ShowMenu(); }
             },GameUI.Coral,24);
         }
         void OnFeedback(string message)
@@ -262,10 +255,10 @@ namespace OneMoreFloor
         void Pause()
         {
             if(game==null || game.State!=PlayState.Playing) return;
-            game.Pause(); SaveBest(); ClearOverlay();
+            game.Pause(); coachRoot.gameObject.SetActive(false); SaveBest(); ClearOverlay();
             var card=Modal("ЛИФТ ПОДОЖДЁТ","Небольшой\nперерыв");
             ui.Text("Pause detail",card,"Пассажиры никуда не торопятся,\nпока игра на паузе.",.08f,.51f,.92f,.65f,23,GameUI.Hex("627D7C"));
-            ui.Button("Continue",card,"Продолжить",.09f,.365f,.91f,.48f,()=>{ game.Resume(); overlay.gameObject.SetActive(false); },GameUI.Coral);
+            ui.Button("Continue",card,"Продолжить",.09f,.365f,.91f,.48f,()=>{ game.Resume(); overlay.gameObject.SetActive(false); Render(0); },GameUI.Coral);
             ui.Button("Pause settings",card,"Настройки",.09f,.23f,.91f,.33f,ShowSettings,GameUI.Teal,24);
             ui.Button("Restart",card,"Заново",.09f,.085f,.49f,.19f,NewGame,GameUI.Hex("708E8C"),21);
             ui.Button("Menu",card,"В меню",.52f,.085f,.91f,.19f,ShowMenu,GameUI.Hex("708E8C"),21);
@@ -276,12 +269,12 @@ namespace OneMoreFloor
         }
         void EndGame()
         {
-            bool newRecord=game.Score>sessionStartBest; SaveBest(); ClearOverlay();
-            var card=Modal(newRecord ? "НОВЫЙ ЛИЧНЫЙ РЕКОРД!" : "СПАСИБО ЗА СМЕНУ","На сегодня\nвсё!");
-            ui.Text("Final score",card,game.Score.ToString(),.1f,.49f,.9f,.68f,68,GameUI.Teal,TextAnchor.MiddleCenter,true);
-            ui.Text("Results",card,"Доставлено: "+game.Delivered+"    •    Рекорд: "+best,.06f,.4f,.94f,.49f,22,GameUI.Hex("627D7C"));
-            ui.Button("Retry",card,"Ещё одну смену  →",.09f,.22f,.91f,.355f,NewGame,GameUI.Coral);
-            ui.Button("Menu",card,"В главное меню",.09f,.07f,.91f,.18f,ShowMenu);
+            SaveBest(); coachRoot.gameObject.SetActive(false); ClearOverlay();
+            var card=Modal("УРОВЕНЬ "+currentLevel+" / 5","Попробуем\nещё раз?");
+            ui.Text("Final score",card,game.Score+" очков",.1f,.5f,.9f,.67f,45,GameUI.Teal,TextAnchor.MiddleCenter,true);
+            ui.Text("Results",card,"Доставлено: "+game.Delivered+" / "+game.Level.DeliveryGoal+"\nТрое соседей не дождались лифта.",.06f,.38f,.94f,.51f,23,GameUI.Hex("627D7C"));
+            ui.Button("Retry",card,"Повторить уровень →",.09f,.22f,.91f,.345f,NewGame,GameUI.Coral);
+            ui.Button("Levels",card,"К уровням",.09f,.07f,.91f,.18f,ShowLevels);
         }
         void Update()
         {
@@ -297,27 +290,22 @@ namespace OneMoreFloor
                 feedbackTime-=dt; if(feedbackTime<=0) feedback.text="Число над головой — нужный пассажиру этаж";
                 Render(dt);
             }
-            if(before!=PlayState.GameOver && game.State==PlayState.GameOver) EndGame();
+            if(before==PlayState.Playing && game.State==PlayState.GameOver) EndGame();
+            else if(before==PlayState.Playing && game.State==PlayState.Won) WinLevel();
         }
         void Render(float dt)
         {
             score.text=game.Score.ToString(); multiplier.text="×"+game.Multiplier;
-            var difficulty=game.Difficulty;
-            difficultyLabel.text="СЛОЖНОСТЬ "+difficulty.Level+"/6   •   ПАССАЖИРЫ: ЭТАЖИ 1–"+difficulty.ActiveFloors;
-            if(difficulty.Level>lastDifficultyLevel)
-            {
-                lastDifficultyLevel=difficulty.Level;
-                feedback.text="Дом оживает! Пассажиров становится больше"; feedbackTime=3;
-            }
+            difficultyLabel.text="УРОВЕНЬ "+currentLevel+" / 5   •   ДОСТАВЛЕНО "+Math.Min(game.Delivered,game.Level.DeliveryGoal)+" / "+game.Level.DeliveryGoal;
             streak.text=game.Multiplier==3 ? "МАКСИМУМ" : "ДО ×"+(game.Multiplier+1);
             for(int i=0;i<streakMarks.Length;i++) streakMarks[i].color=game.Multiplier==3 || i<game.Streak%5 ? GameUI.Gold : GameUI.Hex("D9D9C9");
             for(int i=0;i<lossMarks.Length;i++) lossMarks[i].color=i<game.Lost ? GameUI.Coral : GameUI.Hex("ADC2B8");
-            occupancy.text="В лифте  "+game.Lift.Riders.Count+" / "+game.Rules.Capacity;
-            loadCard.color=game.Lift.Riders.Count==game.Rules.Capacity ? GameUI.Gold : GameUI.Hex("DCE6D8");
+            occupancy.text="В лифте  "+game.Lift.OccupiedSpaces+" / "+game.Rules.Capacity+" мест";
+            loadCard.color=game.Lift.OccupiedSpaces==game.Rules.Capacity ? GameUI.Gold : GameUI.Hex("DCE6D8");
             lossesLabel.text="УШЛИ "+game.Lost+"/"+game.Rules.LossLimit;
             route.text=game.Lift.Moving ? "Едем на "+(game.Lift.TargetFloor+1)+" этаж" : "Остановка: "+(game.Lift.CurrentFloor+1)+" этаж";
             if(game.Lift.NextFloor.HasValue) route.text+="   •   Затем: "+(game.Lift.NextFloor.Value+1);
-            building.Render(game,dt);
+            building.Render(game,dt); RenderCoach();
         }
         void ApplySafeArea()
         {

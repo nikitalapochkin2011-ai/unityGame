@@ -22,7 +22,7 @@
 |---|---|
 | Название по умолчанию | Ещё один этаж |
 | Package Name по умолчанию | com.nikitalapochkin.onemorefloor |
-| Версия по умолчанию | 1.0.0 |
+| Версия архива с кампанией | 1.1.0, код 2 |
 | Bundle Version Code | Не меньше 1, существующий больший код сохраняется |
 | Ориентация | Portrait |
 | Scripting Backend | IL2CPP |
