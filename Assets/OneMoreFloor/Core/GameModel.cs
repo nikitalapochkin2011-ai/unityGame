@@ -120,32 +120,59 @@ namespace OneMoreFloor
         internal void Tick(float dt, GameSession game)
         {
             if(game.Level!=null && (Spawned>=game.SpawnBudget || (game.IsGuiding && Spawned>0))) return;
-            var difficulty = game.Difficulty;
-            countdown = Math.Min(countdown, difficulty.SpawnInterval) - dt;
-            if (countdown > 0) return;
-            // Draw uniformly from floors with a free waiting slot. A full building
-            // skips this scheduled arrival without creating an invisible passenger/loss.
-            int available = 0;
-            for (int f = 0; f < difficulty.ActiveFloors; f++)
-                if (game.Queues.Floors[f].Count < game.QueueLimit) available++;
-            countdown += difficulty.SpawnInterval * (game.Level==null ? 1 : .85f+(float)random.NextDouble()*.30f);
-            if (available == 0) return;
-            int choice = random.Next(available), floor = 0;
-            for (int f = 0; f < difficulty.ActiveFloors; f++)
+            var difficulty=game.Difficulty;
+            if(game.Level!=null && game.ActivePassengerCount==0)
+                countdown=Math.Min(countdown,game.Level.EmptyHouseDelay);
+            if(game.Level==null) countdown=Math.Min(countdown,difficulty.SpawnInterval);
+            countdown-=dt;
+            if(countdown>0) return;
+            // A full house waits for a free slot; it doesn't build up a hidden backlog.
+            if(game.Level!=null && game.ActivePassengerCount>=game.Level.MaxActivePassengers)
+            { countdown=0; return; }
+            int batch=game.Level!=null && !game.IsGuiding && game.Level.Traffic==TrafficPattern.Waves && random.NextDouble()<.6 ? 2 : 1;
+            for(int i=0;i<batch;i++)
             {
-                if (game.Queues.Floors[f].Count >= game.QueueLimit) continue;
-                if (choice-- == 0) { floor = f; break; }
+                if(game.Level!=null && (Spawned>=game.SpawnBudget || game.ActivePassengerCount>=game.Level.MaxActivePassengers)) break;
+                if(!Spawn(game,difficulty)) break;
             }
-            int min = Math.Max(0, floor - difficulty.MaximumRouteDistance);
-            int max = Math.Min(difficulty.ActiveFloors - 1, floor + difficulty.MaximumRouteDistance);
-            // Select uniformly from the reachable floors, excluding the origin, without retries.
-            int destination = random.Next(min, max);
-            if (destination >= floor) destination++;
+            countdown+=difficulty.SpawnInterval*(game.Level==null ? 1 : .85f+(float)random.NextDouble()*.30f);
+        }
+        bool Spawn(GameSession game,DifficultyState difficulty)
+        {
+            // Every origin remains random among unlocked floors with room.
+            int available=0;
+            for(int f=0;f<difficulty.ActiveFloors;f++)
+                if(game.Queues.Floors[f].Count<game.QueueLimit) available++;
+            if(available==0) return false;
+            int choice=random.Next(available),floor=0;
+            for(int f=0;f<difficulty.ActiveFloors;f++)
+            {
+                if(game.Queues.Floors[f].Count>=game.QueueLimit) continue;
+                if(choice--==0) { floor=f; break; }
+            }
+            int min=Math.Max(0,floor-difficulty.MaximumRouteDistance);
+            int max=Math.Min(difficulty.ActiveFloors-1,floor+difficulty.MaximumRouteDistance);
+            int destination;
+            if(game.Level!=null && game.Level.Traffic==TrafficPattern.LongTrips)
+            {
+                int minimumDistance=Math.Max(1,game.Level.ActiveFloors/2),choices=0;
+                for(int f=0;f<difficulty.ActiveFloors;f++) if(Math.Abs(f-floor)>=minimumDistance) choices++;
+                int selected=random.Next(choices); destination=0;
+                for(int f=0;f<difficulty.ActiveFloors;f++)
+                    if(Math.Abs(f-floor)>=minimumDistance && selected--==0) { destination=f; break; }
+            }
+            else
+            {
+                destination=random.Next(min,max);
+                if(destination>=floor) destination++;
+            }
             bool box=game.Level!=null && game.Rules.Capacity>=2 && random.NextDouble()<game.Level.BoxChance;
             int appearance=game.Level==null ? Spawned%8 : random.Next(8);
-            if(game.Queues.TryEnqueue(floor,new Passenger(destination,game.PassengerPatience,box,appearance))) Spawned++;
+            if(!game.Queues.TryEnqueue(floor,new Passenger(destination,game.PassengerPatience,box,appearance))) return false;
+            Spawned++; return true;
         }
     }
+
     public enum PlayState { Playing, Paused, GameOver, Won }
     public sealed class GameSession
     {
@@ -157,6 +184,15 @@ namespace OneMoreFloor
         public readonly int LevelNumber;
         public int SpawnBudget { get { return Level==null ? int.MaxValue : Level.DeliveryGoal+Rules.LossLimit-1; } }
         public int Spawned { get { return spawner.Spawned; } }
+        public int ActivePassengerCount
+        {
+            get
+            {
+                int count=Lift.Riders.Count;
+                foreach(var queue in Queues.Floors) count+=queue.Count;
+                return count;
+            }
+        }
         public int QueueLimit { get { return Level==null ? GameRules.MaxWaitingPerFloor : Level.QueueLimit; } }
         public float PassengerPatience { get { return Level==null ? Rules.PatienceSeconds : Level.PatienceSeconds; } }
         public bool IsGuiding { get { return Level!=null && Level.Guided && Delivered==0; } }

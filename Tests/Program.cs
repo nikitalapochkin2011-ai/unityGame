@@ -21,8 +21,9 @@ class Program
         }
         return count;
     }
-    static void Main()
+    static void Main(string[] args)
     {
+        if(args.Length>0 && args[0]=="--catalog") { CampaignTests.PrintCatalog(); return; }
         var g=Game(); var first=new Passenger(1,1000); g.Queues.TryEnqueue(0,first);
         for(int i=0;i<5;i++) g.Queues.TryEnqueue(0,new Passenger(2,1000));
         g.SelectFloor(0); Run(g,.05f);

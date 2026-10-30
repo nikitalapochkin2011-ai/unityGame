@@ -124,7 +124,7 @@ namespace OneMoreFloor
             ui.Text("House label",overlay,"ДОМ № 6  /  ВАША НОВАЯ СМЕНА",.08f,.925f,.79f,.96f,16,GameUI.Teal,TextAnchor.MiddleCenter,true);
             ui.IconButton("Menu settings",overlay,"gear",.84f,.935f,.95f,.99f,ShowSettings,GameUI.Ink);
             ui.Text("Game title",overlay,"Ещё один\nэтаж",.07f,.735f,.93f,.916f,68,GameUI.Ink,TextAnchor.MiddleCenter,true);
-            ui.Text("Tagline",overlay,"Кому-то домой. Кому-то в гости.\nА вам — пять маленьких историй.",.1f,.65f,.9f,.742f,23,GameUI.Hex("476B70"));
+            ui.Text("Tagline",overlay,"Кому-то домой. Кому-то в гости.\nА вам — пятьдесят историй одного дома.",.1f,.65f,.9f,.742f,23,GameUI.Hex("476B70"));
             var hero=ui.Panel("Lobby illustration",overlay,.12f,.333f,.88f,.635f,GameUI.Hex("E8D3B5")).rectTransform;
             ui.Panel("Lobby floor",hero,.02f,.015f,.98f,.09f,GameUI.Hex("C19B7A"),false);
             ui.Picture("Lobby window",hero,"window",.045f,.38f,.31f,.89f);
@@ -136,7 +136,7 @@ namespace OneMoreFloor
             ui.Text("Lobby plaque",hero,"ДОБРО ПОЖАЛОВАТЬ",.04f,.9f,.48f,.98f,12,GameUI.Teal,TextAnchor.MiddleCenter,true);
             ui.Button("Play",overlay,"Выбрать уровень  →",.12f,.237f,.88f,.313f,StartShift,GameUI.Coral,31);
             ui.Button("Learn",overlay,"Как играть?  Обучение",.12f,.162f,.88f,.218f,()=>ShowTutorial(false),GameUI.Teal,23);
-            record=ui.Text("Record",overlay,"ПРОЙДЕНО УРОВНЕЙ: "+progress.Completed+" / 5",.12f,.101f,.88f,.15f,23,GameUI.Ink,TextAnchor.MiddleCenter,true);
+            record=ui.Text("Record",overlay,"ПРОЙДЕНО УРОВНЕЙ: "+progress.Completed+" / "+Campaign.LevelCount,.12f,.101f,.88f,.15f,23,GameUI.Ink,TextAnchor.MiddleCenter,true);
             ui.Text("Best score",overlay,"Личный рекорд: "+best,.12f,.075f,.88f,.104f,18,GameUI.Teal);
             ui.Text("Menu instructions",overlay,"Начните с обучения на первом уровне.\nНовые этажи открываются по мере прохождения.",.08f,.012f,.92f,.077f,18,GameUI.Hex("476B70"));
         }
@@ -208,7 +208,7 @@ namespace OneMoreFloor
         void RenderTutorial()
         {
             ClearOverlay(true);
-            string[] titles={ "Знакомьтесь: соседи", "Вы управляете лифтом", "Копите очки", "Пять историй в одном доме" };
+            string[] titles={ "Знакомьтесь: соседи", "Вы управляете лифтом", "Копите очки", "Пятьдесят историй дома" };
             var card=Modal("ОБУЧЕНИЕ  "+(tutorialPage+1)+" / 4",titles[tutorialPage]);
             string detail;
             if(tutorialPage==0)
@@ -270,7 +270,7 @@ namespace OneMoreFloor
         void EndGame()
         {
             SaveBest(); coachRoot.gameObject.SetActive(false); ClearOverlay();
-            var card=Modal("УРОВЕНЬ "+currentLevel+" / 5","Попробуем\nещё раз?");
+            var card=Modal("УРОВЕНЬ "+currentLevel+" / "+Campaign.LevelCount,"Попробуем\nещё раз?");
             ui.Text("Final score",card,game.Score+" очков",.1f,.5f,.9f,.67f,45,GameUI.Teal,TextAnchor.MiddleCenter,true);
             ui.Text("Results",card,"Доставлено: "+game.Delivered+" / "+game.Level.DeliveryGoal+"\nТрое соседей не дождались лифта.",.06f,.38f,.94f,.51f,23,GameUI.Hex("627D7C"));
             ui.Button("Retry",card,"Повторить уровень →",.09f,.22f,.91f,.345f,NewGame,GameUI.Coral);
@@ -296,7 +296,7 @@ namespace OneMoreFloor
         void Render(float dt)
         {
             score.text=game.Score.ToString(); multiplier.text="×"+game.Multiplier;
-            difficultyLabel.text="УРОВЕНЬ "+currentLevel+" / 5   •   ДОСТАВЛЕНО "+Math.Min(game.Delivered,game.Level.DeliveryGoal)+" / "+game.Level.DeliveryGoal;
+            difficultyLabel.text="УРОВЕНЬ "+currentLevel+" / "+Campaign.LevelCount+"   •   ДОСТАВЛЕНО "+Math.Min(game.Delivered,game.Level.DeliveryGoal)+" / "+game.Level.DeliveryGoal;
             streak.text=game.Multiplier==3 ? "МАКСИМУМ" : "ДО ×"+(game.Multiplier+1);
             for(int i=0;i<streakMarks.Length;i++) streakMarks[i].color=game.Multiplier==3 || i<game.Streak%5 ? GameUI.Gold : GameUI.Hex("D9D9C9");
             for(int i=0;i<lossMarks.Length;i++) lossMarks[i].color=i<game.Lost ? GameUI.Coral : GameUI.Hex("ADC2B8");

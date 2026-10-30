@@ -7,7 +7,7 @@ namespace OneMoreFloor
     public sealed partial class GameApp
     {
         CampaignProgress progress;
-        int currentLevel=1;
+        int currentLevel=1, levelPage;
         static int seedSerial;
         RectTransform coachRoot, coachPointer, coachCard;
         Text coachTitle, coachDetail, pointerLabel;
@@ -17,38 +17,48 @@ namespace OneMoreFloor
 
         void ShowLevels()
         {
+            levelPage=Campaign.PageForLevel(progress.Unlocked); RenderLevelPage();
+        }
+        void RenderLevelPage()
+        {
+            levelPage=Math.Max(0,Math.Min(Campaign.PageCount-1,levelPage));
             game=null; building.Reset(); buildingRoot.gameObject.SetActive(false);
             coachRoot.gameObject.SetActive(false); settingsLayer.gameObject.SetActive(false); ClearOverlay(true);
-            ui.Text("Campaign label",overlay,"ДОМ № 6  /  ПЯТЬ РАБОЧИХ ДНЕЙ",.08f,.92f,.92f,.96f,17,GameUI.Teal,TextAnchor.MiddleCenter,true);
-            ui.Text("Campaign title",overlay,"Ваши истории",.06f,.825f,.94f,.92f,45,GameUI.Ink,TextAnchor.MiddleCenter,true);
-            ui.Text("Campaign progress",overlay,"Пройдено "+progress.Completed+" из 5. Можно переиграть любой открытый уровень.",.08f,.76f,.92f,.825f,20,GameUI.Teal);
-            for(int i=0;i<Campaign.LevelCount;i++)
+            int first=levelPage*Campaign.LevelsPerPage,last=Math.Min(Campaign.LevelCount,first+Campaign.LevelsPerPage);
+            ui.Text("Campaign label",overlay,"ДОМ № 6  /  "+Campaign.LevelCount+" ИСТОРИЙ",.08f,.92f,.92f,.96f,17,GameUI.Teal,TextAnchor.MiddleCenter,true);
+            ui.Text("Campaign title",overlay,"Уровни "+(first+1)+"–"+last,.06f,.825f,.94f,.92f,45,GameUI.Ink,TextAnchor.MiddleCenter,true);
+            ui.Text("Campaign progress",overlay,"Пройдено "+progress.Completed+" из "+Campaign.LevelCount+". Открытые уровни можно повторять.",.08f,.76f,.92f,.825f,20,GameUI.Teal);
+            for(int i=first;i<last;i++)
             {
                 int number=i+1; var level=Settings.Levels[i]; bool unlocked=progress.IsUnlocked(number);
-                float top=.735f-i*.12f;
-                var button=ui.Button("Level "+number,overlay,"",.07f,top-.105f,.93f,top,
+                float top=.735f-(i-first)*.112f;
+                var button=ui.Button("Level "+number,overlay,"",.07f,top-.102f,.93f,top,
                     ()=>ChooseLevel(number),unlocked ? GameUI.Cream : GameUI.Hex("A4BBB3"));
                 button.interactable=unlocked;
-                ui.Text("Level number",button.transform,number.ToString(),.02f,.1f,.15f,.9f,40,unlocked ? GameUI.Coral : GameUI.Hex("6B8682"),TextAnchor.MiddleCenter,true);
-                ui.Text("Level title",button.transform,level.Title,.19f,.45f,.92f,.9f,25,GameUI.Ink,TextAnchor.MiddleLeft,true);
+                ui.Text("Level number",button.transform,number.ToString(),.02f,.1f,.15f,.9f,36,unlocked ? GameUI.Coral : GameUI.Hex("6B8682"),TextAnchor.MiddleCenter,true);
+                ui.Text("Level title",button.transform,level.Title,.19f,.47f,.88f,.9f,25,GameUI.Ink,TextAnchor.MiddleLeft,true);
                 string detail=unlocked ? "Этажи 1–"+level.ActiveFloors+"  •  "+level.DeliveryGoal+" доставок" : "Пройдите уровень "+i+", чтобы открыть";
                 if(number<=progress.Completed) detail+="  •  Рекорд "+PlayerPrefs.GetInt("OneMoreFloor.LevelBest."+number,0);
                 ui.Text("Level detail",button.transform,detail,.19f,.09f,.94f,.47f,18,GameUI.Hex("4C7478"),TextAnchor.MiddleLeft);
                 if(number<=progress.Completed)
-                    ui.Text("Completed",button.transform,"✓",.87f,.47f,.98f,.92f,27,GameUI.Teal,TextAnchor.MiddleCenter,true);
+                    ui.Text("Completed",button.transform,"✓",.88f,.49f,.98f,.92f,27,GameUI.Teal,TextAnchor.MiddleCenter,true);
             }
-            ui.Button("Back to menu",overlay,"В главное меню",.12f,.055f,.88f,.122f,ShowMenu,GameUI.Teal,25);
+            var previous=ui.Button("Previous levels",overlay,"←",.07f,.107f,.27f,.163f,()=>{levelPage--; RenderLevelPage();},GameUI.Teal,28);
+            previous.interactable=levelPage>0;
+            ui.Text("Level page",overlay,(levelPage+1)+" / "+Campaign.PageCount,.3f,.107f,.7f,.163f,22,GameUI.Ink,TextAnchor.MiddleCenter,true);
+            var next=ui.Button("Next levels",overlay,"→",.73f,.107f,.93f,.163f,()=>{levelPage++; RenderLevelPage();},GameUI.Teal,28);
+            next.interactable=levelPage<Campaign.PageCount-1;
+            ui.Button("Back to menu",overlay,"В главное меню",.12f,.025f,.88f,.088f,ShowMenu,GameUI.Teal,25);
         }
         void ChooseLevel(int number)
         {
             if(!progress.IsUnlocked(number)) return;
             currentLevel=number; var level=Settings.Levels[number-1]; ClearOverlay(true);
-            var card=Modal("УРОВЕНЬ "+number+" / 5",level.Title);
+            var card=Modal("УРОВЕНЬ "+number+" / "+Campaign.LevelCount,level.Title);
             ui.Text("Level goal",card,"Доставьте "+level.DeliveryGoal+" человек",.08f,.52f,.92f,.67f,31,GameUI.Teal,TextAnchor.MiddleCenter,true);
-            string detail="Доступны этажи 1–"+level.ActiveFloors+". В лифте 4 места.\nТри ушедших пассажира — повтор уровня.\n";
-            detail+=level.Guided ? "Начнём с одного соседа и подсказок.\nПервая доставка без спешки и таймера." :
-                level.BoxChance>0 ? "Встречаются соседи с коробкой: им нужны 2 места.\nКаждая попытка — новые люди и маршруты." :
-                "Маршруты и внешность соседей случайны.\nТемп чуть бодрее, чем на первом уровне.";
+            string detail="Доступны этажи 1–"+level.ActiveFloors+". В лифте 4 места.\n";
+            detail+=level.Guided ? "Начнём с одного соседа и подсказок.\nПервая доставка без спешки и таймера.\n" : Campaign.TrafficDescription(level.Traffic)+".\n";
+            detail+="Три ушедших пассажира — повтор уровня.\nКаждая попытка — случайные этажи и новые люди.";
             ui.Text("Level briefing",card,detail,.07f,.29f,.93f,.53f,23,GameUI.Hex("627D7C"));
             ui.Button("Begin level",card,level.Guided ? "Начать обучение →" : "Поехали →",.09f,.15f,.91f,.27f,NewGame,GameUI.Coral);
             ui.Button("Back to levels",card,"К уровням",.09f,.025f,.91f,.125f,ShowLevels,GameUI.Teal,23);
@@ -76,7 +86,7 @@ namespace OneMoreFloor
             PlayerPrefs.SetInt(key,Math.Max(game.Score,PlayerPrefs.GetInt(key,0))); PlayerPrefs.Save();
             coachRoot.gameObject.SetActive(false); ClearOverlay(); Play(deliveryTone);
             bool last=currentLevel==Campaign.LevelCount;
-            var card=Modal("УРОВЕНЬ "+currentLevel+" ПРОЙДЕН!",last ? "Пять историй\nпозади!" : "Отличная\nработа!");
+            var card=Modal("УРОВЕНЬ "+currentLevel+" ПРОЙДЕН!",last ? "Все "+Campaign.LevelCount+" историй\nпозади!" : "Отличная\nработа!");
             ui.Text("Win score",card,game.Score+" очков",.08f,.5f,.92f,.68f,48,GameUI.Teal,TextAnchor.MiddleCenter,true);
             ui.Text("Win detail",card,"Доставлено: "+game.Delivered+" человек\n"+(last ? "Все уровни открыты. Попробуете улучшить результат?" : "Открыт уровень "+(currentLevel+1)+" — "+Settings.Levels[currentLevel].Title),.07f,.36f,.93f,.51f,24,GameUI.Hex("627D7C"));
             ui.Button("Advance",card,last ? "К уровням →" : "Следующий уровень →",.09f,.205f,.91f,.325f,
