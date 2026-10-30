@@ -64,7 +64,7 @@ namespace OneMoreFloor
             rightDoor = ui.Picture("Right door",doors,"door",.5f,0,1,1,false).rectTransform;
             // Door edges sit above the people, while transparent glass keeps destinations readable.
             ui.Picture("Roof",root,"roof",-.005f,1.0f,1,1.085f,false);
-            ui.Text("Building name",root,"ДОМ № 6",.35f,1.046f,.7f,1.08f,17,GameUI.Ink,TextAnchor.MiddleCenter,true);
+            ui.Text("Building name",root,Loc.T("building.name"),.35f,1.046f,.7f,1.08f,17,GameUI.Ink,TextAnchor.MiddleCenter,true);
             ui.Panel("Foundation",root,-.005f,-.025f,1,.003f,GameUI.Hex("45636A"));
         }
         public void Reset()
@@ -105,7 +105,7 @@ namespace OneMoreFloor
                 var queue=game.Queues.Floors[f]; bool active=f<game.Difficulty.ActiveFloors;
                 callButtons[f].interactable=hallButtons[f].interactable=active;
                 lockedLabels[f].gameObject.SetActive(!active);
-                lockedLabels[f].text="Этаж "+(f+1)+" • с уровня "+(f<3 ? 1 : f);
+                lockedLabels[f].text=Loc.T("building.locked",f+1,f<3 ? 1 : f);
                 bool selected=game.Lift.NextFloor==f || (game.Lift.Moving && game.Lift.TargetFloor==f);
                 callLights[f].color=selected ? GameUI.Coral : (game.Lift.CurrentFloor==f && !game.Lift.Moving ? GameUI.Teal : GameUI.Hex("355563"));
                 rooms[f].color = !active ? new Color(.48f,.55f,.53f,1) : (selected ? new Color(1,.98f,.92f,1) : Color.white);
@@ -136,7 +136,7 @@ namespace OneMoreFloor
                 if(delivered) { view.Leave(true); departures.Add(view); }
                 else view.Destroy(); // A replacement must not produce an eighth waiting silhouette.
                 removed.Add(pair.Key);
-                Float(delivered ? "Спасибо!" : "Ушёл…",center,delivered ? GameUI.Teal : GameUI.Coral);
+                Float(Loc.T(delivered ? "building.thanks" : "building.left"),center,delivered ? GameUI.Teal : GameUI.Coral);
             }
             foreach(var p in removed) people.Remove(p);
             foreach(var view in people.Values) view.Tick(dt);

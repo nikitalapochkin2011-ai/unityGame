@@ -174,6 +174,14 @@ namespace OneMoreFloor
     }
 
     public enum PlayState { Playing, Paused, GameOver, Won }
+    public enum FeedbackKind { Floor, Delivered, Boarded, Lost, BoxBlocked, Won }
+    public readonly struct GameFeedback
+    {
+        public readonly FeedbackKind Kind;
+        public readonly int Count, Multiplier;
+        public GameFeedback(FeedbackKind kind,int count=0,int multiplier=1)
+        { Kind=kind; Count=count; Multiplier=multiplier; }
+    }
     public sealed class GameSession
     {
         public readonly GameRules Rules;
@@ -205,7 +213,7 @@ namespace OneMoreFloor
         public int Multiplier { get { return Math.Min(3, 1 + Streak / 5); } }
         public float Elapsed { get; private set; }
         public DifficultyState Difficulty { get { return Level==null ? DifficultyCurve.AtScore(Rules,Score) : Campaign.Difficulty(Level,LevelNumber,Delivered); } }
-        public event Action<string> Feedback;
+        public event Action<GameFeedback> Feedback;
         public GameSession(GameRules rules, int seed, LevelDefinition level=null, int levelNumber=1)
         {
             Rules = rules; rules.Validate();
@@ -237,7 +245,7 @@ namespace OneMoreFloor
         }
         void LosePassenger()
         {
-            Lost++; Streak = 0; Emit("Пассажир ушёл!");
+            Lost++; Streak = 0; Emit(FeedbackKind.Lost);
             if (Lost >= Rules.LossLimit) State = PlayState.GameOver;
         }
         void ServiceFloor()
@@ -251,17 +259,17 @@ namespace OneMoreFloor
                 }
             if(Level!=null && Delivered>=Level.DeliveryGoal)
             {
-                State=PlayState.Won; Emit("Уровень пройден!"); return;
+                State=PlayState.Won; Emit(FeedbackKind.Won); return;
             }
             var queue = Queues.Floors[Lift.CurrentFloor];
             while (queue.Count>0 && Lift.OccupiedSpaces+queue[0].SpaceRequired<=Rules.Capacity)
             { Lift.Riders.Add(Queues.TakeFirst(Lift.CurrentFloor)); boarded++; }
-            if (delivered > 0) Emit("Доставлено: " + delivered + "  ×" + Multiplier);
-            else if (boarded > 0) Emit("Вошли: " + boarded);
-            else Emit("Этаж " + (Lift.CurrentFloor + 1));
+            if (delivered > 0) Emit(FeedbackKind.Delivered,delivered);
+            else if (boarded > 0) Emit(FeedbackKind.Boarded,boarded);
+            else Emit(FeedbackKind.Floor,Lift.CurrentFloor+1);
             if(queue.Count>0 && queue[0].HasBox && Rules.Capacity-Lift.OccupiedSpaces==1)
-                Emit("Для коробки нужны 2 свободных места");
+                Emit(FeedbackKind.BoxBlocked);
         }
-        void Emit(string message) { if (Feedback != null) Feedback(message); }
+        void Emit(FeedbackKind kind,int count=0) { if(Feedback!=null) Feedback(new GameFeedback(kind,count,Multiplier)); }
     }
 }

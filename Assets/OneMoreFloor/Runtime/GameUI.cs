@@ -11,12 +11,19 @@ namespace OneMoreFloor
     {
         public static readonly Color Ink = Hex("203E4D"), Teal = Hex("387D7A"), Coral = Hex("D66C54");
         public static readonly Color Cream = Hex("FFF2DC"), Muted = Hex("7F999C"), Gold = Hex("E5B965");
-        readonly TMP_FontAsset regularFont = Resources.Load<TMP_FontAsset>("Fonts/GameSans SDF");
-        readonly TMP_FontAsset boldFont = Resources.Load<TMP_FontAsset>("Fonts/GameSans Bold SDF");
+        readonly TMP_FontAsset regularFont = Resources.Load<TMP_FontAsset>("Fonts/GameLatin SDF");
+        readonly TMP_FontAsset boldFont = Resources.Load<TMP_FontAsset>("Fonts/GameLatin Bold SDF");
         public GameUI()
         {
-            if(regularFont==null || boldFont==null)
+            var chinese=Resources.Load<TMP_FontAsset>("Fonts/GameHan SDF");
+            var chineseBold=Resources.Load<TMP_FontAsset>("Fonts/GameHan Bold SDF");
+            if(regularFont==null || boldFont==null || chinese==null || chineseBold==null)
                 throw new System.InvalidOperationException("Шрифты ещё не подготовлены. Остановите Play и выполните: Ещё один этаж → Подготовить качественный текст.");
+            // Native language names include Chinese even before a language is selected.
+            if(regularFont.fallbackFontAssetTable==null) regularFont.fallbackFontAssetTable=new List<TMP_FontAsset>();
+            if(boldFont.fallbackFontAssetTable==null) boldFont.fallbackFontAssetTable=new List<TMP_FontAsset>();
+            if(!regularFont.fallbackFontAssetTable.Contains(chinese)) regularFont.fallbackFontAssetTable.Add(chinese);
+            if(!boldFont.fallbackFontAssetTable.Contains(chineseBold)) boldFont.fallbackFontAssetTable.Add(chineseBold);
         }
         readonly Dictionary<string, Sprite> art = new Dictionary<string, Sprite>();
         public static Color Hex(string value) { Color color; ColorUtility.TryParseHtmlString("#" + value, out color); return color; }
@@ -61,7 +68,7 @@ namespace OneMoreFloor
             text.alignment = Alignment(alignment);
             text.enableAutoSizing = true; text.fontSizeMin = Mathf.Max(12,size*.72f); text.fontSizeMax = size;
             text.raycastTarget = false; text.richText = false; text.margin = Vector4.zero;
-            text.overflowMode = TextOverflowModes.Overflow;
+            text.overflowMode = TextOverflowModes.Truncate;
             return text;
         }
         static TextAlignmentOptions Alignment(TextAnchor value)

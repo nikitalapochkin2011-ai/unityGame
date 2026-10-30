@@ -176,5 +176,6 @@ class Program
         Check(simulated>1000,"25 seeded sessions preserve invariants under random taps and pauses");
         Console.WriteLine(passed + " legacy checks passed; stress frames: " + simulated);
         CampaignTests.MainChecks();
+        LocalizationTests.Run();
     }
 }
