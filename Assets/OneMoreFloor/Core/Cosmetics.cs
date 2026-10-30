@@ -13,9 +13,23 @@ namespace OneMoreFloor
     public static class FortuneWheelLayout
     {
         public const int Sectors=12;
-        public static int KindAt(int sector) { return sector%2==0 ? -1 : sector/2%3; }
+        // Even slots show a coin; odd slots show the same mystery decoration symbol.
+        public static int KindAt(int sector) { return sector%2==0 ? -1 : 0; }
         public static int SectorFor(SpinReward reward,Random random)
-        { return reward.IsCoins ? 2*random.Next(6) : 2*(reward.CosmeticId/10+3*random.Next(2))+1; }
+        { return 2*random.Next(Sectors/2)+(reward.IsCoins ? 0 : 1); }
+        public static float AngleForSector(int sector) { return sector*(360f/Sectors); }
+        public static int SectorUnderPointer(float rotation)
+        {
+            double angle=(rotation%360+360)%360;
+            return (int)Math.Floor(angle/(360.0/Sectors)+.5)%Sectors;
+        }
+        public static float RotationAt(float start,int sector,float progress)
+        {
+            float offset=(AngleForSector(sector)-start)%360;
+            if(offset<0) offset+=360;
+            float p=Math.Max(0,Math.Min(1,progress));
+            return start+(6*360+offset)*(1-(1-p)*(1-p)*(1-p));
+        }
     }
     // Independent of GameSession: this RNG and currency can never change routes or balance.
     public sealed class Cosmetics

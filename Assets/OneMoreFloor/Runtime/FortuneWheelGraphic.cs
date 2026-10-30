@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 namespace OneMoreFloor
 {
+    [RequireComponent(typeof(CanvasRenderer))]
     public sealed class FortuneWheelGraphic : Graphic
     {
         public const int Sectors=FortuneWheelLayout.Sectors;

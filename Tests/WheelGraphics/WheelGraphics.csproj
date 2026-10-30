@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../Assets/OneMoreFloor/Core/Cosmetics.cs" Link="Cosmetics.cs"/>
+    <Compile Include="../../Assets/OneMoreFloor/Runtime/FortuneWheelGraphic.cs" Link="FortuneWheelGraphic.cs"/>
+    <Compile Include="../../Assets/OneMoreFloor/Runtime/WheelRewardIcon.cs" Link="WheelRewardIcon.cs"/>
+    <Compile Include="../../Assets/OneMoreFloor/Runtime/WheelPointerGraphic.cs" Link="WheelPointerGraphic.cs"/>
+  </ItemGroup>
+</Project>

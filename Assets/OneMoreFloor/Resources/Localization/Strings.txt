@@ -186,3 +186,5 @@ cosmetic.9	Moonlight	Лунный свет	Ay ışığı	Luz de luna	Mondlicht	C
 wheel.coinLabel	Coins	Монеты	Para	Monedas	Münzen	Pièces	金币
 wheel.mystery	Your prize is revealed after the wheel stops	Награда откроется после остановки колеса	Ödül, çark durduktan sonra açılır	El premio se revela cuando se detiene la ruleta	Dein Preis wird nach dem Stopp enthüllt	Le gain sera révélé à la fin du tour	转盘停止后揭晓奖励
 wheel.coinReward	You won {0} coins!	Вы выиграли {0} монет!	{0} para kazandın!	¡Has ganado {0} monedas!	Du gewinnst {0} Münzen!	Vous gagnez {0} pièces !	你获得了{0}金币！
+wheel.tryLuck	Try your luck	Испытай удачу	Şansını dene	Prueba tu suerte	Versuch dein Glück	Tentez votre chance	试试运气
+wheel.decoration	Decoration	Оформление	Dekorasyon	Decoración	Gestaltung	Décoration	外观

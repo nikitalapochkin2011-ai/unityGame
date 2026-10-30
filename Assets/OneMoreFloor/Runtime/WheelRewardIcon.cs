@@ -4,9 +4,11 @@ using UnityEngine.UI;
 namespace OneMoreFloor
 {
     // Neutral emblems conceal the exact cosmetic and coin amount until the reveal.
+    [RequireComponent(typeof(CanvasRenderer))]
     public sealed class WheelRewardIcon : Graphic
     {
-        public int Kind=-1; // coin, sky, hallway, lift
+        int kind=-1;
+        public int Kind { get { return kind; } set { if(kind==value) return; kind=value; SetVerticesDirty(); } } // coin or mystery
         protected override void OnPopulateMesh(VertexHelper vh)
         {
             vh.Clear();
@@ -23,29 +25,20 @@ namespace OneMoreFloor
                 WheelMesh.Star(vh,center,.39f*unit,light);
                 return;
             }
-            WheelMesh.Quad(vh,center,unit,-.88f,-.82f,.88f,.82f,dark);
-            WheelMesh.Quad(vh,center,unit,-.78f,-.72f,.78f,.72f,light);
-            WheelMesh.Quad(vh,center,unit,-.64f,-.58f,.64f,.58f,GameUI.Hex("B78038"));
-            if(Kind==0)
+            // A raised question mark on a gold medallion, identical for every decoration.
+            WheelMesh.Disc(vh,center+new Vector2(0,-.055f)*unit,.87f*unit,dark);
+            WheelMesh.Disc(vh,center,.87f*unit,gold);
+            WheelMesh.Disc(vh,center,.73f*unit,GameUI.Hex("304550"));
+            WheelMesh.Ring(vh,center,.77f*unit,.82f*unit,light);
+            // Rounded hook and stem; a mesh symbol does not depend on TMP/font loading.
+            for(int i=0;i<32;i++)
             {
-                WheelMesh.Disc(vh,center+new Vector2(.29f,.28f)*unit,.18f*unit,light);
-                WheelMesh.Triangle(vh,center+new Vector2(-.6f,-.49f)*unit,center+new Vector2(-.2f,.24f)*unit,center+new Vector2(.28f,-.49f)*unit,gold);
-                WheelMesh.Triangle(vh,center+new Vector2(-.12f,-.49f)*unit,center+new Vector2(.33f,.04f)*unit,center+new Vector2(.61f,-.49f)*unit,light);
+                float angle=(155-i*240f/31)*Mathf.PI/180;
+                var point=center+new Vector2(Mathf.Cos(angle)*.30f,.24f+Mathf.Sin(angle)*.30f)*unit;
+                WheelMesh.Disc(vh,point,.095f*unit,light);
             }
-            else if(Kind==1)
-            {
-                WheelMesh.Quad(vh,center,unit,-.12f,-.50f,.48f,.46f,light);
-                WheelMesh.Quad(vh,center,unit,-.03f,-.50f,.39f,.37f,dark);
-                WheelMesh.Quad(vh,center,unit,-.54f,-.16f,-.26f,.38f,gold);
-                for(int i=0;i<3;i++) WheelMesh.Quad(vh,center,unit,-.66f,-.58f+i*.07f,.66f,-.55f+i*.07f,gold);
-            }
-            else
-            {
-                WheelMesh.Quad(vh,center,unit,-.46f,-.50f,-.035f,.27f,light);
-                WheelMesh.Quad(vh,center,unit,.035f,-.50f,.46f,.27f,light);
-                WheelMesh.Triangle(vh,center+new Vector2(-.27f,.37f)*unit,center+new Vector2(-.14f,.56f)*unit,center+new Vector2(-.01f,.37f)*unit,light);
-                WheelMesh.Triangle(vh,center+new Vector2(.01f,.56f)*unit,center+new Vector2(.14f,.37f)*unit,center+new Vector2(.27f,.56f)*unit,gold);
-            }
+            WheelMesh.Quad(vh,center,unit,-.07f,-.20f,.12f,.06f,light);
+            WheelMesh.Disc(vh,center+new Vector2(.025f,-.42f)*unit,.105f*unit,light);
         }
     }
     internal static class WheelMesh

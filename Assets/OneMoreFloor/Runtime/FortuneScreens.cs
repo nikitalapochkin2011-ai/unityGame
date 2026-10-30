@@ -46,29 +46,28 @@ namespace OneMoreFloor
             ui.Panel("Velvet backdrop",overlay,-.2f,-.1f,1.2f,1.1f,GameUI.Hex("192D36"),false);
             ui.Text("Title",overlay,Loc.T("wheel.title"),.04f,.925f,.96f,.99f,36,GameUI.Gold,TextAnchor.MiddleCenter,true);
             wheelWallet=Wallet(overlay,true);
-            ui.Text("Wheel help",overlay,(wheelTestMode ? "ТЕСТ: бесконечные вращения. Награды и выбор оформлений не сохраняются." : Loc.T("wheel.detail")),.06f,.79f,.94f,.88f,19,GameUI.Cream);
+            ui.Text("Wheel help",overlay,Loc.T("wheel.tryLuck"),.06f,.795f,.94f,.875f,29,GameUI.Gold,TextAnchor.MiddleCenter,true);
             // A square viewport keeps the wheel circular at all portrait safe-area sizes.
             var slot=ui.Rect("Wheel slot",overlay,.14f,.415f,.86f,.78f);
             var viewport=ui.Rect("Wheel viewport",slot,0,0,1,1);
             var aspect=viewport.gameObject.AddComponent<AspectRatioFitter>(); aspect.aspectMode=AspectRatioFitter.AspectMode.FitInParent; aspect.aspectRatio=1;
             ui.Picture("Wheel shadow",viewport,"circle",-.025f,-.04f,1.025f,1.01f,false).color=new Color(0,0,0,.4f);
             wheelDisk=ui.Rect("Rotating wheel",viewport,0,0,1,1);
-            var graphic=wheelDisk.gameObject.AddComponent<FortuneWheelGraphic>(); graphic.raycastTarget=false;
+            var graphic=AddWheelGraphic<FortuneWheelGraphic>(wheelDisk); graphic.raycastTarget=false;
             for(int sector=0;sector<FortuneWheelGraphic.Sectors;sector++)
             {
                 float angle=sector*Mathf.PI*2/FortuneWheelGraphic.Sectors;
                 float x=.5f+Mathf.Sin(angle)*.335f,y=.5f+Mathf.Cos(angle)*.335f;
                 RewardIcon(wheelDisk,FortuneWheelGraphic.KindAt(sector),x-.075f,y-.075f,x+.075f,y+.075f);
             }
-            wheelDisk.localEulerAngles=new Vector3(0,0,stoppedSector*(360f/FortuneWheelGraphic.Sectors));
-            var pointer=ui.Picture("Golden pointer",viewport,"triangle",.448f,.935f,.552f,1.06f);
-            pointer.color=GameUI.Hex("FFE6A0"); pointer.rectTransform.localEulerAngles=new Vector3(0,0,180);
-            for(int k=-1;k<3;k++)
-            {
-                float x=.035f+(k+1)*.24f;
-                RewardIcon(overlay,k,x,.36f,x+.065f,.403f);
-                ui.Text("Prize legend",overlay,k<0 ? Loc.T("wheel.coinLabel") : Category(k),x+.067f,.36f,x+.23f,.403f,16,GameUI.Cream);
-            }
+            wheelDisk.localEulerAngles=new Vector3(0,0,FortuneWheelLayout.AngleForSector(stoppedSector));
+            // The pointer belongs to the stationary viewport, never to the rotating disk.
+            var pointer=ui.Rect("Fixed downward pointer",viewport,.445f,.905f,.555f,1.04f);
+            AddWheelGraphic<WheelPointerGraphic>(pointer);
+            RewardIcon(overlay,-1,.19f,.36f,.255f,.403f);
+            ui.Text("Coin legend",overlay,Loc.T("wheel.coinLabel"),.26f,.36f,.46f,.403f,18,GameUI.Cream);
+            RewardIcon(overlay,0,.52f,.36f,.585f,.403f);
+            ui.Text("Mystery legend",overlay,Loc.T("wheel.decoration"),.59f,.36f,.89f,.403f,18,GameUI.Cream);
             var prizeCard=ui.Panel("Reveal card",overlay,.065f,.288f,.935f,.352f,GameUI.Hex("304550")).rectTransform;
             if(result==null)
                 ui.Text("Mystery",prizeCard,Loc.T("wheel.mystery"),.03f,.06f,.97f,.94f,20,GameUI.Cream);
@@ -109,11 +108,13 @@ namespace OneMoreFloor
         {
             if(spinning) return;
             int previousBalance=cosmetics.Coins;
+            float startRotation=wheelDisk!=null ? wheelDisk.localEulerAngles.z : 0;
             var reward=RollWheel(free);
             if(reward==null) { RefreshWheel(); return; }
             // Persist before animation: backgrounding or quitting never loses the awarded item.
             SaveCosmetics();
             ShowWheel();
+            wheelDisk.localEulerAngles=new Vector3(0,0,startRotation);
             // Award has already been saved, but revealing the wallet would spoil its amount.
             wheelWallet.text=Loc.T("wheel.coins",previousBalance);
             spinning=true;
@@ -121,25 +122,36 @@ namespace OneMoreFloor
             // Only the generic category is represented on the disk; the exact prize is
             // neither labelled nor tinted until the animation has finished.
             int sector=FortuneWheelLayout.SectorFor(reward,cosmeticRandom);
-            StartCoroutine(AnimateSpin(reward,sector));
+            StartCoroutine(AnimateSpin(reward,sector,startRotation));
         }
-        IEnumerator AnimateSpin(SpinReward reward,int sector)
+        IEnumerator AnimateSpin(SpinReward reward,int sector,float startRotation)
         {
             var disk=wheelDisk;
-            float t=0, end=360*6+sector*(360f/FortuneWheelGraphic.Sectors);
+            float t=0;
             while(t<3.4f && disk!=null)
             {
                 t+=Time.unscaledDeltaTime;
                 float progress=Mathf.Clamp01(t/3.4f);
-                disk.localEulerAngles=new Vector3(0,0,end*(1-Mathf.Pow(1-progress,3)));
+                disk.localEulerAngles=new Vector3(0,0,FortuneWheelLayout.RotationAt(startRotation,sector,progress));
                 yield return null;
             }
+            // Resolve the visible stopping slot from the final rotation used by the animation.
+            int landed=FortuneWheelLayout.SectorUnderPointer(FortuneWheelLayout.RotationAt(startRotation,sector,1));
             spinning=false;
-            if(disk!=null && disk.gameObject.activeInHierarchy) ShowWheel(reward,sector);
+            if(disk!=null && disk.gameObject.activeInHierarchy) ShowWheel(reward,landed);
+        }
+        T AddWheelGraphic<T>(RectTransform rect) where T : Graphic
+        {
+            // Explicit renderer setup also works with uGUI versions where Graphic does
+            // not declare CanvasRenderer as a required component.
+            if(rect.GetComponent<CanvasRenderer>()==null) rect.gameObject.AddComponent<CanvasRenderer>();
+            var graphic=rect.gameObject.AddComponent<T>(); graphic.raycastTarget=false;
+            graphic.canvasRenderer.SetColor(Color.white);
+            graphic.SetAllDirty(); return graphic;
         }
         void RewardIcon(Transform parent,int kind,float x0,float y0,float x1,float y1)
         {
-            var icon=ui.Rect("Prize emblem",parent,x0,y0,x1,y1).gameObject.AddComponent<WheelRewardIcon>();
+            var icon=AddWheelGraphic<WheelRewardIcon>(ui.Rect("Prize emblem",parent,x0,y0,x1,y1));
             icon.Kind=kind; icon.raycastTarget=false;
         }
         void ShowCollection(int kind=0)

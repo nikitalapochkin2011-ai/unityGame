@@ -93,13 +93,23 @@ static class CosmeticsTests
         Check(Math.Abs(distribution[0]/20000.0-.5)<.02 && Math.Abs(distribution[1]/20000.0-.3)<.02 && Math.Abs(distribution[2]/20000.0-.2)<.02,"seeded simulation matches 50/30/20 overall odds");
         var sectorCounts=new int[4];
         for(int i=0;i<FortuneWheelLayout.Sectors;i++) sectorCounts[FortuneWheelLayout.KindAt(i)+1]++;
-        Check(sectorCounts[0]==6 && sectorCounts[1]==2 && sectorCounts[2]==2 && sectorCounts[3]==2,"disk has six coin and six decoration sectors");
+        Check(sectorCounts[0]==6 && sectorCounts[1]==6 && sectorCounts[2]==0 && sectorCounts[3]==0,"disk has six coin and six mystery sectors");
         for(int id=-1;id<30;id++)
-            for(int variant=0;variant<(id<0 ? 6 : 2);variant++)
+            for(int variant=0;variant<6;variant++)
             {
                 var award=new SpinReward(id,id<0 ? 20 : 0);
                 int sector=FortuneWheelLayout.SectorFor(award,new Sequence(variant));
-                Check(sector>=0 && sector<12 && FortuneWheelLayout.KindAt(sector)==(id<0 ? -1 : id/10),"pointer lands on actual prize category "+id+"/"+variant);
+                Check(sector>=0 && sector<12 && FortuneWheelLayout.KindAt(sector)==(id<0 ? -1 : 0),"pointer lands on actual prize category "+id+"/"+variant);
+            }
+        foreach(float start in new[]{0f,30f,150f,359.9f})
+            for(int sector=0;sector<12;sector++)
+            {
+                Check(FortuneWheelLayout.RotationAt(start,sector,0)==start,"spin begins at the displayed angle");
+                float previous=start; bool monotone=true;
+                for(int step=1;step<=100;step++)
+                { float next=FortuneWheelLayout.RotationAt(start,sector,step/100f); monotone &= next>=previous; previous=next; }
+                Check(monotone && previous>=start+2160,"disk turns six full revolutions without reversing");
+                Check(FortuneWheelLayout.SectorUnderPointer(previous)==sector,"fixed top pointer selects the actual stopping sector");
             }
         var sandbox=Cosmetics.Load("1|0|1049601|0|0|0|999999");
         string realSave=sandbox.Save();
