@@ -159,8 +159,7 @@ level.50	Fifty stories	Пятьдесят историй	Elli hikâye	Cincuenta 
 wheel.title	Fortune wheel	Колесо фортуны	Şans çarkı	Ruleta de la suerte	Glücksrad	Roue de la fortune	幸运转盘
 collection.title	Collection	Коллекция	Koleksiyon	Colección	Sammlung	Collection	收藏
 wheel.coins	Coins: {0}	Монеты: {0}	Para: {0}	Monedas: {0}	Münzen: {0}	Pièces : {0}	金币：{0}
-wheel.detail	One new style per spin. Free every 24 hours. Each delivered passenger has a 12% chance to give 1 coin.	Каждое вращение — новое оформление. Бесплатно раз в 24 часа. Шанс получить 1 монету за пассажира — 12%.	Her dönüşte yeni bir stil. 24 saatte bir ücretsiz. Teslim edilen her yolcu %12 şansla 1 para verir.	Un estilo nuevo por giro. Gratis cada 24 horas. Cada pasajero entregado tiene un 12% de dar 1 moneda.	Ein neuer Stil pro Dreh. Alle 24 Stunden kostenlos. Jeder beförderte Fahrgast gibt mit 12% Chance 1 Münze.	Un nouveau style par tour. Gratuit toutes les 24 heures. Chaque passager livré a 12% de chance de donner 1 pièce.	每次获得新外观。每24小时免费一次。每送达一位乘客有12%的机会获得1金币。
-wheel.legend	Gold: {0} · Green: {1} · Blue: {2}	Золото: {0} · Зелень: {1} · Синий: {2}	Altın: {0} · Yeşil: {1} · Mavi: {2}	Oro: {0} · Verde: {1} · Azul: {2}	Gold: {0} · Grün: {1} · Blau: {2}	Or : {0} · Vert : {1} · Bleu : {2}	金：{0} · 绿：{1} · 蓝：{2}
+wheel.detail	50%: 20–50 coins. 50%: a new style. Coin prizes: 60% for 20–29, 40% for 30–50. Free every 24 hours.	50% — 20–50 монет, 50% — новое оформление. Среди монет: 60% на 20–29, 40% на 30–50. Бесплатно раз в 24 часа.	%50: 20–50 para. %50: yeni stil. Para ödülleri: %60 ile 20–29, %40 ile 30–50. 24 saatte bir ücretsiz.	50%: 20–50 monedas. 50%: un estilo nuevo. Premios en monedas: 60% de 20–29, 40% de 30–50. Gratis cada 24 horas.	50%: 20–50 Münzen. 50%: ein neuer Stil. Münzpreise: 60% für 20–29, 40% für 30–50. Alle 24 Stunden kostenlos.	50% : 20–50 pièces. 50% : un nouveau style. Gains en pièces : 60% pour 20–29, 40% pour 30–50. Gratuit toutes les 24 heures.	50%获得20–50金币，50%获得新外观。金币奖励中：60%为20–29，40%为30–50。每24小时免费一次。
 wheel.free	Free spin	Бесплатное вращение	Ücretsiz çevir	Giro gratis	Kostenlos drehen	Tour gratuit	免费旋转
 wheel.paid	Spin — {0} coins	Вращать — {0} монет	Çevir — {0} para	Girar — {0} monedas	Drehen — {0} Münzen	Tourner — {0} pièces	旋转 — {0}金币
 wheel.wait	Free in {0}	Бесплатно через {0}	Ücretsiz: {0} sonra	Gratis en {0}	Kostenlos in {0}	Gratuit dans {0}	免费倒计时：{0}
@@ -184,3 +183,6 @@ cosmetic.6	Lagoon	Лагуна	Lagun	Laguna	Lagune	Lagon	泻湖
 cosmetic.7	Twilight	Сумерки	Alacakaranlık	Crepúsculo	Dämmerung	Crépuscule	暮色
 cosmetic.8	Copper	Медь	Bakır	Cobre	Kupfer	Cuivre	铜色
 cosmetic.9	Moonlight	Лунный свет	Ay ışığı	Luz de luna	Mondlicht	Clair de lune	月光
+wheel.coinLabel	Coins	Монеты	Para	Monedas	Münzen	Pièces	金币
+wheel.mystery	Your prize is revealed after the wheel stops	Награда откроется после остановки колеса	Ödül, çark durduktan sonra açılır	El premio se revela cuando se detiene la ruleta	Dein Preis wird nach dem Stopp enthüllt	Le gain sera révélé à la fin du tour	转盘停止后揭晓奖励
+wheel.coinReward	You won {0} coins!	Вы выиграли {0} монет!	{0} para kazandın!	¡Has ganado {0} monedas!	Du gewinnst {0} Münzen!	Vous gagnez {0} pièces !	你获得了{0}金币！

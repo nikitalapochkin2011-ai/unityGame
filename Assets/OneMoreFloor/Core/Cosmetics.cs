@@ -4,6 +4,19 @@ using System.Globalization;
 namespace OneMoreFloor
 {
     public enum CosmeticKind { Background, Floor, Lift }
+    public sealed class SpinReward
+    {
+        public readonly int CosmeticId, CoinAmount;
+        public bool IsCoins { get { return CosmeticId<0; } }
+        public SpinReward(int cosmeticId,int coinAmount) { CosmeticId=cosmeticId; CoinAmount=coinAmount; }
+    }
+    public static class FortuneWheelLayout
+    {
+        public const int Sectors=12;
+        public static int KindAt(int sector) { return sector%2==0 ? -1 : sector/2%3; }
+        public static int SectorFor(SpinReward reward,Random random)
+        { return reward.IsCoins ? 2*random.Next(6) : 2*(reward.CosmeticId/10+3*random.Next(2))+1; }
+    }
     // Independent of GameSession: this RNG and currency can never change routes or balance.
     public sealed class Cosmetics
     {
@@ -28,16 +41,28 @@ namespace OneMoreFloor
             for(int i=0;i<passengers;i++) if(random.Next(100)<12 && Coins<int.MaxValue) { Coins++; added++; }
             return added;
         }
-        // Select from the remaining pool, then debit and unlock as one synchronous operation.
-        public int Spin(bool free,long utcSeconds,Random random)
+        // Resolve and apply once, before presentation. Existing save format remains compatible.
+        public SpinReward Spin(bool free,long utcSeconds,Random random)
         {
-            if(Complete || utcSeconds<0 || utcSeconds>253402214399L || (free ? FreeIn(utcSeconds)>0 : Coins<SpinCost)) return -1;
-            int remaining=0;
-            for(int i=0;i<30;i++) if((owned & (1<<i))==0) remaining++;
-            int pick=random.Next(remaining),reward=-1;
-            for(int i=0;i<30;i++) if((owned & (1<<i))==0 && pick--==0) { reward=i; break; }
+            if(Complete || utcSeconds<0 || utcSeconds>253402214399L || (free ? FreeIn(utcSeconds)>0 : Coins<SpinCost)) return null;
+            SpinReward reward;
+            if(random.Next(100)<50)
+            {
+                // Conditional coin distribution: 60% in 20..29, 40% in 30..50, inclusive.
+                int amount=random.Next(100)<60 ? 20+random.Next(10) : 30+random.Next(21);
+                reward=new SpinReward(-1,amount);
+            }
+            else
+            {
+                int remaining=0;
+                for(int i=0;i<30;i++) if((owned & (1<<i))==0) remaining++;
+                int pick=random.Next(remaining),id=-1;
+                for(int i=0;i<30;i++) if((owned & (1<<i))==0 && pick--==0) { id=i; break; }
+                reward=new SpinReward(id,0);
+            }
             if(free) NextFree=utcSeconds+Cooldown; else Coins-=SpinCost;
-            owned|=1<<reward;
+            if(reward.IsCoins) Coins=(int)Math.Min(int.MaxValue,(long)Coins+reward.CoinAmount);
+            else owned|=1<<reward.CosmeticId;
             return reward;
         }
         public string Save()

@@ -11,7 +11,7 @@ namespace OneMoreFloor
         Cosmetics cosmetics;
         readonly System.Random cosmeticRandom=new System.Random();
         RectTransform wheelDisk;
-        Text freeCountdown;
+        Text freeCountdown,wheelWallet;
         Button freeSpin,paidSpin;
         bool spinning;
         float countdownTick;
@@ -20,34 +20,56 @@ namespace OneMoreFloor
         string ItemName(int id) { return Loc.T("cosmetic."+(id%10)); }
         string Category(int kind) { return Loc.T("collection.kind."+kind); }
         string RewardName(int id) { return Category(id/10)+": "+ItemName(id); }
-        void Wallet(Transform parent)
-        { ui.Text("Wallet",parent,Loc.T("wheel.coins",cosmetics.Coins),.06f,.88f,.94f,.925f,23,GameUI.Teal,TextAnchor.MiddleCenter,true); }
-        void ShowWheel(string result="")
+        Text Wallet(Transform parent,bool golden=false)
+        { return ui.Text("Wallet",parent,Loc.T("wheel.coins",cosmetics.Coins),.06f,.88f,.94f,.925f,23,golden ? GameUI.Gold : GameUI.Teal,TextAnchor.MiddleCenter,true); }
+        void ShowWheel(SpinReward result=null,int stoppedSector=0)
         {
             if(RequireLanguage()) return;
             ClearOverlay(true); wheelDisk=null;
-            ui.Text("Title",overlay,Loc.T("wheel.title"),.04f,.925f,.96f,.99f,36,GameUI.Ink,TextAnchor.MiddleCenter,true);
-            Wallet(overlay);
-            ui.Text("Wheel help",overlay,Loc.T("wheel.detail"),.06f,.79f,.94f,.88f,19,GameUI.Ink);
+            ui.Panel("Velvet backdrop",overlay,-.2f,-.1f,1.2f,1.1f,GameUI.Hex("192D36"),false);
+            ui.Text("Title",overlay,Loc.T("wheel.title"),.04f,.925f,.96f,.99f,36,GameUI.Gold,TextAnchor.MiddleCenter,true);
+            wheelWallet=Wallet(overlay,true);
+            ui.Text("Wheel help",overlay,Loc.T("wheel.detail"),.06f,.79f,.94f,.88f,19,GameUI.Cream);
             // A square viewport keeps the wheel circular at all portrait safe-area sizes.
             var slot=ui.Rect("Wheel slot",overlay,.14f,.415f,.86f,.78f);
             var viewport=ui.Rect("Wheel viewport",slot,0,0,1,1);
             var aspect=viewport.gameObject.AddComponent<AspectRatioFitter>(); aspect.aspectMode=AspectRatioFitter.AspectMode.FitInParent; aspect.aspectRatio=1;
+            ui.Picture("Wheel shadow",viewport,"circle",-.025f,-.04f,1.025f,1.01f,false).color=new Color(0,0,0,.4f);
             wheelDisk=ui.Rect("Rotating wheel",viewport,0,0,1,1);
             var graphic=wheelDisk.gameObject.AddComponent<FortuneWheelGraphic>(); graphic.raycastTarget=false;
-            for(int id=0;id<30;id++)
+            for(int sector=0;sector<FortuneWheelGraphic.Sectors;sector++)
             {
-                float angle=id*Mathf.PI*2/30;
-                float x=.5f+Mathf.Sin(angle)*.40f,y=.5f+Mathf.Cos(angle)*.40f;
-                var t=ui.Text("Sector",wheelDisk,cosmetics.Owns((CosmeticKind)(id/10),id%10) ? "✓" : (id%10+1).ToString(),x-.035f,y-.025f,x+.035f,y+.025f,13,GameUI.Ink);
-                t.rectTransform.localEulerAngles=new Vector3(0,0,-id*12);
+                float angle=sector*Mathf.PI*2/FortuneWheelGraphic.Sectors;
+                float x=.5f+Mathf.Sin(angle)*.335f,y=.5f+Mathf.Cos(angle)*.335f;
+                RewardIcon(wheelDisk,FortuneWheelGraphic.KindAt(sector),x-.075f,y-.075f,x+.075f,y+.075f);
             }
-            ui.Picture("Pointer",viewport,"triangle",.455f,.96f,.545f,1.06f).rectTransform.localEulerAngles=new Vector3(0,0,180);
-            ui.Text("Wheel legend",overlay,Loc.T("wheel.legend",Category(0),Category(1),Category(2)),.04f,.355f,.96f,.413f,17,GameUI.Ink);
-            ui.Text("Reward",overlay,result,.04f,.29f,.96f,.355f,22,GameUI.Teal,TextAnchor.MiddleCenter,true);
-            freeSpin=ui.Button("Free spin",overlay,"",.07f,.20f,.93f,.28f,()=>BeginSpin(true),GameUI.Coral,23);
-            freeCountdown=freeSpin.GetComponentInChildren<Text>();
-            paidSpin=ui.Button("Paid spin",overlay,Loc.T("wheel.paid",Cosmetics.SpinCost),.07f,.105f,.93f,.185f,()=>BeginSpin(false),GameUI.Teal,23);
+            wheelDisk.localEulerAngles=new Vector3(0,0,stoppedSector*(360f/FortuneWheelGraphic.Sectors));
+            var pointer=ui.Picture("Golden pointer",viewport,"triangle",.448f,.935f,.552f,1.06f);
+            pointer.color=GameUI.Hex("FFE6A0"); pointer.rectTransform.localEulerAngles=new Vector3(0,0,180);
+            for(int k=-1;k<3;k++)
+            {
+                float x=.035f+(k+1)*.24f;
+                RewardIcon(overlay,k,x,.36f,x+.065f,.403f);
+                ui.Text("Prize legend",overlay,k<0 ? Loc.T("wheel.coinLabel") : Category(k),x+.067f,.36f,x+.23f,.403f,16,GameUI.Cream);
+            }
+            var prizeCard=ui.Panel("Reveal card",overlay,.065f,.288f,.935f,.352f,GameUI.Hex("304550")).rectTransform;
+            if(result==null)
+                ui.Text("Mystery",prizeCard,Loc.T("wheel.mystery"),.03f,.06f,.97f,.94f,20,GameUI.Cream);
+            else
+            {
+                if(result.IsCoins) RewardIcon(prizeCard,-1,.015f,.08f,.15f,.92f);
+                else
+                {
+                    int id=result.CosmeticId,kind=id/10,index=id%10;
+                    var preview=ui.Panel("Revealed style",prizeCard,.015f,.08f,.15f,.92f,GameUI.Hex("BDD4D0"),false).rectTransform;
+                    if(kind==0) { ui.Picture("Sky",preview,"skyline",0,0,1,1,false); CosmeticStyle.Background(ui,preview,index); }
+                    else { ui.Picture("Style",preview,kind==1 ? "hallway" : "cabin",0,0,1,1,false).color=CosmeticStyle.Tint(index); CosmeticStyle.Detail(ui,preview,index,kind==2); }
+                }
+                ui.Text("Revealed reward",prizeCard,result.IsCoins ? Loc.T("wheel.coinReward",result.CoinAmount) : Loc.T("wheel.reward",RewardName(result.CosmeticId)),.17f,.06f,.98f,.94f,22,GameUI.Gold,TextAnchor.MiddleCenter,true);
+            }
+            freeSpin=ui.Button("Free spin",overlay,"",.07f,.20f,.93f,.28f,()=>BeginSpin(true),GameUI.Hex("C7953C"),23);
+            freeCountdown=freeSpin.GetComponentInChildren<Text>(); freeCountdown.color=GameUI.Ink;
+            paidSpin=ui.Button("Paid spin",overlay,Loc.T("wheel.paid",Cosmetics.SpinCost),.07f,.105f,.93f,.185f,()=>BeginSpin(false),GameUI.Hex("75572F"),23);
             ui.Button("Back",overlay,Loc.T("common.menu"),.07f,.025f,.47f,.09f,ShowMenu,GameUI.Ink,21);
             ui.Button("Collection",overlay,Loc.T("collection.title"),.50f,.025f,.93f,.09f,()=>ShowCollection(),GameUI.Ink,21);
             RefreshWheel();
@@ -69,26 +91,39 @@ namespace OneMoreFloor
         void BeginSpin(bool free)
         {
             if(spinning) return;
-            int reward=cosmetics.Spin(free,UtcNow,cosmeticRandom);
-            if(reward<0) { RefreshWheel(); return; }
+            int previousBalance=cosmetics.Coins;
+            var reward=cosmetics.Spin(free,UtcNow,cosmeticRandom);
+            if(reward==null) { RefreshWheel(); return; }
             // Persist before animation: backgrounding or quitting never loses the awarded item.
-            SaveCosmetics(); spinning=true;
+            SaveCosmetics();
+            ShowWheel();
+            // Award has already been saved, but revealing the wallet would spoil its amount.
+            wheelWallet.text=Loc.T("wheel.coins",previousBalance);
+            spinning=true;
             foreach(var button in overlay.GetComponentsInChildren<Button>()) button.interactable=false;
-            StartCoroutine(AnimateSpin(reward));
+            // Only the generic category is represented on the disk; the exact prize is
+            // neither labelled nor tinted until the animation has finished.
+            int sector=FortuneWheelLayout.SectorFor(reward,cosmeticRandom);
+            StartCoroutine(AnimateSpin(reward,sector));
         }
-        IEnumerator AnimateSpin(int reward)
+        IEnumerator AnimateSpin(SpinReward reward,int sector)
         {
             var disk=wheelDisk;
-            float t=0, end=360*5+reward*12;
-            while(t<2.8f && disk!=null)
+            float t=0, end=360*6+sector*(360f/FortuneWheelGraphic.Sectors);
+            while(t<3.4f && disk!=null)
             {
                 t+=Time.unscaledDeltaTime;
-                float progress=Mathf.Clamp01(t/2.8f);
+                float progress=Mathf.Clamp01(t/3.4f);
                 disk.localEulerAngles=new Vector3(0,0,end*(1-Mathf.Pow(1-progress,3)));
                 yield return null;
             }
             spinning=false;
-            if(disk!=null && disk.gameObject.activeInHierarchy) ShowWheel(Loc.T("wheel.reward",RewardName(reward)));
+            if(disk!=null && disk.gameObject.activeInHierarchy) ShowWheel(reward,sector);
+        }
+        void RewardIcon(Transform parent,int kind,float x0,float y0,float x1,float y1)
+        {
+            var icon=ui.Rect("Prize emblem",parent,x0,y0,x1,y1).gameObject.AddComponent<WheelRewardIcon>();
+            icon.Kind=kind; icon.raycastTarget=false;
         }
         void ShowCollection(int kind=0)
         {
