@@ -47,7 +47,7 @@ namespace OneMoreFloor
         { return index<10 ? CosmeticRarity.Common : index<15 ? CosmeticRarity.Rare : index<20 ? CosmeticRarity.Epic : CosmeticRarity.Legendary; }
         public bool Owns(CosmeticKind kind,int index) { return Valid(kind,index) && owned[(int)kind*PerKind+index]; }
         static bool Valid(CosmeticKind kind,int index) { return (int)kind>=0 && (int)kind<3 && index>=0 && index<PerKind; }
-        static readonly int[] TierWeights={60,25,10,5};
+        static readonly int[] TierWeights={50,25,15,10};
         public int AvailableRarityWeight(CosmeticRarity rarity)
         {
             int tier=(int)rarity; if(tier<0 || tier>=TierWeights.Length) return 0;
@@ -69,6 +69,8 @@ namespace OneMoreFloor
             for(int i=0;i<passengers;i++) if(random.Next(100)<12 && Coins<int.MaxValue) { Coins++; added++; }
             return added;
         }
+        public SpinReward SpinAfterAd(bool rewardEarned,long utcSeconds,Random random)
+        { return rewardEarned ? Spin(true,utcSeconds,random) : null; }
         // Resolve and apply once, before presentation. Legacy ownership is migrated by category when loading.
         public SpinReward Spin(bool free,long utcSeconds,Random random)
         { return SpinInternal(free,utcSeconds,random,false); }

@@ -17,19 +17,19 @@ static class ExpansionTests
     public static void Run()
     {
         for(int i=0;i<16;i++) Check(new Passenger(1,40,false,i).Appearance==i,"all sixteen human appearances survive model construction "+i);
-        var raccoon=new Passenger(0,40,true,0,true);
-        Check(raccoon.IsRaccoon && raccoon.Appearance==16 && raccoon.DeliveryUnits==2 && raccoon.SpaceRequired==1 && !raccoon.HasBox,"raccoon uses one slot, its own sprite and two delivery units without a parcel");
+        var raccoon=new Passenger(0,40,false,0,true);
+        Check(raccoon.IsRaccoon && raccoon.Appearance==16 && raccoon.DeliveryUnits==1 && raccoon.SpaceRequired==1 && !raccoon.HasBox,"raccoon uses one slot, its own sprite and one normal delivery unit");
         var g=Game();g.Lift.Riders.Add(raccoon);Stop(g);
-        Check(g.Score==20 && g.Delivered==2 && g.Streak==2 && g.Lift.Riders.Count==0,"raccoon delivery applies exactly twice the ordinary reward and progress");
-        g.Tick(.2f);Check(g.Score==20 && g.Delivered==2,"delivered raccoon cannot be counted twice on later frames");
+        Check(g.Score==10 && g.Delivered==1 && g.Streak==1 && g.Lift.Riders.Count==0,"raccoon delivery awards ordinary points, progress and streak");
+        g.Tick(.2f);Check(g.Score==10 && g.Delivered==1,"delivered raccoon cannot be counted twice on later frames");
         var a=Game();var b=Game();
         for(int i=0;i<4;i++) { a.Lift.Riders.Add(new Passenger(0,40)); b.Lift.Riders.Add(new Passenger(0,40)); }
-        Stop(a);Stop(b);a.Lift.Riders.Add(new Passenger(0,40,isRaccoon:true));b.Lift.Riders.Add(new Passenger(0,40));b.Lift.Riders.Add(new Passenger(0,40));
+        Stop(a);Stop(b);a.Lift.Riders.Add(new Passenger(0,40,isRaccoon:true));b.Lift.Riders.Add(new Passenger(0,40));
         a.Tick(.25f);b.Tick(.25f);Stop(a);Stop(b);
-        Check(a.Score==b.Score && a.Delivered==6 && a.Streak==b.Streak && a.Score==70,"double delivery respects a multiplier boundary exactly like two humans");
-        var level=Campaign.CreateLevels()[0].Copy(); level.DeliveryGoal=2;
+        Check(a.Score==b.Score && a.Delivered==5 && a.Streak==b.Streak && a.Score==50,"raccoon and human are identical at a multiplier boundary");
+        var level=Campaign.CreateLevels()[0].Copy(); level.DeliveryGoal=1;
         g=Game(level);g.Lift.Riders.Add(new Passenger(0,40,isRaccoon:true));Stop(g);
-        Check(g.State==PlayState.Won && g.Delivered==2 && g.Score==20,"raccoon can satisfy the level goal on the winning stop");
+        Check(g.State==PlayState.Won && g.Delivered==1 && g.Score==10,"raccoon can satisfy the level goal on the winning stop");
         g=Game();g.Queues.TryEnqueue(1,new Passenger(0,.001f,isRaccoon:true));g.Tick(.02f);
         Check(g.Lost==1 && g.Delivered==0 && g.Score==0,"an expired raccoon is one lost passenger and awards no delivery");
         int total=0,special=0; var looks=new HashSet<int>(); bool valid=true;
@@ -67,15 +67,15 @@ static class ExpansionTests
         for(int roll=0;roll<100;roll++)
         {
             var prize=new Cosmetics().Spin(true,100,new Sequence(99,roll,0));
-            int expected=roll<60 ? 0 : roll<85 ? 1 : roll<95 ? 2 : 3;
+            int expected=roll<50 ? 0 : roll<75 ? 1 : roll<90 ? 2 : 3;
             Check(!prize.IsCoins && (int)Cosmetics.Rarity(prize.CosmeticId%25)==expected,"exact rarity probability boundary "+roll);
         }
         var noCommon=Cosmetics.Load("2|0|1023.1023.1023|0|0|0|0");
-        Check(noCommon.RarityChance(CosmeticRarity.Common)==0 && noCommon.RarityChance(CosmeticRarity.Rare)==62.5,"exhausted common rarity is removed and displayed odds renormalize");
-        for(int roll=0;roll<40;roll++)
+        Check(noCommon.RarityChance(CosmeticRarity.Common)==0 && noCommon.RarityChance(CosmeticRarity.Rare)==50,"exhausted common rarity is removed and displayed odds renormalize");
+        for(int roll=0;roll<50;roll++)
         {
             var state=Cosmetics.Load(noCommon.Save());var prize=state.Spin(true,100,new Sequence(99,roll,0));
-            Check((int)Cosmetics.Rarity(prize.CosmeticId%25)==(roll<25 ? 1 : roll<35 ? 2 : 3),"remaining rarities keep their relative weights "+roll);
+            Check((int)Cosmetics.Rarity(prize.CosmeticId%25)==(roll<25 ? 1 : roll<40 ? 2 : 3),"remaining rarities keep their relative weights "+roll);
         }
         var last=Cosmetics.Load("2|0|33554431.33554431.16777215|0|0|0|0");
         Check(last.RarityChance(CosmeticRarity.Legendary)==100 && last.Spin(true,100,new Sequence(99,4,0)).CosmeticId==74 && last.Complete,"last missing legendary is reachable with no duplicate or empty-tier roll");

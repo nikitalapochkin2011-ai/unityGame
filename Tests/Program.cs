@@ -168,7 +168,7 @@ class Program
                 foreach(var q in g.Queues.Floors)
                 {
                     if(q.Count>7) throw new Exception("waiting capacity exceeded");
-                    foreach(var p in q) if(p.Remaining<=0) throw new Exception("expired queue rider");
+                    foreach(var p in q) if(p.Remaining<=0 && !(g.State==PlayState.GameOver && g.CanContinueAfterAd)) throw new Exception("expired queue rider outside the frozen ad offer");
                 }
                 simulated++;
             }
@@ -179,5 +179,6 @@ class Program
         LocalizationTests.Run();
         CosmeticsTests.Run();
         ExpansionTests.Run();
+        RewardedGameplayTests.Run();
     }
 }

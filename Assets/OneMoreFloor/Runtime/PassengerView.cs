@@ -40,9 +40,6 @@ namespace OneMoreFloor
             badge.rectTransform.sizeDelta=new Vector2(30,28);
             destination = ui.Text("Destination",badge.transform,"",0,0,1,1,23,GameUI.Ink,TextAnchor.MiddleCenter,true);
             destination.enableAutoSizing=false; destination.fontSize=22;
-            var bonusBadge=ui.Panel("Double delivery badge",Root,.55f,.49f,.99f,.67f,GameUI.Gold).rectTransform;
-            ui.Text("Raccoon double delivery",bonusBadge,"×2",.02f,0,.98f,1,15,GameUI.Ink,TextAnchor.MiddleCenter,true);
-            bonusBadge.gameObject.SetActive(appearance==Passenger.RaccoonAppearance);
             patienceTrack = ui.Panel("Patience track",Root,.09f,.015f,.91f,.055f,GameUI.Ink).rectTransform;
             patience = ui.Panel("Patience",patienceTrack,0,0,1,1,GameUI.Teal,false);
         }
@@ -74,7 +71,7 @@ namespace OneMoreFloor
             if (Departing) return;
             Departing = true; departureTime = 0;
             target = position + new Vector2(delivered ? .12f : -.1f,.035f);
-            destination.text = delivered ? (appearance==Passenger.RaccoonAppearance ? "+2" : "✓") : "!";
+            destination.text = delivered ? "✓" : "!";
             badge.color = delivered ? GameUI.Gold : GameUI.Coral;
             patienceTrack.gameObject.SetActive(false);
         }

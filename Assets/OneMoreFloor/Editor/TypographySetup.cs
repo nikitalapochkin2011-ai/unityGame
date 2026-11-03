@@ -116,6 +116,9 @@ namespace OneMoreFloor.Editor
             var font=existing ?? TMP_FontAsset.CreateFontAsset(source,sampling,8,GlyphRenderMode.SDFAA,atlas,atlas,AtlasPopulationMode.Dynamic,true);
             if(font==null) throw new InvalidOperationException("Unable to create SDF font: "+sourceName);
             font.name=assetName;
+            // Updated font subsets may reuse glyph indices. Rebuild the generated
+            // tables and atlas when adding coverage, preserving the asset GUID.
+            if(existing!=null) font.ClearFontAssetData();
             string missing;
             if(!font.TryAddCharacters(characters,out missing))
                 throw new InvalidOperationException("Missing required glyphs in "+sourceName+": "+missing);

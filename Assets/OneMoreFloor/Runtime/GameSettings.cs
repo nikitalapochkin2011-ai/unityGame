@@ -4,11 +4,13 @@ namespace OneMoreFloor
     [CreateAssetMenu(menuName = "Ещё один этаж/Настройки игры")]
     public sealed class GameSettings : ScriptableObject
     {
+        public RewardedAdsConfiguration Ads = new RewardedAdsConfiguration();
         public GameRules Rules = new GameRules();
         public LevelDefinition[] Levels = Campaign.CreateLevels();
         public int CampaignBalanceVersion;
         public void Prepare()
         {
+            if(Ads==null) Ads=new RewardedAdsConfiguration();
             if(Rules==null) Rules=new GameRules();
             Rules.Validate();
             // Existing GameSettings assets gain the campaign without a manual scene rebuild.

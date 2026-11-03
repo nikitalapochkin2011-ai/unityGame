@@ -37,7 +37,7 @@ namespace OneMoreFloor
             Settings.Prepare();
             progress=new CampaignProgress(PlayerPrefs.GetInt("OneMoreFloor.Campaign.Completed",0));
             cosmetics=CosmeticStore.Load(); InitializeWheelTesting();
-            Loc.Initialize(); ui=new GameUI();
+            Loc.Initialize(); InitializeAds(); ui=new GameUI();
             best=PlayerPrefs.GetInt("OneMoreFloor.Best",0);
             sound=PlayerPrefs.GetInt("OneMoreFloor.Sound",1)!=0;
             audioSource=gameObject.AddComponent<AudioSource>(); audioSource.playOnAwake=false;
@@ -294,13 +294,17 @@ namespace OneMoreFloor
             SaveBest(); coachRoot.gameObject.SetActive(false); ClearOverlay();
             var card=Modal(Loc.T("level.number",currentLevel,Campaign.LevelCount),Loc.T("loss.title"));
             ui.Text("Final score",card,Loc.T("win.score",game.Score),.1f,.5f,.9f,.67f,45,GameUI.Teal,TextAnchor.MiddleCenter,true);
-            ui.Text("Results",card,Loc.T("loss.detail",game.Delivered,game.Level.DeliveryGoal,game.Rules.LossLimit),.06f,.38f,.94f,.51f,23,GameUI.Hex("627D7C"));
-            ui.Button("Retry",card,Loc.T("loss.retry"),.09f,.22f,.91f,.345f,NewGame,GameUI.Coral);
-            ui.Button("Levels",card,Loc.T("common.levels"),.09f,.07f,.91f,.18f,ShowLevels);
+            ui.Text("Results",card,Loc.T("loss.detail",game.Delivered,game.Level.DeliveryGoal,game.Lost),.06f,.40f,.94f,.51f,22,GameUI.Hex("627D7C"));
+            ui.Text("Ad continue detail",card,Loc.T("ads.continueDetail",Math.Max(0,game.Lost-1)),.06f,.295f,.94f,.405f,19,GameUI.Ink);
+            continueAdButton=ui.Button("Continue after rewarded ad",card,Loc.T("ads.continue"),.09f,.195f,.91f,.29f,ContinueWithAd,GameUI.Coral,22);
+            continueAdLabel=continueAdButton.GetComponentInChildren<Text>();
+            ui.Button("Retry",card,Loc.T("loss.retry"),.09f,.085f,.49f,.18f,NewGame,GameUI.Teal,21);
+            ui.Button("Levels",card,Loc.T("common.levels"),.52f,.085f,.91f,.18f,ShowLevels,GameUI.Ink,21);
+            RefreshContinueAd();
         }
         void Update()
         {
-            ApplySafeArea(); UpdateWheel();
+            ApplySafeArea(); UpdateWheel(); RefreshContinueAd();
             if(overlay!=null && overlay.gameObject.activeSelf)
             { screenAge+=Time.unscaledDeltaTime; screenFade.alpha=Mathf.Clamp01(screenAge/.18f); }
             if(game==null) return;

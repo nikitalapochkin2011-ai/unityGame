@@ -28,14 +28,14 @@ namespace OneMoreFloor
         public const int HumanAppearanceCount=16, RaccoonAppearance=16;
         public const int RaccoonChancePercent=4;
         public bool IsRaccoon { get; private set; }
-        public int DeliveryUnits { get { return IsRaccoon ? 2 : 1; } }
+        public int DeliveryUnits { get { return 1; } }
         public int Destination { get; private set; }
         public bool HasBox { get; private set; }
         public int SpaceRequired { get { return HasBox ? 2 : 1; } }
         public int Appearance { get; private set; }
         public float Remaining { get; internal set; }
         public Passenger(int destination, float patience, bool hasBox=false, int appearance=0, bool isRaccoon=false)
-        { Destination = destination; Remaining = patience; IsRaccoon=isRaccoon; HasBox=hasBox && !isRaccoon; Appearance=isRaccoon ? RaccoonAppearance : Math.Max(0,appearance)%HumanAppearanceCount; }
+        { Destination = destination; Remaining = patience; IsRaccoon=isRaccoon; HasBox=hasBox; Appearance=isRaccoon ? RaccoonAppearance : Math.Max(0,appearance)%HumanAppearanceCount; }
     }
     public sealed class Elevator
     {
@@ -104,15 +104,21 @@ namespace OneMoreFloor
         {
             var queue = queues[floor]; var passenger = queue[0]; queue.RemoveAt(0); return passenger;
         }
-        internal void Age(float dt, Action lost, Func<bool> ended)
+        internal void Age(float dt, Action<int,Passenger> lost, Func<bool> ended)
         {
-            foreach (var queue in queues)
+            for(int floor=0;floor<queues.Length;floor++)
+            {
+                var queue=queues[floor];
                 for (int i = 0; i < queue.Count;)
                 {
                     queue[i].Remaining -= dt;
                     if (queue[i].Remaining > 0) { i++; continue; }
-                    queue.RemoveAt(i); lost(); if (ended()) return;
+                    // Keep the terminal passenger in the same slot while the ad offer
+                    // is open. Earlier losses leave normally and free a queue slot.
+                    lost(floor,queue[i]); if(ended()) return;
+                    queue.RemoveAt(i);
                 }
+            }
         }
     }
     public sealed class PassengerSpawner
@@ -123,7 +129,7 @@ namespace OneMoreFloor
         public PassengerSpawner(int seed) { random = new Random(seed); specialRandom=new Random(unchecked(seed ^ 0x51EC7A)); }
         internal void Tick(float dt, GameSession game)
         {
-            if(game.Level!=null && (Spawned>=game.SpawnBudget || (game.IsGuiding && Spawned>0))) return;
+            if(game.Level!=null && (Spawned>=game.SpawnBudget || !game.NeedsMorePassengers || (game.IsGuiding && Spawned>0))) return;
             var difficulty=game.Difficulty;
             if(game.Level!=null && game.ActivePassengerCount==0)
                 countdown=Math.Min(countdown,game.Level.EmptyHouseDelay);
@@ -136,7 +142,7 @@ namespace OneMoreFloor
             int batch=game.Level!=null && !game.IsGuiding && game.Level.Traffic==TrafficPattern.Waves && random.NextDouble()<.6 ? 2 : 1;
             for(int i=0;i<batch;i++)
             {
-                if(game.Level!=null && (Spawned>=game.SpawnBudget || game.ActivePassengerCount>=game.Level.MaxActivePassengers)) break;
+                if(game.Level!=null && (Spawned>=game.SpawnBudget || !game.NeedsMorePassengers || game.ActivePassengerCount>=game.Level.MaxActivePassengers)) break;
                 if(!Spawn(game,difficulty)) break;
             }
             countdown+=difficulty.SpawnInterval*(game.Level==null ? 1 : .85f+(float)random.NextDouble()*.30f);
@@ -195,7 +201,23 @@ namespace OneMoreFloor
         readonly PassengerSpawner spawner;
         public readonly LevelDefinition Level;
         public readonly int LevelNumber;
-        public int SpawnBudget { get { return Level==null ? int.MaxValue : Level.DeliveryGoal+Rules.LossLimit-1; } }
+        public const int ReservePassengers=3;
+        public int SpawnBudget { get { return Level==null ? int.MaxValue : (int)Math.Min(int.MaxValue,(long)Level.DeliveryGoal+ReservePassengers); } }
+        // Replacements use the reserve only after someone actually leaves. Do not
+        // populate a surplus queue once all remaining deliveries are already present.
+        public bool NeedsMorePassengers { get { return Level==null || (long)Delivered+ActivePassengerCount<Level.DeliveryGoal; } }
+        Passenger revivalPassenger;
+        int revivalFloor;
+        public bool CanContinueAfterAd { get { return State==PlayState.GameOver && revivalPassenger!=null; } }
+        public bool ContinueAfterAd()
+        {
+            if(!CanContinueAfterAd) return false;
+            bool present=false; foreach(var passenger in Queues.Floors[revivalFloor]) if(ReferenceEquals(passenger,revivalPassenger)) { present=true; break; }
+            if(!present) return false;
+            revivalPassenger.Remaining=PassengerPatience*.30f;
+            revivalPassenger=null; Lost=Math.Max(0,Rules.LossLimit-1);
+            State=PlayState.Playing; return true;
+        }
         public int Spawned { get { return spawner.Spawned; } }
         public int ActivePassengerCount
         {
@@ -248,10 +270,14 @@ namespace OneMoreFloor
                 if (Lift.Tick(step)) ServiceFloor();
             }
         }
-        void LosePassenger()
+        void LosePassenger(int floor,Passenger passenger)
         {
             Lost++; Streak = 0; Emit(FeedbackKind.Lost);
-            if (Lost >= Rules.LossLimit) State = PlayState.GameOver;
+            if (Lost >= Rules.LossLimit)
+            {
+                revivalFloor=floor; revivalPassenger=passenger;
+                State = PlayState.GameOver;
+            }
         }
         void ServiceFloor()
         {
@@ -259,11 +285,9 @@ namespace OneMoreFloor
             for (int i = Lift.Riders.Count - 1; i >= 0; i--)
                 if (Lift.Riders[i].Destination == Lift.CurrentFloor)
                 {
-                    int units=Lift.Riders[i].DeliveryUnits;
                     Lift.Riders.RemoveAt(i);
-                    // Exactly equivalent to sequential ordinary deliveries, including streak thresholds.
-                    for(int unit=0;unit<units;unit++)
-                    { Score += Rules.DeliveryPoints * Multiplier; Streak++; Delivered++; delivered++; }
+                    Score += Rules.DeliveryPoints * Multiplier;
+                    Streak++; Delivered++; delivered++;
                 }
             if(Level!=null && Delivered>=Level.DeliveryGoal)
             {

@@ -141,7 +141,7 @@ namespace OneMoreFloor
                 if(delivered) { view.Leave(true); departures.Add(view); }
                 else view.Destroy(); // A replacement must not produce an eighth waiting silhouette.
                 removed.Add(pair.Key);
-                Float(delivered && pair.Key.IsRaccoon ? Loc.T("raccoon.delivered") : Loc.T(delivered ? "building.thanks" : "building.left"),center,delivered ? GameUI.Teal : GameUI.Coral);
+                Float(Loc.T(delivered ? "building.thanks" : "building.left"),center,delivered ? GameUI.Teal : GameUI.Coral);
             }
             foreach(var p in removed) people.Remove(p);
             foreach(var view in people.Values) view.Tick(dt);

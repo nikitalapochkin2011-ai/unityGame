@@ -19,12 +19,12 @@ namespace OneMoreFloor
             wheelTestMode=UnityEditor.EditorPrefs.GetBool(WheelTestPreference,false);
 #endif
         }
-        SpinReward RollWheel(bool free)
+        SpinReward RollWheel(bool free,bool rewardEarned=false)
         {
 #if UNITY_EDITOR
             if(wheelTestMode) return cosmetics.SpinPreview(UtcNow,cosmeticRandom);
 #endif
-            return cosmetics.Spin(free,UtcNow,cosmeticRandom);
+            return free ? cosmetics.SpinAfterAd(rewardEarned,UtcNow,cosmeticRandom) : cosmetics.Spin(false,UtcNow,cosmeticRandom);
         }
         readonly System.Random cosmeticRandom=new System.Random();
         RectTransform wheelDisk;
@@ -47,12 +47,6 @@ namespace OneMoreFloor
             ui.Text("Title",overlay,Loc.T("wheel.title"),.04f,.925f,.96f,.99f,36,GameUI.Gold,TextAnchor.MiddleCenter,true);
             wheelWallet=Wallet(overlay,true);
             ui.Text("Wheel help",overlay,Loc.T("wheel.tryLuck"),.06f,.837f,.94f,.875f,25,GameUI.Gold,TextAnchor.MiddleCenter,true);
-            ui.Text("Rarity odds",overlay,Loc.T("wheel.rarityOdds",
-                cosmetics.RarityChance(CosmeticRarity.Common).ToString("0.#",System.Globalization.CultureInfo.InvariantCulture),
-                cosmetics.RarityChance(CosmeticRarity.Rare).ToString("0.#",System.Globalization.CultureInfo.InvariantCulture),
-                cosmetics.RarityChance(CosmeticRarity.Epic).ToString("0.#",System.Globalization.CultureInfo.InvariantCulture),
-                cosmetics.RarityChance(CosmeticRarity.Legendary).ToString("0.#",System.Globalization.CultureInfo.InvariantCulture)),
-                .04f,.785f,.96f,.835f,13,GameUI.Cream);
             // A square viewport keeps the wheel circular at all portrait safe-area sizes.
             var slot=ui.Rect("Wheel slot",overlay,.14f,.415f,.86f,.78f);
             var viewport=ui.Rect("Wheel viewport",slot,0,0,1,1);
@@ -88,7 +82,7 @@ namespace OneMoreFloor
                 }
                 ui.Text("Revealed reward",prizeCard,result.IsCoins ? Loc.T("wheel.coinReward",result.CoinAmount) : Loc.T("wheel.reward",RewardName(result.CosmeticId)),.17f,.06f,.98f,.94f,22,GameUI.Gold,TextAnchor.MiddleCenter,true);
             }
-            freeSpin=ui.Button("Free spin",overlay,"",.07f,.20f,.93f,.28f,()=>BeginSpin(true),GameUI.Hex("C7953C"),23);
+            freeSpin=ui.Button("Free spin",overlay,"",.07f,.20f,.93f,.28f,BeginDailyAdSpin,GameUI.Hex("C7953C"),23);
             freeCountdown=freeSpin.GetComponentInChildren<Text>(); freeCountdown.color=GameUI.Ink;
             paidSpin=ui.Button("Paid spin",overlay,Loc.T("wheel.paid",Cosmetics.SpinCost),.07f,.105f,.93f,.185f,()=>BeginSpin(false),GameUI.Hex("75572F"),23);
             ui.Button("Back",overlay,Loc.T("common.menu"),.07f,.025f,.47f,.09f,ShowMenu,GameUI.Ink,21);
@@ -99,9 +93,9 @@ namespace OneMoreFloor
         {
             if(freeCountdown==null) return;
             long left=cosmetics.FreeIn(UtcNow);
-            freeCountdown.text=wheelTestMode ? "ТЕСТ • Бесконечные вращения" : cosmetics.Complete ? Loc.T("wheel.complete") : left==0 ? Loc.T("wheel.free") : Loc.T("wheel.wait",string.Format(System.Globalization.CultureInfo.InvariantCulture,"{0:00}:{1:00}:{2:00}",left/3600,left/60%60,left%60));
-            freeSpin.interactable=!spinning && (wheelTestMode || (!cosmetics.Complete && left==0));
-            paidSpin.interactable=!spinning && !wheelTestMode && !cosmetics.Complete && cosmetics.Coins>=Cosmetics.SpinCost;
+            freeCountdown.text=wheelTestMode ? Loc.T("ads.testSpin") : cosmetics.Complete ? Loc.T("wheel.complete") : left==0 ? Loc.T(ads.Ready ? "wheel.adSpin" : "ads.unavailable") : Loc.T("wheel.wait",string.Format(System.Globalization.CultureInfo.InvariantCulture,"{0:00}:{1:00}:{2:00}",left/3600,left/60%60,left%60));
+            freeSpin.interactable=!spinning && !adPending && (wheelTestMode || (!cosmetics.Complete && left==0 && ads.Ready));
+            paidSpin.interactable=!spinning && !adPending && !wheelTestMode && !cosmetics.Complete && cosmetics.Coins>=Cosmetics.SpinCost;
         }
         void UpdateWheel()
         {
@@ -109,12 +103,26 @@ namespace OneMoreFloor
             countdownTick+=Time.unscaledDeltaTime;
             if(countdownTick>=1) { countdownTick=0; RefreshWheel(); }
         }
-        void BeginSpin(bool free)
+        void BeginDailyAdSpin()
         {
-            if(spinning) return;
+            if(wheelTestMode) { BeginSpin(true,true); return; }
+            if(adPending || spinning || cosmetics.Complete || cosmetics.FreeIn(UtcNow)>0) return;
+            SetAdPending(true);
+            bool started=ads.Show(RewardedPlacement.DailyWheel,earned=>
+            {
+                if(this==null) return;
+                SetAdPending(false);
+                if(earned) BeginSpin(true,true);
+                else ShowAdNotice("ads.incomplete");
+            });
+            if(!started) { SetAdPending(false); ShowAdNotice("ads.unavailable"); }
+        }
+        void BeginSpin(bool free,bool rewardEarned=false)
+        {
+            if(spinning || adPending) return;
             int previousBalance=cosmetics.Coins;
             float startRotation=wheelDisk!=null ? wheelDisk.localEulerAngles.z : 0;
-            var reward=RollWheel(free);
+            var reward=RollWheel(free,rewardEarned);
             if(reward==null) { RefreshWheel(); return; }
             // Persist before animation: backgrounding or quitting never loses the awarded item.
             SaveCosmetics();

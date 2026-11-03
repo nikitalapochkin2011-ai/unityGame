@@ -5,7 +5,7 @@ root=Path(__file__).resolve().parents[1]
 a=root/'Assets/OneMoreFloor/Resources/Art';o=root/'Docs';o.mkdir(exist_ok=True)
 f=ImageFont.truetype(str(root/'Assets/OneMoreFloor/Resources/Fonts/DejaVuSans.ttf'),18)
 im=Image.new('RGB',(1100,310),'#efe4d1');d=ImageDraw.Draw(im)
-labels=['Бабушка 1','Бабушка 2','Бабушка 3','Бабушка 4','Дедушка 1','Дедушка 2','Дедушка 3','Дедушка 4','Енот ×2']
+labels=['Бабушка 1','Бабушка 2','Бабушка 3','Бабушка 4','Дедушка 1','Дедушка 2','Дедушка 3','Дедушка 4','Енот']
 for i in range(8,17):
     x=12+(i-8)*121;s=Image.open(a/f'person_{i}.png');s.thumbnail((110,260));im.paste(s,(x,18),s);d.text((x,275),labels[i-8],font=f,fill='#203e4d')
 im.save(o/'NewPassengers.png')

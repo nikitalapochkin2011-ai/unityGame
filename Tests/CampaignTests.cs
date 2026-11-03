@@ -181,7 +181,7 @@ static class CampaignTests
             game.Tick(.05f);
             for(int f=0;f<3;f++) while(game.Queues.Floors[f].Count>0) game.Queues.TakeFirst(f);
         }
-        Check(game.Spawned==game.SpawnBudget && game.SpawnBudget==3,"finite supply includes exactly two spare passengers");
+        Check(game.Spawned==game.SpawnBudget && game.SpawnBudget==4,"finite supply includes exactly three reserve passengers");
         game=Isolated(2); game.Queues.TryEnqueue(0,new Passenger(1,.01f)); game.Queues.TryEnqueue(0,new Passenger(1,.01f));
         Run(game,.02f); game.Lift.Riders.Add(new Passenger(1,1000)); game.Lift.Riders.Add(new Passenger(1,1000,true));
         game.SelectFloor(1); Run(game,.25f);
