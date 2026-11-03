@@ -115,8 +115,8 @@ namespace UnityEngine
  public static class PlayerPrefs
  {static Dictionary<string,string> v=new();public static void SetInt(string k,int n)=>v[k]=n.ToString();public static int GetInt(string k,int fallback)=>v.TryGetValue(k,out var s)&&int.TryParse(s,out var n)?n:fallback;public static string GetString(string k,string fallback)=>v.GetValueOrDefault(k,fallback);public static void SetString(string k,string x)=>v[k]=x;public static void Save(){}}
  public static class Debug{public static void LogWarning(string s)=>Console.Error.WriteLine(s);public static void Log(string s)=>Console.Error.WriteLine(s);}
- public class AudioClip:Object{public static AudioClip Create(string n,int a,int b,int c,bool d)=>new AudioClip();public void SetData(float[] n,int p){}}
- public class AudioSource:Behaviour{public bool playOnAwake;public void PlayOneShot(AudioClip c){}public void Stop(){}}
+ public class AudioClip:Object{public static AudioClip Create(string n,int a,int b,int c,bool d)=>new AudioClip{name=n};public void SetData(float[] n,int p){}}
+ public class AudioSource:Behaviour{public bool playOnAwake;public readonly List<string> Played=new();public void PlayOneShot(AudioClip c){Played.Add(c.name);}public void Stop(){}}
 }
 namespace UnityEngine.UI
 {
@@ -124,6 +124,7 @@ namespace UnityEngine.UI
  public class Graphic:Behaviour
  {
   public Color color=Color.white;public bool raycastTarget;public RectTransform rectTransform=>(RectTransform)transform;public CanvasRenderer canvasRenderer=>GetComponent<CanvasRenderer>();
+  protected virtual void OnEnable(){}
   public virtual void SetVerticesDirty(){}public virtual void SetAllDirty(){}protected virtual void OnPopulateMesh(VertexHelper h){}
   public VertexHelper Capture(){var h=new VertexHelper();OnPopulateMesh(h);return h;}
  }

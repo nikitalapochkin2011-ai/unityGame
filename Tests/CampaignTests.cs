@@ -151,7 +151,7 @@ static class CampaignTests
             }
         }
         foreach(bool seen in seenBoxes) boxesOnEveryFloor &= seen;
-        Check(allRoutes && origins.Count==6 && destinations.Count==6 && looks.Count==17,"random appearances and valid origins/destinations span every unlocked floor");
+        Check(allRoutes && origins.Count==6 && destinations.Count==6 && looks.Count==18,"random appearances and valid origins/destinations span every unlocked floor");
         Check(boxesOnEveryFloor && firstBoxPositions.Count>12 && boxCount>total*.20 && boxCount<total*.30 && normalCount>0,"box floors and first appearance vary across seeded attempts at configured probability");
         Check(firstSignatures.Count>80,"retries produce varied first passengers and routes");
         bool deterministic=true; var a=new GameSession(new GameRules(),19,levels[4],5); var b=new GameSession(new GameRules(),19,levels[4],5);
@@ -268,9 +268,10 @@ static class CampaignTests
                 }
             }
             allLevelRandomness &= observedOrigins.Count==probe.ActiveFloors && firstChoices.Count>=6;
-            allAppearancesRandom &= observedLooks.Count==17;
+            for(int appearance=0;appearance<=Passenger.RaccoonAppearance;appearance++)allAppearancesRandom &= observedLooks.Contains(appearance);
+            allAppearancesRandom &= !observedLooks.Contains(Passenger.AlienAppearance);
         }
-        Check(allLevelRandomness && allAppearancesRandom,"every level uses all unlocked origin floors, all seventeen appearances and varied first passengers");
+        Check(allLevelRandomness && allAppearancesRandom,"every level uses all unlocked origin floors, all original appearances and varied first passengers; rare dinosaur remains probabilistic");
         Check(profileRoutes && burstsSeen,"short and long route rules hold, wave levels actually spawn pairs");
 
         int simulated=0;
@@ -286,7 +287,8 @@ static class CampaignTests
                     // A simple driver reacts every 1.25 seconds; no clairvoyance or route optimization.
                     think-=.05f; if(think<=0) { Drive(game); think=1.25f; }
                     game.Tick(.05f); simulated++;
-                    if(game.Lift.OccupiedSpaces>4 || game.Lost>3 || game.Lift.Position<0 || game.Lift.Position>=game.Level.ActiveFloors || game.ActivePassengerCount>game.Level.MaxActivePassengers || game.Spawned>game.SpawnBudget)
+                    if(game.Lift.OccupiedSpaces>4 || game.Lost>3 || game.Lift.Position<0 || game.Lift.Position>game.RoofFloor ||
+                        (game.Lift.Position>=game.Level.ActiveFloors && game.Lift.CurrentFloor!=game.RoofFloor && (!game.Lift.Moving || game.Lift.TargetFloor!=game.RoofFloor)) || game.ActivePassengerCount>game.Level.MaxActivePassengers || game.Spawned>game.SpawnBudget)
                         throw new Exception("campaign capacity/floor invariant");
                     for(int f=0;f<6;f++)
                     {

@@ -1,6 +1,6 @@
 # OMF Han: Chinese font subsets
 
-These renamed subsets of **Noto Sans CJK SC** cover all Simplified Chinese characters used by the seven-language catalogue, plus ASCII for font metrics and spacing. They include 545 code points each. The game uses separate regular and bold SDF assets as fallbacks to DejaVu Sans. No font downloads occur in the game.
+These renamed subsets of **Noto Sans CJK SC** cover all Simplified Chinese characters used by the seven-language catalogue, plus ASCII for font metrics and spacing. They include 547 code points each. The game uses separate regular and bold SDF assets as fallbacks to DejaVu Sans. No font downloads occur in the game.
 
 Original copyright statement retained inside both fonts:
 
@@ -18,5 +18,5 @@ Regenerate after adding Chinese characters: download the two official upstream O
 
 SHA-256 of shipped subsets:
 
-- OMFHan-Regular.otf: `b63a41a05a27029628d9a8b80df27120dcf392c5fec6abf87519b62dfeaaa3c1`
-- OMFHan-Bold.otf: `1d616002c6cd0c1626022dcd74839644e60b031da5a72b49f48dd0346051f683`
+- OMFHan-Regular.otf: `b541784cd44d63fea4608e6f46c3b7b9d5567dd189478a8c72cbfb2d89ae94cd`
+- OMFHan-Bold.otf: `82164c67b9a8be8498cc6a4ca28570eb7a9fe9b4c824609e24e7e86f59e704e8`

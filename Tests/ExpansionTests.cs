@@ -32,7 +32,7 @@ static class ExpansionTests
         Check(g.State==PlayState.Won && g.Delivered==1 && g.Score==10,"raccoon can satisfy the level goal on the winning stop");
         g=Game();g.Queues.TryEnqueue(1,new Passenger(0,.001f,isRaccoon:true));g.Tick(.02f);
         Check(g.Lost==1 && g.Delivered==0 && g.Score==0,"an expired raccoon is one lost passenger and awards no delivery");
-        int total=0,special=0; var looks=new HashSet<int>(); bool valid=true;
+        int total=0,special=0,dinosaurs=0; var looks=new HashSet<int>(); bool valid=true;
         for(int seed=0;seed<2400;seed++)
         {
             g=new GameSession(new GameRules {InitialSpawnSeconds=.2f,MinimumSpawnSeconds=.2f,PatienceSeconds=1000},seed);
@@ -42,12 +42,14 @@ static class ExpansionTests
                 for(int f=0;f<g.Queues.Floors.Count;f++) while(g.Queues.Floors[f].Count>0)
                 {
                     var p=g.Queues.TakeFirst(f);total++;
+                    if(p.IsDinosaur){dinosaurs++;valid &= p.Appearance==17 && p.SpaceRequired==1 && !p.HasBox && !p.IsAlien;}
                     if(p.IsRaccoon) {special++;valid &= p.SpaceRequired==1 && !p.HasBox && p.Appearance==16;}
-                    else looks.Add(p.Appearance);
+                    else if(!p.IsDinosaur)looks.Add(p.Appearance);
                 }
             }
         }
         Check(total>70000 && Math.Abs(special/(double)total-.04)<.003 && looks.Count==16 && valid,"real endless spawner produces approximately 4% raccoons and all sixteen humans: "+special+"/"+total);
+        Check(Math.Abs(dinosaurs/(double)total-.005)<.001,"real spawning samples approximately 0.5% dinosaurs: "+dinosaurs+"/"+total);
         for(int bit=0;bit<30;bit++)
         {
             int kind=bit/10,index=bit%10;

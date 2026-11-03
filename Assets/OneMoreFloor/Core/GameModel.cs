@@ -26,7 +26,17 @@ namespace OneMoreFloor
     public sealed class Passenger
     {
         public const int HumanAppearanceCount=16, RaccoonAppearance=16;
-        public const int RaccoonChancePercent=4;
+        public const int RaccoonChancePercent=4, DinosaurAppearance=17, AlienAppearance=18;
+        public const int AppearanceRollSize=10000, DinosaurChanceBasisPoints=50;
+        // One independent roll: exactly 0.5% dinosaur, 4% raccoon. The alien is scripted.
+        public static int SpecialAppearance(int roll)
+        {
+            if(roll<0 || roll>=AppearanceRollSize)throw new ArgumentOutOfRangeException(nameof(roll));
+            return roll<DinosaurChanceBasisPoints ? DinosaurAppearance :
+                roll<DinosaurChanceBasisPoints+RaccoonChancePercent*100 ? RaccoonAppearance : -1;
+        }
+        public bool IsDinosaur { get; private set; }
+        public bool IsAlien { get; private set; }
         public bool IsRaccoon { get; private set; }
         public int DeliveryUnits { get { return 1; } }
         public int Destination { get; private set; }
@@ -34,12 +44,18 @@ namespace OneMoreFloor
         public int SpaceRequired { get { return HasBox ? 2 : 1; } }
         public int Appearance { get; private set; }
         public float Remaining { get; internal set; }
-        public Passenger(int destination, float patience, bool hasBox=false, int appearance=0, bool isRaccoon=false)
-        { Destination = destination; Remaining = patience; IsRaccoon=isRaccoon; HasBox=hasBox; Appearance=isRaccoon ? RaccoonAppearance : Math.Max(0,appearance)%HumanAppearanceCount; }
+        public Passenger(int destination, float patience, bool hasBox=false, int appearance=0, bool isRaccoon=false, bool isDinosaur=false, bool isAlien=false)
+        {
+            Destination=destination;Remaining=patience;IsAlien=isAlien;IsDinosaur=!isAlien && isDinosaur;
+            IsRaccoon=!isAlien && !isDinosaur && isRaccoon;
+            HasBox=hasBox && !IsDinosaur && !IsAlien;
+            Appearance=IsAlien ? AlienAppearance : IsDinosaur ? DinosaurAppearance : IsRaccoon ? RaccoonAppearance : Math.Max(0,appearance)%HumanAppearanceCount;
+        }
     }
     public sealed class Elevator
     {
         readonly GameRules rules;
+        readonly bool roofAccess;
         public readonly List<Passenger> Riders = new List<Passenger>();
         public int OccupiedSpaces
         {
@@ -51,10 +67,10 @@ namespace OneMoreFloor
         public float Position { get; private set; }
         public bool Moving { get; private set; }
         float stopRemaining;
-        public Elevator(GameRules rules) { this.rules = rules; }
+        public Elevator(GameRules rules,bool roofAccess=false) { this.rules=rules;this.roofAccess=roofAccess; }
         public void Select(int floor)
         {
-            if (floor < 0 || floor >= rules.Floors) return;
+            if (floor < 0 || floor >= rules.Floors+(roofAccess ? 1 : 0)) return;
             NextFloor = floor; // Last tap wins; the active trip is immutable.
         }
         internal bool Tick(float dt)
@@ -178,8 +194,11 @@ namespace OneMoreFloor
             }
             bool box=game.Level!=null && game.Rules.Capacity>=2 && random.NextDouble()<game.Level.BoxChance;
             int appearance=random.Next(Passenger.HumanAppearanceCount);
-            bool raccoon=specialRandom.Next(100)<Passenger.RaccoonChancePercent;
-            if(!game.Queues.TryEnqueue(floor,new Passenger(destination,game.PassengerPatience,box,appearance,raccoon))) return false;
+            int special=Passenger.SpecialAppearance(specialRandom.Next(Passenger.AppearanceRollSize));
+            bool alien=game.FinalAlienReady;
+            if(!game.Queues.TryEnqueue(floor,new Passenger(alien ? game.RoofFloor : destination,game.PassengerPatience,box,appearance,
+                isRaccoon:!alien && special==Passenger.RaccoonAppearance,
+                isDinosaur:!alien && special==Passenger.DinosaurAppearance,isAlien:alien)))return false;
             Spawned++; return true;
         }
     }
@@ -205,7 +224,19 @@ namespace OneMoreFloor
         public int SpawnBudget { get { return Level==null ? int.MaxValue : (int)Math.Min(int.MaxValue,(long)Level.DeliveryGoal+ReservePassengers); } }
         // Replacements use the reserve only after someone actually leaves. Do not
         // populate a surplus queue once all remaining deliveries are already present.
-        public bool NeedsMorePassengers { get { return Level==null || (long)Delivered+ActivePassengerCount<Level.DeliveryGoal; } }
+        public bool HasAlienFinale { get { return Level!=null && LevelNumber==10; } }
+        public int RoofFloor { get { return Rules.Floors; } }
+        public bool AlienDelivered { get; private set; }
+        public bool FinalAlienReady { get { return HasAlienFinale && Delivered>=Level.DeliveryGoal-1 && ActivePassengerCount==0; } }
+        public bool NeedsMorePassengers
+        {
+            get
+            {
+                if(Level==null)return true;
+                int goal=HasAlienFinale && Delivered<Level.DeliveryGoal-1 ? Level.DeliveryGoal-1 : Level.DeliveryGoal;
+                return (long)Delivered+ActivePassengerCount<goal;
+            }
+        }
         Passenger revivalPassenger;
         int revivalFloor;
         public bool CanContinueAfterAd { get { return State==PlayState.GameOver && revivalPassenger!=null; } }
@@ -241,17 +272,18 @@ namespace OneMoreFloor
         public float Elapsed { get; private set; }
         public DifficultyState Difficulty { get { return Level==null ? DifficultyCurve.AtScore(Rules,Score) : Campaign.Difficulty(Level,LevelNumber,Delivered); } }
         public event Action<GameFeedback> Feedback;
+        public event Action<int> Arrived;
         public GameSession(GameRules rules, int seed, LevelDefinition level=null, int levelNumber=1)
         {
             Rules = rules; rules.Validate();
             Level=level==null ? null : level.Copy(); if(Level!=null) Level.Validate(rules.Floors);
-            LevelNumber=Math.Max(1,Math.Min(Campaign.LevelCount,levelNumber)); Lift = new Elevator(rules);
+            LevelNumber=Math.Max(1,Math.Min(Campaign.LevelCount,levelNumber)); Lift = new Elevator(rules,true);
             Queues = new PassengerQueues(rules.Floors); spawner = new PassengerSpawner(seed);
         }
         public void SelectFloor(int floor)
         {
             if(State!=PlayState.Playing) return;
-            if(Level!=null && (floor<0 || floor>=Level.ActiveFloors)) return;
+            if(floor!=RoofFloor && Level!=null && (floor<0 || floor>=Level.ActiveFloors)) return;
             Lift.Select(floor);
         }
         public void Pause() { if (State == PlayState.Playing) State = PlayState.Paused; }
@@ -267,7 +299,12 @@ namespace OneMoreFloor
                 if(!IsGuiding) Queues.Age(step, LosePassenger, () => Finished);
                 if (State == PlayState.GameOver) break;
                 spawner.Tick(step, this);
-                if (Lift.Tick(step)) ServiceFloor();
+                bool wasMoving=Lift.Moving;
+                if(Lift.Tick(step))
+                {
+                    if(wasMoving && Arrived!=null)Arrived(Lift.CurrentFloor);
+                    ServiceFloor();
+                }
             }
         }
         void LosePassenger(int floor,Passenger passenger)
@@ -285,6 +322,7 @@ namespace OneMoreFloor
             for (int i = Lift.Riders.Count - 1; i >= 0; i--)
                 if (Lift.Riders[i].Destination == Lift.CurrentFloor)
                 {
+                    if(Lift.Riders[i].IsAlien && Lift.CurrentFloor==RoofFloor)AlienDelivered=true;
                     Lift.Riders.RemoveAt(i);
                     Score += Rules.DeliveryPoints * Multiplier;
                     Streak++; Delivered++; delivered++;
@@ -293,6 +331,9 @@ namespace OneMoreFloor
             {
                 State=PlayState.Won; Emit(FeedbackKind.Won); return;
             }
+            // The roof is an extra destination, never a residential spawn queue.
+            if(Lift.CurrentFloor==RoofFloor)
+            { Emit(delivered>0 ? FeedbackKind.Delivered : FeedbackKind.Floor,delivered>0 ? delivered : RoofFloor+1);return; }
             var queue = Queues.Floors[Lift.CurrentFloor];
             while (queue.Count>0 && Lift.OccupiedSpaces+queue[0].SpaceRequired<=Rules.Capacity)
             { Lift.Riders.Add(Queues.TakeFirst(Lift.CurrentFloor)); boarded++; }

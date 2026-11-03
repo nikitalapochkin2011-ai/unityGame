@@ -71,6 +71,7 @@ namespace OneMoreFloor
             RewardIcon(overlay,0,.525f,.350f,.580f,.389f);
             ui.Text("Mystery legend",overlay,Loc.T("wheel.decoration"),.595f,.350f,.89f,.389f,15,UITheme.Surface,TextAnchor.MiddleLeft);
             var prizeCard=ui.Surface("Reveal card",overlay,.055f,.266f,.945f,.343f,new Color(.72f,.82f,.67f,.065f),UITheme.SmallRadius,false,false,true).rectTransform;
+            if(result!=null)prizeCard.gameObject.AddComponent<UIPanelEntrance>();
             if(result==null)
             {
                 ui.Icon("Mystery sparkle",prizeCard,UIIcon.Star,.035f,.24f,.115f,.76f,UITheme.Gold);

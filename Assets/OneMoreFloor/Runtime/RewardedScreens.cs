@@ -31,13 +31,8 @@ namespace OneMoreFloor
             {
                 var notice=ui.Surface("Ad notice",overlay,.08f,wheel ? .35f : .88f,.92f,wheel ? .407f : .94f,UITheme.Deep,UITheme.SmallRadius,false,true,true).rectTransform;
                 ui.Text("Ad result",notice,Loc.T(key),.05f,.08f,.95f,.92f,16,UITheme.Surface);
-                StartCoroutine(HideAdNotice(notice.gameObject));
+                notice.gameObject.AddComponent<UIToastMotion>();
             }
-        }
-        System.Collections.IEnumerator HideAdNotice(GameObject notice)
-        {
-            float age=0;while(age<2.8f && notice!=null){age+=Time.unscaledDeltaTime;yield return null;}
-            if(notice!=null)Destroy(notice);
         }
         void RefreshContinueAd()
         {

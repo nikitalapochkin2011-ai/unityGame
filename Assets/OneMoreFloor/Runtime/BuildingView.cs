@@ -24,6 +24,9 @@ namespace OneMoreFloor
         readonly List<PassengerView> departures = new List<PassengerView>();
         readonly List<FloatingLabel> labels = new List<FloatingLabel>();
         float doorOpen;
+        readonly RoofView roof;
+        public bool RoofFinaleComplete { get { return roof.Complete; } }
+        public bool AnimationsPending { get { return departures.Count>0 || labels.Count>0; } }
         sealed class FloatingLabel { public Text Text; public Vector2 Position; public float Time; }
 
         public BuildingView(GameUI ui, RectTransform root, GameRules rules, System.Action<int> select,int floorStyle=0,int liftStyle=0)
@@ -57,11 +60,12 @@ namespace OneMoreFloor
                 lockedLabels[f]=ui.Text("Locked floor",row,"",.195f,.37f,.655f,.66f,15,GameUI.Cream,TextAnchor.MiddleCenter,true);
                 lockSymbols[f]=ui.Icon("Floor lock symbol",row,UIIcon.Lock,.14f,.41f,.18f,.65f,GameUI.Cream);
             }
+            roof=new RoofView(ui,root,rules,select);
             cabin = ui.Rect("Moving elevator",root,BuildingLayout.LiftLeft,0,BuildingLayout.LiftRight,1f/rules.Floors);
             ui.Picture("Cabin",cabin,CosmeticStyle.Asset(CosmeticKind.Lift,liftStyle),0,.025f,1,.99f,false).color=CosmeticStyle.Tint(liftStyle);
             CosmeticStyle.Detail(ui,cabin,liftStyle,true);
-            cabinDisplay = ui.Text("Cabin floor display",cabin,"1",.29f,.87f,.71f,.98f,18,GameUI.Gold,TextAnchor.MiddleCenter,true);
-            cabinDisplay.fontSizeMin=10;
+            cabinDisplay = ui.Text("Cabin floor display",cabin,"1",.29f,.85f,.71f,.995f,18,GameUI.Gold,TextAnchor.MiddleCenter,true);
+            cabinDisplay.fontSizeMin=9;
             actors = ui.Rect("People",root,0,0,1,1);
             doors = ui.Rect("Moving glass doors",root,BuildingLayout.DoorLeft,.065f/rules.Floors,BuildingLayout.DoorRight,.855f/rules.Floors);
             doors.gameObject.AddComponent<RectMask2D>();
@@ -70,8 +74,7 @@ namespace OneMoreFloor
             rightDoor = ui.Picture("Right door",doors,"door",.5f,0,1,1,false).rectTransform;
             rightDoor.GetComponent<Image>().color=CosmeticStyle.DoorTint(liftStyle);
             // Door edges sit above the people, while transparent glass keeps destinations readable.
-            ui.Picture("Roof",root,"roof",-.005f,1.0f,1,1.085f,false);
-            ui.Text("Building name",root,Loc.T("building.name"),.35f,1.046f,.7f,1.08f,17,GameUI.Ink,TextAnchor.MiddleCenter,true);
+            ui.Text("Building name",root,Loc.T("building.name"),.35f,1.004f,.7f,1.034f,13,GameUI.Ink,TextAnchor.MiddleCenter,true);
             ui.Panel("Foundation",root,-.005f,-.025f,1,.003f,GameUI.Hex("45636A"));
         }
         public void Reset()
@@ -79,7 +82,7 @@ namespace OneMoreFloor
             foreach (var view in people.Values) view.Destroy(); people.Clear();
             foreach (var view in departures) view.Destroy(); departures.Clear();
             foreach (var label in labels) { label.Text.gameObject.SetActive(false); Object.Destroy(label.Text.gameObject); } labels.Clear();
-            doorOpen=0;
+            doorOpen=0;roof.Reset();
         }
         PassengerView View(Passenger passenger)
         {
@@ -106,7 +109,8 @@ namespace OneMoreFloor
             doorOpen = game.Lift.Moving ? 0 : Mathf.MoveTowards(doorOpen,1,dt*6);
             GameUI.Place(leftDoor,-doorOpen*.46f,0,.5f-doorOpen*.46f,1);
             GameUI.Place(rightDoor,.5f+doorOpen*.46f,0,1+doorOpen*.46f,1);
-            cabinDisplay.text=(game.Lift.Moving ? "→ " : "")+(game.Lift.Moving ? game.Lift.TargetFloor+1 : game.Lift.CurrentFloor+1);
+            int shownFloor=game.Lift.Moving ? game.Lift.TargetFloor : game.Lift.CurrentFloor;
+            cabinDisplay.text=(game.Lift.Moving ? "→ " : "")+(shownFloor==game.RoofFloor ? Loc.T("roof.short") : (shownFloor+1).ToString());
             for(int f=0;f<rules.Floors;f++)
             {
                 var queue=game.Queues.Floors[f]; bool active=f<game.Difficulty.ActiveFloors;
@@ -140,10 +144,16 @@ namespace OneMoreFloor
                 if (present.Contains(pair.Key)) continue;
                 var view=pair.Value; bool delivered=view.WasRiding;
                 var center=(view.Root.anchorMin+view.Root.anchorMax)*.5f;
-                if(delivered) { view.Leave(true); departures.Add(view); }
+                if(delivered)
+                {
+                    if(pair.Key.IsAlien && game.AlienDelivered)view.LeaveToShip(new Vector2(.465f,1.025f));
+                    else view.Leave(true);
+                    departures.Add(view);
+                }
                 else view.Destroy(); // A replacement must not produce an eighth waiting silhouette.
                 removed.Add(pair.Key);
-                Float(Loc.T(delivered ? "building.thanks" : "building.left"),center,delivered ? GameUI.Teal : GameUI.Coral);
+                if(!pair.Key.IsAlien || !delivered)
+                    Float(Loc.T(delivered ? "building.thanks" : "building.left"),center,delivered ? GameUI.Teal : GameUI.Coral);
             }
             foreach(var p in removed) people.Remove(p);
             foreach(var view in people.Values) view.Tick(dt);
@@ -157,13 +167,15 @@ namespace OneMoreFloor
                 var label=labels[i]; label.Time+=dt;
                 float y=label.Position.y+label.Time*.045f;
                 GameUI.Place(label.Text.rectTransform,label.Position.x-.1f,y,label.Position.x+.1f,y+.035f);
-                var color=label.Text.color; color.a=Mathf.Clamp01(1-label.Time/1.1f); label.Text.color=color;
+                var color=label.Text.color; color.a=Mathf.Clamp01(label.Time/.13f)*Mathf.Clamp01((1.1f-label.Time)/.32f); label.Text.color=color;
                 if(label.Time>=1.1f) { Object.Destroy(label.Text.gameObject); labels.RemoveAt(i); }
             }
+            roof.Tick(game,dt);
         }
         void Float(string text,Vector2 position,Color color)
         {
             var label=ui.Text("Passenger feedback",actors,text,0,0,0,0,18,color,TextAnchor.MiddleCenter,true);
+            var initial=label.color;initial.a=0;label.color=initial;
             labels.Add(new FloatingLabel { Text=label, Position=position });
         }
     }

@@ -45,7 +45,7 @@ UIWindowMotion.Hide(window);Step(exit,20);
 Check(!window.activeSelf,"reverse transition completes within 200 ms");
 UIWindowMotion.Show(window);Step(exit,8);
 Check(window.GetComponent<CanvasGroup>().alpha>0 && window.GetComponent<CanvasGroup>().alpha<1 && window.GetComponent<CanvasGroup>().interactable,"modal and scrim fade together without postponing input");
-Step(exit,20);Check(window.GetComponent<CanvasGroup>().alpha==1,"window fade settles at full opacity");
+Step(exit,30);Check(window.GetComponent<CanvasGroup>().alpha==1,"window fade settles at full opacity");
 
 PlayerPrefs.SetString("OneMoreFloor.Language","ru");PlayerPrefs.SetInt("OneMoreFloor.Campaign.Completed",2);PlayerPrefs.SetInt("OneMoreFloor.BoxExplained",1);
 var root=new GameObject("App test");var app=root.AddComponent<GameApp>();Call(app,"Start");
@@ -86,4 +86,43 @@ foreach(var viewport in new[]{(360,640,0,0),(360,800,28,18),(390,844,47,34),(430
   }),screen+" buttons stay inside portrait safe area "+viewport);
  }
 }
+// Intermediate frames must stay monotonic, not merely finish at the right endpoint.
+var smoothPanel=new GameObject("Smooth modal test");var smooth=smoothPanel.AddComponent<UIPanelEntrance>();
+float previousAlpha=0,previousScale=0;bool monotonic=true;Time.unscaledDeltaTime=.01f;
+for(int i=0;i<35;i++){GameObject.Invoke(smooth,"Update");float a=smoothPanel.GetComponent<CanvasGroup>().alpha,k=smoothPanel.transform.localScale.x;monotonic &= a>=previousAlpha && a<=1 && k>=previousScale && k<=1;previousAlpha=a;previousScale=k;}
+Check(monotonic && previousAlpha==1 && previousScale==1,"modal opacity and scale are monotonic across intermediate frames without spring overshoot");
+// Drive a real level-10 session through the runtime presentation bridge.
+Screen.width=600;Screen.height=1060;Screen.safeArea=new Rect(0,0,600,1060);
+Time.unscaledDeltaTime=.05f;Set(app,"currentLevel",10);Set(app,"progress",new CampaignProgress(9));Set(app,"sound",true);
+app.Settings.Levels[9].DeliveryGoal=1;Call(app,"NewGame");game=Get<GameSession>(app,"game");
+var saucer=root.GetComponentsInChildren<Image>().Single(x=>x.gameObject.name=="Waiting flying saucer");
+Check(saucer.gameObject.activeInHierarchy,"saucer is waiting on the roof from the start of level 10");
+var source=Get<AudioSource>(app,"audioSource");int bellStart=source.Played.Count(x=>x=="Soft lift bell");
+for(int frame=0;frame<1800 && !game.Finished;frame++)
+{
+ if(!game.Lift.Moving)
+ {
+  if(game.Lift.Riders.Count>0)game.SelectFloor(game.Lift.Riders[0].Destination);
+  else for(int f=0;f<game.Queues.Floors.Count;f++)if(game.Queues.Floors[f].Count>0){game.SelectFloor(f);break;}
+ }
+ Call(app,"Update");foreach(var m in root.GetComponentsInChildren<UIWindowMotion>())GameObject.Invoke(m,"Update");
+}
+Check(game.State==PlayState.Won && game.AlienDelivered && Get<bool>(app,"awaitingRoofFinale"),"roof delivery starts the boarding epilogue before the victory panel");
+Check(Get<CampaignProgress>(app,"progress").Completed==10,"level progress is saved before the cinematic finishes");
+Check(source.Played.Count(x=>x=="Soft lift bell")>bellStart,"real arrival event reaches the gentle bell cue");
+Check(!root.GetComponentsInChildren<UIConfetti>().Any(),"confetti waits until the ship departs and the victory panel appears");
+for(int i=0;i<70;i++)Call(app,"Update");
+var burst=root.GetComponentsInChildren<UIConfetti>().Single();
+Check(!Get<bool>(app,"awaitingRoofFinale") && !saucer.gameObject.activeSelf && source.Played.Count(x=>x=="Airy celebration")==1,"ship departs once, then victory plays exactly one airy celebration");
+Set(burst,"age",.48f);var particles=burst.Capture();
+Check(!burst.raycastTarget && particles.Vertices.Count>0 && particles.Vertices.Count<=256 && particles.Triangles.All(t=>t.a>=0 && t.b<particles.Vertices.Count && t.c<particles.Vertices.Count) && particles.Vertices.All(v=>float.IsFinite(v.position.x) && float.IsFinite(v.position.y)),"two-sided confetti has a finite small mesh and cannot capture taps");
+for(int i=0;i<10;i++)Call(app,"Update");
+Check(source.Played.Count(x=>x=="Airy celebration")==1,"later won frames do not replay victory audio");
+int played=source.Played.Count;Set(app,"sound",false);Call(app,"WinLevel");
+Check(source.Played.Count==played,"muting sound also mutes the new celebration cue");
+Call(app,"NewGame");Set(app,"currentLevel",1);Call(app,"NewGame");
+Check(!root.GetComponentsInChildren<Image>().Any(x=>x.gameObject.name=="Waiting flying saucer" && x.gameObject.activeInHierarchy),"saucer is absent outside the level-10 finale");
+var notice=new GameObject("Notice test");var fade=notice.AddComponent<UIToastMotion>();
+Check(notice.GetComponent<CanvasGroup>().alpha==0 && !notice.GetComponent<CanvasGroup>().blocksRaycasts,"new transient notices begin transparent and do not block input");
+Step(fade,5);Check(notice.GetComponent<CanvasGroup>().alpha>.9f,"transient notice fades in smoothly");
 Console.WriteLine(passed+" UI presentation checks passed with SDK substitutes; Unity rendering, native input and lifecycle remain unverified.");

@@ -61,6 +61,7 @@ namespace OneMoreFloor
             string detail=Loc.T("level.floors",level.ActiveFloors,Settings.Rules.Capacity)+"\n";
             detail+=(level.Guided ? Loc.T("level.guided") : Loc.T("traffic."+level.Traffic))+"\n";
             detail+=Loc.T("level.rules",Settings.Rules.LossLimit);
+            if(number==10)detail+="\n"+Loc.T("roof.briefing");
             ui.Text("Level briefing",card,detail,.07f,.29f,.93f,.53f,21,UITheme.Muted);
             ui.Button("Begin level",card,level.Guided ? Loc.T("level.startTutorial") : Loc.T("level.start"),.09f,.15f,.91f,.27f,NewGame,UITheme.Terra);
             ui.Button("Back to levels",card,Loc.T("common.levels"),.09f,.025f,.91f,.125f,ShowLevels,UITheme.Secondary,UITheme.SecondaryText);
@@ -80,13 +81,27 @@ namespace OneMoreFloor
                 PlayerPrefs.SetInt("OneMoreFloor.BoxExplained",1); PlayerPrefs.Save(); NewGame();
             },UITheme.Terra,26);
         }
-        void WinLevel()
+        void SaveVictory()
         {
+            if(victorySaved)return;victorySaved=true;
             SaveBest(); progress.Complete(currentLevel);
             PlayerPrefs.SetInt("OneMoreFloor.Campaign.Completed",progress.Completed);
             string key="OneMoreFloor.LevelBest."+currentLevel;
             PlayerPrefs.SetInt(key,Math.Max(game.Score,PlayerPrefs.GetInt(key,0))); PlayerPrefs.Save();
-            coachRoot.gameObject.SetActive(false); ClearOverlay(); Play(deliveryTone);
+        }
+        void PresentVictory()
+        {
+            SaveVictory(); // Persist the won level before its optional visual epilogue.
+            if(game.HasAlienFinale && !building.RoofFinaleComplete)
+            {
+                awaitingRoofFinale=true;coachRoot.gameObject.SetActive(false);
+                feedback.text=Loc.T("roof.departing");feedback.color=UITheme.Green;return;
+            }
+            WinLevel();
+        }
+        void WinLevel()
+        {
+            SaveVictory();coachRoot.gameObject.SetActive(false); ClearOverlay(); Play(celebrationTone);
             bool last=currentLevel==Campaign.LevelCount;
             var card=Modal(Loc.T("win.eyebrow",currentLevel),last ? Loc.T("win.last",Campaign.LevelCount) : Loc.T("win.title"));
             ui.Picture("Medal halo",card,"circle",.375f,.49f,.625f,.66f).color=UITheme.Soft;
@@ -97,6 +112,7 @@ namespace OneMoreFloor
                 ()=>{ if(last) ShowLevels(); else ChooseLevel(currentLevel+1); },UITheme.Terra,25);
             ui.Button("Replay",card,Loc.T("common.replay"),.09f,.035f,.49f,.13f,NewGame,UITheme.Soft,20);
             ui.Button("Levels",card,Loc.T("common.levels"),.52f,.035f,.91f,.13f,ShowLevels,UITheme.Soft,20);
+            ui.Rect("Victory side confetti",overlay,0,0,1,1).gameObject.AddComponent<UIConfetti>();
         }
         void BuildCoach()
         {
@@ -104,6 +120,7 @@ namespace OneMoreFloor
             // This layer is above the house, below all modals, and never captures a tap.
             coachRoot.SetSiblingIndex(overlay.GetSiblingIndex());
             coachCard=ui.Surface("Coach instructions",coachRoot,.04f,.012f,.96f,.135f,UITheme.Surface,UITheme.SmallRadius).rectTransform;
+            coachCard.gameObject.AddComponent<UIPanelEntrance>();
             coachTitle=ui.Text("Coach step",coachCard,"",.04f,.58f,.96f,.95f,24,UITheme.Green,TextAnchor.MiddleCenter,true);
             coachDetail=ui.Text("Coach detail",coachCard,"",.04f,.05f,.96f,.58f,20,UITheme.Ink);
             coachPointer=ui.Rect("Arrow to actual floor",coachRoot,.08f,.2f,.57f,.25f);

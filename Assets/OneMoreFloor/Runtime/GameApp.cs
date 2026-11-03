@@ -27,7 +27,8 @@ namespace OneMoreFloor
         Rect lastSafe;
         Vector2Int lastScreen;
         AudioSource audioSource;
-        AudioClip boardTone, deliveryTone, lossTone, tapTone;
+        AudioClip boardTone, deliveryTone, lossTone, tapTone, arrivalTone, celebrationTone;
+        bool awaitingRoofFinale,victorySaved;
         readonly List<AudioClip> clips = new List<AudioClip>();
 
         void Start()
@@ -45,6 +46,8 @@ namespace OneMoreFloor
             deliveryTone=Tone("Delivered",new []{523f,659f,784f},.085f,.09f);
             lossTone=Tone("Lost",new []{294f,247f},.14f,.07f);
             tapTone=Tone("Tap",new []{400f},.035f,.035f);
+            arrivalTone=Cue("Soft lift bell",CozySound.Bell());
+            celebrationTone=Cue("Airy celebration",CozySound.Celebration());
             BuildUI(); ShowMenu(); if(!Loc.HasChosenLanguage) ShowLanguagePicker(true);
         }
         AudioClip Tone(string name,float[] notes,float noteLength,float volume)
@@ -59,6 +62,10 @@ namespace OneMoreFloor
                     samples[n*noteSamples+i]=Mathf.Sin(2*Mathf.PI*notes[n]*t)*envelope*volume;
                 }
             var clip=AudioClip.Create(name,samples.Length,1,rate,false); clip.SetData(samples,0); clips.Add(clip); return clip;
+        }
+        AudioClip Cue(string name,float[] samples)
+        {
+            var clip=AudioClip.Create(name,samples.Length,1,44100,false);clip.SetData(samples,0);clips.Add(clip);return clip;
         }
         void Play(AudioClip clip) { if(sound && audioSource!=null) audioSource.PlayOneShot(clip); }
         void BuildUI()
@@ -81,18 +88,18 @@ namespace OneMoreFloor
             difficultyLabel=ui.Text("Difficulty",header,"",.12f,.09f,.73f,.52f,13,UITheme.Muted,TextAnchor.MiddleLeft);
             ui.SymbolButton("Pause",safe,UIIcon.Pause,.735f,.926f,.835f,.982f,Pause,UITheme.Soft);
             ui.SymbolButton("Settings",safe,UIIcon.Settings,.855f,.926f,.955f,.982f,ShowSettings,UITheme.Soft);
-            var scoreCard=ui.Surface("Score card",safe,.036f,.810f,.637f,.905f,UITheme.Surface).rectTransform;
+            var scoreCard=ui.Surface("Score card",safe,.036f,.839f,.637f,.912f,UITheme.Surface).rectTransform;
             ui.Text("Score caption",scoreCard,Loc.T("hud.score"),.065f,.69f,.46f,.92f,12,UITheme.Muted,TextAnchor.MiddleLeft,true);
             score=ui.Text("Score",scoreCard,"0",.065f,.11f,.46f,.73f,44,UITheme.Ink,TextAnchor.MiddleLeft,true);
             var multiplierBadge=ui.Surface("Multiplier badge",scoreCard,.77f,.46f,.94f,.86f,UITheme.Soft,UITheme.BadgeRadius,false,false).rectTransform;
             multiplier=ui.Text("Multiplier",multiplierBadge,"×1",.05f,.02f,.95f,.98f,23,UITheme.Green,TextAnchor.MiddleCenter,true);
-            streak=ui.Text("Streak caption",scoreCard,Loc.T("hud.streak",2),.47f,.57f,.73f,.88f,12,UITheme.Muted);
+            streak=ui.Text("Streak caption",scoreCard,Loc.T("hud.streak",2),.47f,.45f,.73f,.94f,12,UITheme.Muted);
             streakMarks=new Graphic[5];
             for(int i=0;i<5;i++) streakMarks[i]=ui.Panel("Streak dot",scoreCard,.49f+i*.09f,.20f,.55f+i*.09f,.26f,UITheme.Border);
-            var load=ui.Surface("Occupancy card",safe,.663f,.810f,.964f,.905f,UITheme.Surface);loadCard=load;
+            var load=ui.Surface("Occupancy card",safe,.663f,.839f,.964f,.912f,UITheme.Surface);loadCard=load;
             ui.Icon("Capacity symbol",load.transform,UIIcon.Person,.39f,.52f,.61f,.87f,UITheme.Green);
             occupancy=ui.Text("Occupancy",load.transform,Loc.T("hud.occupancy",0,Settings.Rules.Capacity),.05f,.11f,.95f,.48f,19,UITheme.Ink,TextAnchor.MiddleCenter,true);
-            var losses=ui.Surface("Lost card",safe,.036f,.764f,.964f,.800f,UITheme.Surface,UITheme.SmallRadius,false,false).rectTransform;
+            var losses=ui.Surface("Lost card",safe,.036f,.792f,.964f,.826f,UITheme.Surface,UITheme.SmallRadius,false,false).rectTransform;
             lossesLabel=ui.Text("Lost caption",losses,Loc.T("hud.losses",0,Settings.Rules.LossLimit),.035f,.08f,.65f,.92f,15,UITheme.Muted,TextAnchor.MiddleLeft);
             lossMarks=new Graphic[Settings.Rules.LossLimit];
             for(int i=0;i<lossMarks.Length;i++)
@@ -100,8 +107,8 @@ namespace OneMoreFloor
                 float x=.765f+i*.205f/lossMarks.Length;
                 lossMarks[i]=ui.Icon("Remaining patience life",losses,UIIcon.Heart,x,.19f,x+.16f/lossMarks.Length,.81f,UITheme.Terra);
             }
-            ui.Card("Building tray",safe,.017f,.145f,.983f,.755f);
-            buildingRoot=ui.Rect("Illustrated apartment building",safe,.026f,.160f,.974f,.708f);
+            ui.Card("Building tray",safe,.017f,.145f,.983f,.790f);
+            buildingRoot=ui.Rect("Illustrated apartment building",safe,.026f,.160f,.974f,.685f);
             buildingRoot.gameObject.AddComponent<UIArtwork>();
             building=new BuildingView(ui,buildingRoot,Settings.Rules,SelectFloor,cosmetics.Selected(CosmeticKind.Floor),cosmetics.Selected(CosmeticKind.Lift));
             var routeCard=ui.Surface("Route",safe,.036f,.078f,.964f,.130f,UITheme.Deep,UITheme.ButtonRadius,false,false,true).rectTransform;
@@ -239,7 +246,9 @@ namespace OneMoreFloor
             if(level.BoxChance>0 && PlayerPrefs.GetInt("OneMoreFloor.BoxExplained",0)==0)
             { ShowBoxIntroduction(); return; }
             building.Reset(); buildingRoot.gameObject.SetActive(true); settingsLayer.gameObject.SetActive(false);
+            awaitingRoofFinale=victorySaved=false;
             game=new GameSession(Settings.Rules,NewSeed(),level,currentLevel);
+            game.Arrived+=floor=>Play(arrivalTone);
             game.Feedback+=OnFeedback; feedback.color=UITheme.Ink;feedback.text=Loc.T("feedback.goal",level.DeliveryGoal);
             feedbackTime=5; DismissOverlay(); Render(0);
         }
@@ -298,7 +307,7 @@ namespace OneMoreFloor
                 case FeedbackKind.Lost: key="feedback.lost"; Play(lossTone); break;
                 case FeedbackKind.Won: key="feedback.won"; break;
                 case FeedbackKind.BoxBlocked: key="feedback.box"; break;
-                default: key="feedback.floor"; break;
+                default: key=game!=null && message.Count==game.RoofFloor+1 ? "feedback.roof" : "feedback.floor"; break;
             }
             feedback.color=message.Kind==FeedbackKind.Lost ? UITheme.Terra : message.Kind==FeedbackKind.Delivered ? UITheme.Green : UITheme.Ink;
             feedback.text=Loc.T(key,message.Count,message.Multiplier);
@@ -340,8 +349,15 @@ namespace OneMoreFloor
         {
             ApplySafeArea(); UpdateWheel(); RefreshContinueAd();
             if(overlay!=null && overlay.gameObject.activeSelf && !UIWindowMotion.IsClosing(overlay.gameObject))
-            { screenAge+=Time.unscaledDeltaTime; screenFade.alpha=Mathf.Clamp01(screenAge/UITheme.ModalIn); }
-            if(game==null) return;
+            { screenAge+=Time.unscaledDeltaTime; screenFade.alpha=Mathf.SmoothStep(0,1,Mathf.Clamp01(screenAge/UITheme.ModalIn)); }
+            if(game==null)return;
+            if(awaitingRoofFinale && game.State==PlayState.Won)
+            {
+                building.Render(game,Mathf.Min(Time.unscaledDeltaTime,.1f));
+                if(building.RoofFinaleComplete){awaitingRoofFinale=false;WinLevel();}
+                return;
+            }
+            if(game.Finished && building.AnimationsPending)building.Render(game,Mathf.Min(Time.unscaledDeltaTime,.1f));
             var before=game.State;
             int deliveredBefore=game.Delivered;
             game.Tick(Time.unscaledDeltaTime);
@@ -359,7 +375,7 @@ namespace OneMoreFloor
                 Render(dt);
             }
             if(before==PlayState.Playing && game.State==PlayState.GameOver) EndGame();
-            else if(before==PlayState.Playing && game.State==PlayState.Won) WinLevel();
+            else if(before==PlayState.Playing && game.State==PlayState.Won) PresentVictory();
         }
         void Render(float dt)
         {
@@ -371,8 +387,9 @@ namespace OneMoreFloor
             occupancy.text=Loc.T("hud.occupancy",game.Lift.OccupiedSpaces,game.Rules.Capacity);
             loadCard.color=game.Lift.OccupiedSpaces==game.Rules.Capacity ? UITheme.Gold : UITheme.Soft;
             lossesLabel.text=Loc.T("hud.losses",game.Lost,game.Rules.LossLimit);
-            route.text=game.Lift.Moving ? Loc.T("route.moving",game.Lift.TargetFloor+1) : Loc.T("route.stopped",game.Lift.CurrentFloor+1);
-            if(game.Lift.NextFloor.HasValue) route.text+=Loc.T("route.next",game.Lift.NextFloor.Value+1);
+            route.text=game.Lift.Moving ? (game.Lift.TargetFloor==game.RoofFloor ? Loc.T("route.roofMoving") : Loc.T("route.moving",game.Lift.TargetFloor+1)) :
+                (game.Lift.CurrentFloor==game.RoofFloor ? Loc.T("route.roofStopped") : Loc.T("route.stopped",game.Lift.CurrentFloor+1));
+            if(game.Lift.NextFloor.HasValue)route.text+=game.Lift.NextFloor.Value==game.RoofFloor ? Loc.T("route.roofNext") : Loc.T("route.next",game.Lift.NextFloor.Value+1);
             building.Render(game,dt); RenderCoach();
         }
         void ApplySafeArea()

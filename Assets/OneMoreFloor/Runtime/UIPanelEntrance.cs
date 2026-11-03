@@ -15,7 +15,7 @@ namespace OneMoreFloor
         void Update()
         {
             if(suspended || age>=UITheme.ModalIn)return;
-            age+=Time.unscaledDeltaTime;float t=Mathf.Clamp01(age/UITheme.ModalIn),ease=1-(1-t)*(1-t)*(1-t);
+            age+=Time.unscaledDeltaTime;float t=Mathf.Clamp01(age/UITheme.ModalIn),ease=t*t*(3-2*t);
             group.alpha=ease;transform.localScale=Vector3.one*Mathf.Lerp(UITheme.ModalScale,1,ease);
         }
     }

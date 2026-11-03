@@ -4,7 +4,7 @@ from PIL import Image
 import re
 root=Path(__file__).resolve().parents[1]
 art=root/'Assets/OneMoreFloor/Resources/Art'
-expected=['panel','circle','triangle','window','plant','skyline','cabin','door','lobby_cabin','gear','hallway']+[f'person_{i}' for i in range(17)]+['roof']+[f'{prefix}_{i}' for prefix in ['background','interior','lift','lobby_lift'] for i in range(10,25)]
+expected=['panel','circle','triangle','window','plant','skyline','cabin','door','lobby_cabin','gear','hallway']+[f'person_{i}' for i in range(19)]+['roof','rooftop_ufo','rooftop_landing']+[f'{prefix}_{i}' for prefix in ['background','interior','lift','lobby_lift'] for i in range(10,25)]
 for name in expected:
     p=art/(name+'.png')
     with Image.open(p) as im:

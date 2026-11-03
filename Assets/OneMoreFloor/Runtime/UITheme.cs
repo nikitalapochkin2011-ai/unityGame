@@ -10,7 +10,7 @@ namespace OneMoreFloor
         public static readonly Color Scrim=new Color(.08f,.18f,.14f,.56f),Focus=new Color(.45f,.60f,.48f,.78f);
         public const float ButtonRadius=18,SmallRadius=14,CardRadius=20,ModalRadius=24,BadgeRadius=10,Stroke=1;
         public const float CardShadow=.045f,ModalShadow=.075f,ButtonShadow=.035f,ShadowBlur=7,ShadowOffset=2;
-        public const float PressScale=.98f,PressDuration=.12f,ReleaseDuration=.15f,ColorDuration=.14f,ModalIn=.22f,ModalOut=.13f,ModalScale=.97f;
+        public const float PressScale=.98f,PressDuration=.12f,ReleaseDuration=.15f,ColorDuration=.14f,ModalIn=.30f,ModalOut=.16f,ModalScale=.965f;
         public const int ButtonText=22,SecondaryText=20,CardTitle=23,Body=19,Caption=13,Heading=32;
         public const float Gap=12,Inset=20;
     }

@@ -223,3 +223,11 @@ ui.allLevels	All levels	Все уровни	Tüm bölümler	Todos los niveles	Al
 ui.howToPlay	How to play	Как играть	Nasıl oynanır	Cómo jugar	Spielhilfe	Comment jouer	玩法说明
 ui.collectionCount	{0} of {1} unlocked	Открыто: {0} из {1}	{0} / {1} açıldı	{0} de {1} desbloqueados	{0} von {1} freigeschaltet	{0} sur {1} débloqués	已解锁：{0}/{1}
 wheel.adDaily	Once every 24 hours	Один раз в 24 часа	24 saatte bir	Una vez cada 24 horas	Einmal alle 24 Stunden	Une fois par 24 heures	每24小时一次
+roof.title	Roof	Крыша	Çatı	Azotea	Dach	Toit	屋顶
+roof.short	R	К	Ç	A	D	T	顶
+route.roofMoving	Going to the roof	Едем на крышу	Çatıya gidiyoruz	Subiendo a la azotea	Fahrt zum Dach	En route vers le toit	正在前往屋顶
+route.roofStopped	Stop: roof	Остановка: крыша	Durak: çatı	Parada: azotea	Halt: Dach	Arrêt : toit	停靠：屋顶
+route.roofNext	 · Next: roof	 · Далее: крыша	 · Sonraki: çatı	 · Después: azotea	 · Danach: Dach	 · Ensuite : toit	 · 下一站：屋顶
+feedback.roof	Welcome to the roof	Приехали на крышу	Çatıya geldik	Llegamos a la azotea	Auf dem Dach angekommen	Bienvenue sur le toit	已到达屋顶
+roof.departing	Our visitor is flying home…	Наш гость отправляется домой…	Misafirimiz evine uçuyor…	Nuestro visitante vuela a casa…	Unser Gast fliegt nach Hause…	Notre visiteur rentre chez lui…	客人正在飞回家……
+roof.briefing	Last guest: to the UFO on the roof.	Последний гость — на крышу к НЛО.	Son misafir: çatıdaki UFO’ya.	Último pasajero: al ovni de la azotea.	Letzter Gast: zum UFO auf dem Dach.	Dernier passager : l’ovni sur le toit.	最后一位乘客要去屋顶的飞碟。

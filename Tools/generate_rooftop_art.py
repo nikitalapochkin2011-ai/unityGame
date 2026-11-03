@@ -1,0 +1,87 @@
+"""Original rare passengers and rooftop, drawn in the existing game's flat warm style.
+Only these four new PNGs are authored; existing artwork is never rewritten.
+"""
+from pathlib import Path
+from PIL import Image,ImageDraw
+import uuid,re
+ROOT=Path(__file__).resolve().parents[1]/'Assets/OneMoreFloor/Resources/Art'
+class Canvas:
+ def __init__(self,w,h):self.w,self.h=w,h;self.im=Image.new('RGBA',(w*3,h*3));self.d=ImageDraw.Draw(self.im)
+ def r(self,b,c,rad=0,outline=None,width=1):
+  b=tuple(round(v*3) for v in b)
+  if rad:self.d.rounded_rectangle(b,round(rad*3),c,outline,round(width*3))
+  else:self.d.rectangle(b,c,outline,round(width*3))
+ def e(self,b,c):self.d.ellipse(tuple(round(v*3) for v in b),c)
+ def p(self,pts,c):self.d.polygon([(round(x*3),round(y*3)) for x,y in pts],c)
+ def l(self,pts,c,w=2):self.d.line([(round(x*3),round(y*3)) for x,y in pts],c,round(w*3),joint='curve')
+ def save(self,name):
+  self.im.resize((self.w*2,self.h*2),Image.Resampling.LANCZOS).save(ROOT/(name+'.png'))
+  meta=ROOT/(name+'.png.meta')
+  if not meta.exists():
+   text=(ROOT/'person_0.png.meta').read_text()
+   text=re.sub(r'guid: [0-9a-f]{32}','guid: '+uuid.uuid5(uuid.NAMESPACE_URL,'omf/rooftop/'+name).hex,text,count=1)
+   text=re.sub(r'spriteID: [0-9a-f]+','spriteID: '+uuid.uuid5(uuid.NAMESPACE_URL,'omf/sprite/'+name).hex,text)
+   meta.write_text(text)
+# A friendly upright dinosaur. The ring and tail fit inside the same passenger silhouette.
+c=Canvas(164,240);c.e((24,217,140,233),(20,32,45,38))
+c.p([(55,176),(14,174),(30,155),(40,126),(62,134)],'#739978')
+for x,y in [(35,111),(36,130),(29,149),(18,167)]:c.p([(x,y),(x-13,y-8),(x-7,y+9)],'#c5b178')
+c.e((20,129,146,179),'#b86d54');c.e((33,134,133,164),'#e8cba0')
+c.r((45,168,74,214),'#779b78',10);c.r((90,168,119,214),'#779b78',10)
+for x in (43,89):
+ c.r((x,207,x+34,221),'#5c7b67',9)
+ for a in (x+7,x+17,x+27):c.e((a,211,a+4,218),'#ede1bd')
+c.e((43,93,125,190),'#8caa7d');c.e((60,111,111,178),'#d9d6a3')
+c.r((32,108,51,157),'#8caa7d',10);c.r((116,109,136,156),'#8caa7d',10)
+c.r((46,25,127,106),'#8caa7d',28);c.r((86,58,147,101),'#9ab788',19)
+c.p([(49,42),(38,26),(59,28)],'#c7b57d');c.p([(69,27),(64,12),(83,26)],'#c7b57d')
+c.e((69,49,77,58),'#283d36');c.e((70,49,73,52),'#fff5d9');c.e((133,71,138,75),'#587b60')
+c.l([(103,86),(115,89),(129,85)],'#52745c',2);c.e((79,73,91,80),'#c1b58b')
+for x,y in [(49,98),(113,118),(49,124)]:c.e((x,y,x+8,y+10),'#789b72')
+# Front half of the swim ring wraps around the belly; soft cream bands and a valve.
+c.l([(23,151),(30,166),(48,176),(79,181),(111,177),(133,167),(142,153)],'#b86d54',21)
+c.l([(25,150),(33,162),(51,171),(79,175),(107,171),(130,162),(139,150)],'#d59770',16)
+for pts in [[(38,158),(48,172)],[(75,167),(76,181)],[(115,161),(108,176)]]:c.l(pts,'#f2dfba',8)
+c.r((132,142,141,150),'#eccea1',3);c.e((135,139,141,145),'#f7e8ca');c.save('person_17')
+# Green visitor with a quiet cream suit, rounded boots and friendly almond eyes.
+c=Canvas(164,240);c.e((25,217,137,233),(20,32,45,38))
+for x in (49,88):c.r((x,168,x+26,214),'#b4c4ae',8);c.r((x-5,207,x+29,222),'#61776c',7)
+c.r((39,99,125,178),'#e1ddc4',18);c.r((47,146,117,183),'#c8d0b8',10)
+c.r((27,110,45,162),'#8faf7f',9);c.r((119,110,138,162),'#8faf7f',9)
+for x in (28,120):c.r((x,143,x+16,162),'#a3bd90',7)
+c.r((64,83,100,112),'#8faf7f',11);c.p([(54,100),(82,121),(111,100)],'#76977a')
+c.e((27,13,139,103),'#94b782');c.e((35,21,132,94),'#a2bf8e')
+c.p([(51,47),(62,46),(73,58),(68,72),(58,69),(48,58)],'#29463d')
+c.p([(113,47),(102,46),(91,58),(96,72),(106,69),(116,58)],'#29463d')
+c.e((55,50,60,55),'#f2ecd1');c.e((104,50,109,55),'#f2ecd1')
+c.e((40,73,53,79),'#c2bd91');c.e((113,73,126,79),'#c2bd91');c.l([(75,83),(82,86),(90,82)],'#5a805e',2)
+c.l([(82,121),(82,169)],'#acb9a1',2);c.r((99,122,114,139),'#b6c7ac',3)
+c.e((57,127,66,136),'#d0af6f');c.e((60,129,64,133),'#f5e3b5');c.save('person_18')
+# Empty saucer waiting on its landing struts. Warm brass, sage metal and a glass canopy.
+c=Canvas(360,150)
+c.l([(77,105),(66,134),(49,137)],'#6b8277',8);c.l([(282,105),(295,134),(311,137)],'#6b8277',8)
+c.l([(74,106),(67,130)],'#a9b7a1',3);c.l([(285,106),(294,131)],'#a9b7a1',3)
+c.e((94,10,267,115),'#5f8476');c.e((104,15,257,108),'#bfd3be')
+c.p([(116,45),(132,26),(164,19),(127,71)],'#f5f0d1');c.e((156,43,212,90),'#709787')
+c.r((170,57,200,89),'#415e56',9);c.r((167,55,203,67),'#8eab95',5)
+c.e((25,63,335,131),'#46695e');c.e((13,56,348,116),'#91ac98');c.e((27,54,334,93),'#b8c8ac')
+c.e((13,73,348,116),'#6d9180');c.l([(26,88),(74,101),(180,108),(285,101),(335,87)],'#ddc08c',6)
+for x in (57,104,153,203,252,299):c.e((x-7,87,x+7,98),'#ead5a2');c.e((x-4,88,x+4,94),'#fff0c8')
+c.r((145,110,216,124),'#35594e',6);c.r((157,114,204,119),'#c0d5ba',3)
+c.save('rooftop_ufo')
+# Full-width terrace with a real open lift headhouse, garden, brass trim and railings.
+c=Canvas(800,160)
+c.r((1,128,798,155),'#8a9c8d',4);c.r((1,126,798,141),'#e9d3ac',4);c.r((1,143,798,154),'#59766a',3)
+c.r((11,132,789,136),'#fff0d1',1)
+for x in (31,115,199,283,367,451,535):c.r((x,78,x+5,127),'#6e8879',2)
+c.r((18,77,559,83),'#6e8879',3);c.r((18,77,559,79),'#a8b5a0',2)
+for x in (70,145):
+ c.p([(x-21,105),(x+22,105),(x+16,132),(x-15,132)],'#bb8262');c.r((x-24,101,x+25,110),'#d09d76',4)
+ c.l([(x,103),(x,60)],'#587a60',3)
+ for xx,yy in [(x-14,67),(x+12,55),(x-13,87),(x+14,78)]:c.e((xx-10,yy-9,xx+10,yy+9),'#83a47b');c.l([(xx,yy),(x,yy+15)],'#63876a',2)
+c.r((528,45,534,128),'#677f70',3);c.r((521,40,542,62),'#ead1a0',5);c.r((525,44,538,58),'#fff0c4',4)
+c.r((571,20,798,134),'#657e75',3);c.r((582,26,787,130),'#263f3b',2)
+c.r((578,23,587,132),'#b8c5b4',2);c.r((782,23,791,132),'#9fae9f',2)
+c.r((573,128,797,136),'#d8c18f',2)
+c.p([(568,23),(576,9),(792,9),(799,23)],'#435e52');c.r((568,20,799,28),'#91a58e',3);c.r((572,21,796,24),'#e0c38f',2)
+c.r((604,30,757,36),'#e6d9ae',2);c.save('rooftop_landing')

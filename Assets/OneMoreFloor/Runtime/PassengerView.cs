@@ -11,7 +11,7 @@ namespace OneMoreFloor
         public readonly RectTransform Root;
         public bool WasRiding { get; private set; }
         public bool Departing { get; private set; }
-        public bool Finished { get { return Departing && departureTime >= .55f; } }
+        public bool Finished { get { return Departing && departureTime >= departureDuration; } }
         readonly CanvasGroup opacity;
         readonly Image portrait, badge, patience;
         readonly RectTransform patienceTrack;
@@ -19,7 +19,8 @@ namespace OneMoreFloor
         readonly Text destination;
         readonly int appearance;
         Vector2 position, target, size;
-        float age, departureTime;
+        float age, departureTime, departureDuration=.55f;
+        bool boardingShip;
         bool initialized;
         public PassengerView(GameUI ui, Transform parent, int appearance)
         {
@@ -51,14 +52,16 @@ namespace OneMoreFloor
             bool wide=riding && passenger.HasBox;
             badge.rectTransform.anchorMin=badge.rectTransform.anchorMax=new Vector2(wide ? .25f : .5f,.7f);
             badge.rectTransform.sizeDelta=new Vector2(badgeWidth,28);
-            destination.fontSize=22;
+            destination.enableAutoSizing=passenger.IsAlien;
+            destination.fontSize=passenger.IsAlien ? 16 : 22;destination.fontSizeMax=16;destination.fontSizeMin=12;
+            if(passenger.IsAlien)badge.rectTransform.sizeDelta=new Vector2(62,28);
             GameUI.Place(portrait.rectTransform,0,.06f,wide ? .5f : 1,.67f);
             box.gameObject.SetActive(passenger.HasBox);
             GameUI.Place(box,wide ? .39f : .18f,.16f,.96f,.41f);
             if (riding && WasRiding && initialized) position.y = center.y;
             WasRiding = riding;
             if (!initialized) { position = target + new Vector2(-.008f,0); initialized = true; }
-            destination.text = (passenger.Destination+1).ToString();
+            destination.text=passenger.IsAlien ? Loc.T("roof.title") : (passenger.Destination+1).ToString();
             badge.color = riding ? GameUI.Gold : GameUI.Cream;
             patienceTrack.gameObject.SetActive(!riding);
             patience.rectTransform.anchorMax = new Vector2(Mathf.Clamp01(patienceRatio),1);
@@ -75,12 +78,18 @@ namespace OneMoreFloor
             badge.color = delivered ? GameUI.Gold : GameUI.Coral;
             patienceTrack.gameObject.SetActive(false);
         }
+        public void LeaveToShip(Vector2 landing)
+        {
+            if(Departing)return;Departing=true;boardingShip=true;departureTime=0;departureDuration=RoofView.BoardingSeconds;
+            target=landing;badge.gameObject.SetActive(false);patienceTrack.gameObject.SetActive(false);
+        }
         public void Tick(float dt)
         {
             age += dt;
             float distance = Vector2.Distance(position,target);
-            position = Vector2.Lerp(position,target,1-Mathf.Exp(-dt*15));
-            if (Departing) { departureTime += dt; opacity.alpha = Mathf.Clamp01(1-departureTime/.55f); }
+            if(!boardingShip || departureTime>=.20f)
+                position=Vector2.Lerp(position,target,1-Mathf.Exp(-dt*(boardingShip ? 3.5f : 15)));
+            if (Departing) { departureTime += dt; opacity.alpha=boardingShip ? Mathf.Clamp01((departureDuration-departureTime)/.3f) : Mathf.Clamp01(1-departureTime/departureDuration); }
             else opacity.alpha = Mathf.Clamp01(age/.22f);
             float bob = distance > .004f ? Mathf.Sin(age*23)*.004f : Mathf.Sin(age*2.8f+appearance)*.001f;
             GameUI.Place(Root,position.x-size.x*.5f,position.y,position.x+size.x*.5f,position.y+size.y);

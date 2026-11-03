@@ -57,7 +57,7 @@ class Program
         Check(g.Lost==3 && g.State==PlayState.GameOver,"third loss ends game");
         elapsed=g.Elapsed; g.Resume(); g.SelectFloor(4); Run(g,1); Check(g.Elapsed==elapsed,"game over immutable");
         g=Game(); Check(g.Score==0 && g.Lost==0 && g.Lift.Riders.Count==0 && g.Elapsed==0,"restart clean session");
-        g.SelectFloor(-1); g.SelectFloor(6); Check(!g.Lift.NextFloor.HasValue,"invalid floors ignored");
+        g.SelectFloor(-1); g.SelectFloor(7); Check(!g.Lift.NextFloor.HasValue,"invalid floors ignored");
         g.SelectFloor(0); for(int i=0;i<100;i++) g.SelectFloor(0); Run(g,.5f);
         Check(!g.Lift.Moving && !g.Lift.NextFloor.HasValue,"repeated same-floor taps settle");
         g=new GameSession(new GameRules { PatienceSeconds=10000 },42);
@@ -181,5 +181,6 @@ class Program
         CosmeticsTests.Run();
         ExpansionTests.Run();
         RewardedGameplayTests.Run();
+        RooftopTests.Run();
     }
 }
