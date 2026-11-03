@@ -166,7 +166,7 @@ wheel.wait	Ad spin in {0}	Реклама через {0}	Reklama {0}	Anuncio en {
 wheel.complete	Collection complete!	Коллекция собрана!	Koleksiyon tamamlandı!	¡Colección completa!	Sammlung vollständig!	Collection complète !	收藏已集齐！
 wheel.reward	Unlocked: {0}	Открыто: {0}	Açıldı: {0}	Desbloqueado: {0}	Freigeschaltet: {0}	Débloqué : {0}	已解锁：{0}
 collection.kind.0	Skies	Фоны	Gökyüzü	Fondos	Himmel	Ciels	背景
-collection.kind.1	Floors	Этажи	Katlar	Pisos	Etagen	Étages	楼层
+collection.kind.1	Interiors	Интерьеры	İç mekânlar	Interiores	Innenräume	Intérieurs	内饰
 collection.kind.2	Lifts	Лифты	Asansörler	Ascensores	Aufzüge	Ascenseurs	电梯
 collection.selected	Selected	Выбрано	Seçili	Elegido	Ausgewählt	Choisi	已选择
 collection.select	Select	Выбрать	Seç	Elegir	Auswählen	Choisir	选择
@@ -217,3 +217,8 @@ ads.testTitle	Rewarded ad test	Тест рекламного вознаграж�
 ads.testDetail	Unity Editor simulation. No real ad is shown. Simulate a completed view?	Тест в Unity Editor. Настоящая реклама не показывается. Засчитать завершённый просмотр?	Unity Editor simülasyonu. Gerçek reklam gösterilmez. Tamamlanmış izleme sayılsın mı?	Simulación en Unity Editor. No hay anuncio real. ¿Simular una visualización completa?	Simulation im Unity Editor. Keine echte Werbung. Vollständiges Ansehen simulieren?	Simulation dans Unity Editor. Aucune vraie publicité. Simuler un visionnage complet ?	Unity编辑器模拟，不播放真实广告。模拟完整观看吗？
 ads.testEarn	View completed	Просмотр завершён	İzleme tamamlandı	Visualización completa	Vollständig angesehen	Visionnage terminé	观看完成
 ads.testSpin	TEST • Unlimited spins	ТЕСТ • Бесконечные вращения	TEST • Sınırsız çevir	PRUEBA • Giros ilimitados	TEST • Unbegrenzt drehen	TEST • Tours illimités	测试 • 无限旋转
+ui.play	Play	Играть	Oyna	Jugar	Spielen	Jouer	开始游戏
+ui.level	Level {0}	Уровень {0}	Bölüm {0}	Nivel {0}	Level {0}	Niveau {0}	第{0}关
+ui.allLevels	All levels	Все уровни	Tüm bölümler	Todos los niveles	Alle Level	Tous les niveaux	全部关卡
+ui.howToPlay	How to play	Как играть	Nasıl oynanır	Cómo jugar	Spielhilfe	Comment jouer	玩法说明
+ui.collectionCount	{0} of {1} unlocked	Открыто: {0} из {1}	{0} / {1} açıldı	{0} de {1} desbloqueados	{0} von {1} freigeschaltet	{0} sur {1} débloqués	已解锁：{0}/{1}

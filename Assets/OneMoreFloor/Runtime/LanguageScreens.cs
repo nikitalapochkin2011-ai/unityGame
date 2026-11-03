@@ -10,6 +10,7 @@ namespace OneMoreFloor
         RectTransform languageLayer;
         GameLanguage selectedLanguage;
         Image[] languageCards;
+        RectTransform[] languageChoices;
         Text languageEyebrow, languageHeading, languageDescription, languageConfirm, languageCancel;
 
         void BuildLanguageLayer()
@@ -24,19 +25,23 @@ namespace OneMoreFloor
             selectedLanguage=Loc.Language;
             foreach(Transform child in languageLayer) { child.gameObject.SetActive(false); Destroy(child.gameObject); }
             languageLayer.gameObject.SetActive(true);
-            var scrim=ui.Panel("Language background",languageLayer,-.2f,-.1f,1.2f,1.1f,GameUI.Hex("BDD4D0"),false);
+            var scrim=ui.Panel("Language background",languageLayer,-.2f,-.1f,1.2f,1.1f,GameUI.Paper,false);
             scrim.raycastTarget=true;
-            var card=ui.Panel("Language card",languageLayer,.055f,.06f,.945f,.94f,GameUI.Cream).rectTransform;
-            languageEyebrow=ui.Text("Language eyebrow",card,Loc.T("language.eyebrow"),.06f,.91f,.94f,.97f,17,GameUI.Teal,TextAnchor.MiddleCenter,true);
-            languageHeading=ui.Text("Language title",card,Loc.T("language.title"),.06f,.79f,.94f,.915f,38,GameUI.Ink,TextAnchor.MiddleCenter,true);
-            languageDescription=ui.Text("Language description",card,Loc.T("language.detail"),.07f,.69f,.93f,.80f,22,GameUI.Hex("627D7C"));
-            languageCards=new Image[GameLanguages.Count];
+            var card=ui.Card("Language card",languageLayer,.055f,.06f,.945f,.94f,GameUI.Cream).rectTransform;
+            languageEyebrow=ui.Text("Language eyebrow",card,Loc.T("language.eyebrow"),.06f,.91f,.94f,.97f,13,GameUI.Teal,TextAnchor.MiddleCenter,true);
+            languageHeading=ui.Text("Language title",card,Loc.T("language.title"),.07f,.80f,.93f,.905f,34,GameUI.Ink,TextAnchor.MiddleCenter,true);
+            languageDescription=ui.Text("Language description",card,Loc.T("language.detail"),.07f,.72f,.93f,.80f,18,GameUI.Muted);
+            languageCards=new Image[GameLanguages.Count];languageChoices=new RectTransform[GameLanguages.Count];
             for(int i=0;i<GameLanguages.Count;i++)
             {
-                var language=(GameLanguage)i; float top=.675f-i*.071f;
-                var button=ui.Button("Language "+GameLanguages.Code(language),card,GameLanguages.NativeName(language),.09f,top-.061f,.91f,top,
-                    ()=>{ selectedLanguage=language; UpdateLanguageCards(); },GameUI.Teal,25);
+                var language=(GameLanguage)i; float top=.695f-i*.074f;
+                var button=ui.Button("Language "+GameLanguages.Code(language),card,GameLanguages.NativeName(language),.09f,top-.063f,.91f,top,
+                    ()=>{ selectedLanguage=language; UpdateLanguageCards(); },GameUI.Cream,22);
                 languageCards[i]=button.GetComponent<Image>();
+                var label=button.GetComponentInChildren<Text>();label.alignment=TMPro.TextAlignmentOptions.Left;
+                GameUI.Place(label.rectTransform,.07f,.08f,.82f,.92f);
+                languageChoices[i]=ui.Rect("Chosen language",button.transform,.86f,.25f,.94f,.75f);
+                ui.Icon("Chosen language tick",languageChoices[i],UIIcon.Check,0,0,1,1,GameUI.Teal);
             }
             languageConfirm=ui.Button("Confirm language",card,Loc.T("language.confirm"),.09f,.105f,.91f,.175f,()=>ApplyLanguage(required),GameUI.Coral,26).GetComponentInChildren<Text>();
             languageCancel=null;
@@ -53,8 +58,9 @@ namespace OneMoreFloor
             for(int i=0;i<languageCards.Length;i++)
             {
                 bool chosen=i==(int)selectedLanguage;
-                languageCards[i].color=chosen ? GameUI.Gold : GameUI.Teal;
-                languageCards[i].GetComponentInChildren<Text>().color=chosen ? GameUI.Ink : GameUI.Cream;
+                languageCards[i].color=chosen ? GameUI.Soft : GameUI.Cream;
+                languageChoices[i].gameObject.SetActive(chosen);
+                languageCards[i].GetComponentInChildren<Text>().color=GameUI.Ink;
             }
         }
         void ApplyLanguage(bool firstChoice)
@@ -63,7 +69,7 @@ namespace OneMoreFloor
             // Rebuild visual elements, preserving the paused model, riders, route and elapsed time.
             building.Reset(); uiRoot.SetActive(false); Destroy(uiRoot);
             lastScreen=Vector2Int.zero;
-            ui=new GameUI(); BuildUI();
+            ui=CreateUI(); BuildUI();
             if(game==null) ShowMenu();
             else
             {

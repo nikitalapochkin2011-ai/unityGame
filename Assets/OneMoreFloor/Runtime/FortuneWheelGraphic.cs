@@ -11,12 +11,12 @@ namespace OneMoreFloor
         {
             vh.Clear(); var rect=rectTransform.rect;
             var center=rect.center; float radius=Mathf.Min(rect.width,rect.height)*.5f;
-            WheelMesh.Disc(vh,center,radius,GameUI.Hex("633C1C"));
-            WheelMesh.Ring(vh,center,.92f*radius,.99f*radius,GameUI.Hex("EABC59"));
-            WheelMesh.Ring(vh,center,.94f*radius,.96f*radius,GameUI.Hex("FFF0B1"));
+            WheelMesh.Disc(vh,center,radius,GameUI.Hex("102D29"));
+            WheelMesh.Ring(vh,center,.92f*radius,.99f*radius,GameUI.Hex("E7BC70"));
+            WheelMesh.Ring(vh,center,.94f*radius,.96f*radius,GameUI.Hex("FFF0CA"));
             for(int i=0;i<Sectors;i++)
             {
-                Color color=GameUI.Hex(i%2==0 ? "E3B45F" : "79532E");
+                Color color=GameUI.Hex(i%2==0 ? "DDB56C" : "315F51");
                 for(int j=0;j<12;j++)
                 {
                     float a=(i-.5f+j/12f)*Mathf.PI*2/Sectors,b=(i-.5f+(j+1)/12f)*Mathf.PI*2/Sectors;
@@ -25,14 +25,14 @@ namespace OneMoreFloor
                 float angle=(i-.5f)*Mathf.PI*2/Sectors;
                 Vector2 edge=new Vector2(Mathf.Sin(angle),Mathf.Cos(angle));
                 Vector2 side=new Vector2(edge.y,-edge.x)*radius*.005f;
-                WheelMesh.Triangle(vh,center,center+edge*radius*.92f-side,center+edge*radius*.92f+side,GameUI.Hex("FFE6A0"));
+                WheelMesh.Triangle(vh,center,center+edge*radius*.92f-side,center+edge*radius*.92f+side,GameUI.Hex("F5DB9D"));
                 float mid=i*Mathf.PI*2/Sectors;
                 WheelMesh.Disc(vh,center+new Vector2(Mathf.Sin(mid),Mathf.Cos(mid))*radius*.95f,radius*.018f,GameUI.Hex("FFF4CC"));
             }
-            WheelMesh.Disc(vh,center,radius*.23f,GameUI.Hex("704113"));
-            WheelMesh.Disc(vh,center,radius*.20f,GameUI.Hex("EABC59"));
-            WheelMesh.Ring(vh,center,radius*.15f,radius*.18f,GameUI.Hex("FFF0B1"));
-            WheelMesh.Star(vh,center,radius*.12f,GameUI.Hex("FFF0B1"));
+            WheelMesh.Disc(vh,center,radius*.23f,GameUI.Hex("183B35"));
+            WheelMesh.Disc(vh,center,radius*.20f,GameUI.Hex("E7BC70"));
+            WheelMesh.Ring(vh,center,radius*.15f,radius*.18f,GameUI.Hex("FFF0CA"));
+            WheelMesh.Star(vh,center,radius*.12f,GameUI.Hex("FFF0CA"));
         }
     }
 }

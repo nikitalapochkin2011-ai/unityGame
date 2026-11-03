@@ -16,6 +16,7 @@ namespace OneMoreFloor
         readonly Image[] callLights, rooms;
         readonly Text[] queueCounts;
         readonly Text[] lockedLabels;
+        readonly Graphic[] lockSymbols;
         readonly Button[] callButtons, hallButtons;
         readonly Dictionary<Passenger, PassengerView> people = new Dictionary<Passenger, PassengerView>();
         readonly HashSet<Passenger> present = new HashSet<Passenger>();
@@ -36,7 +37,7 @@ namespace OneMoreFloor
             ui.Panel("Left guide rail",root,.736f,.01f,.742f,.99f,GameUI.Hex("6F8585"),false);
             ui.Panel("Right guide rail",root,.971f,.01f,.978f,.99f,GameUI.Hex("6F8585"),false);
             callLights = new Image[rules.Floors]; rooms = new Image[rules.Floors]; queueCounts = new Text[rules.Floors];
-            lockedLabels=new Text[rules.Floors]; callButtons=new Button[rules.Floors]; hallButtons=new Button[rules.Floors];
+            lockedLabels=new Text[rules.Floors];lockSymbols=new Graphic[rules.Floors]; callButtons=new Button[rules.Floors]; hallButtons=new Button[rules.Floors];
             for (int f=0; f<rules.Floors; f++)
             {
                 int floor = f;
@@ -45,7 +46,7 @@ namespace OneMoreFloor
                 var room = ui.Picture("Unified hallway interior",row,CosmeticStyle.Asset(CosmeticKind.Floor,floorStyle),BuildingLayout.HallLeft,.055f,BuildingLayout.HallRight,.97f,false);
                 room.color=roomTint; CosmeticStyle.Detail(ui,row,floorStyle,false);
                 rooms[f] = room; room.raycastTarget = true;
-                var tap = room.gameObject.AddComponent<Button>(); tap.targetGraphic = room; tap.onClick.AddListener(()=>select(floor));
+                var tap = room.gameObject.AddComponent<Button>(); tap.targetGraphic = room; tap.onClick.AddListener(()=>{ui.ClickSound?.Invoke();select(floor);});
                 hallButtons[f]=tap;
                 ui.Panel("Brass lift threshold",row,.704f,.055f,.716f,.88f,GameUI.Hex("C8B183"),false);
                 ui.Panel("Floor edge",row,.071f,.01f,.999f,.055f,GameUI.Hex("E5D4B5"),false);
@@ -53,7 +54,8 @@ namespace OneMoreFloor
                 callLights[f] = call.GetComponent<Image>();
                 callButtons[f]=call;
                 queueCounts[f] = ui.Text("Waiting count",row,"",.003f,.09f,.069f,.27f,12,GameUI.Hex("D1DACD"));
-                lockedLabels[f]=ui.Text("Locked floor",row,"",.17f,.37f,.63f,.66f,19,GameUI.Ink,TextAnchor.MiddleCenter,true);
+                lockedLabels[f]=ui.Text("Locked floor",row,"",.195f,.37f,.655f,.66f,15,GameUI.Cream,TextAnchor.MiddleCenter,true);
+                lockSymbols[f]=ui.Icon("Floor lock symbol",row,UIIcon.Lock,.14f,.41f,.18f,.65f,GameUI.Cream);
             }
             cabin = ui.Rect("Moving elevator",root,BuildingLayout.LiftLeft,0,BuildingLayout.LiftRight,1f/rules.Floors);
             ui.Picture("Cabin",cabin,CosmeticStyle.Asset(CosmeticKind.Lift,liftStyle),0,.025f,1,.99f,false).color=CosmeticStyle.Tint(liftStyle);
@@ -109,7 +111,7 @@ namespace OneMoreFloor
             {
                 var queue=game.Queues.Floors[f]; bool active=f<game.Difficulty.ActiveFloors;
                 callButtons[f].interactable=hallButtons[f].interactable=active;
-                lockedLabels[f].gameObject.SetActive(!active);
+                lockedLabels[f].gameObject.SetActive(!active);lockSymbols[f].gameObject.SetActive(!active);
                 lockedLabels[f].text=Loc.T("building.locked",f+1,f<3 ? 1 : f);
                 bool selected=game.Lift.NextFloor==f || (game.Lift.Moving && game.Lift.TargetFloor==f);
                 callLights[f].color=selected ? GameUI.Coral : (game.Lift.CurrentFloor==f && !game.Lift.Moving ? GameUI.Teal : GameUI.Hex("355563"));

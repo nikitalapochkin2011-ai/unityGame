@@ -9,7 +9,7 @@ using UnityEngine.UI;
 
 int passed=0;
 void Check(bool value,string label) { if(!value) throw new Exception(label); passed++; Console.WriteLine("PASS mesh: "+label); }
-foreach(var graphic in new Graphic[]{new FortuneWheelGraphic(),new WheelRewardIcon(),new WheelPointerGraphic()})
+foreach(var graphic in new Graphic[]{new FortuneWheelGraphic(),new WheelRewardIcon(),new WheelPointerGraphic(),new UISurfaceGraphic()})
 {
     Check(graphic.GetType().GetCustomAttributes(typeof(RequireComponent),true).Cast<RequireComponent>().Any(a=>a.Type==typeof(CanvasRenderer)),graphic.GetType().Name+" explicitly requires renderer");
     foreach(var size in new[]{(400f,400f),(72f,64f),(28f,38f)})
@@ -35,6 +35,20 @@ Check(coinCount!=questionCount && icon.Dirtied>0,"coin and question meshes diffe
 var pointer=new WheelPointerGraphic().Generate(50,60);
 var tip=pointer.Vertices.OrderBy(v=>v.position.y).First().position;
 Check(Math.Abs(tip.x)<.001 && tip.y<0,"pointer tip is centered and points downward");
+
+foreach(UIIcon kind in Enum.GetValues(typeof(UIIcon)))
+{
+    var symbol=new UIIconGraphic{Icon=kind};
+    foreach(var size in new[]{(18f,18f),(32f,48f),(60f,60f)})
+    {
+        var mesh=symbol.Generate(size.Item1,size.Item2);
+        bool valid=mesh.Vertices.Count>0 && mesh.Vertices.Count<65000 && mesh.Triangles.Count>0;
+        foreach(var v in mesh.Vertices)valid &= float.IsFinite(v.position.x) && float.IsFinite(v.position.y) && Math.Abs(v.position.x)<=size.Item1*.5f && Math.Abs(v.position.y)<=size.Item2*.5f;
+        foreach(var (a,b,c) in mesh.Triangles)valid &= a>=0 && b>=0 && c>=0 && a<mesh.Vertices.Count && b<mesh.Vertices.Count && c<mesh.Vertices.Count;
+        Check(valid,"bounded vector icon mesh "+kind+" "+size);
+    }
+}
+Check(new UISurfaceGraphic().Generate(0,100).Vertices.Count==0 && new UIIconGraphic().Generate(40,0).Vertices.Count==0,"zero-size layout does not produce invalid UI triangles");
 
 if(args.Length>0)
 {

@@ -27,7 +27,17 @@ namespace OneMoreFloor
             bool wheel=wheelDisk!=null;
             if(wheel) ShowWheel();
             else if(game!=null && game.State==PlayState.GameOver) EndGame();
-            if(overlay!=null) ui.Text("Ad result",overlay,Loc.T(key),.08f,wheel ? .785f : .94f,.92f,wheel ? .832f : .99f,17,wheel ? GameUI.Cream : GameUI.Ink);
+            if(overlay!=null)
+            {
+                var notice=ui.Card("Ad notice",overlay,.08f,wheel ? .35f : .88f,.92f,wheel ? .407f : .94f,GameUI.Deep).rectTransform;
+                ui.Text("Ad result",notice,Loc.T(key),.05f,.08f,.95f,.92f,16,GameUI.Cream);
+                StartCoroutine(HideAdNotice(notice.gameObject));
+            }
+        }
+        System.Collections.IEnumerator HideAdNotice(GameObject notice)
+        {
+            float age=0;while(age<2.8f && notice!=null){age+=Time.unscaledDeltaTime;yield return null;}
+            if(notice!=null)Destroy(notice);
         }
         void RefreshContinueAd()
         {
@@ -49,7 +59,7 @@ namespace OneMoreFloor
                 {
                     if(!Application.isFocused) { session.Pause(); RenderPauseScreen(); return; }
                     overlay.gameObject.SetActive(false);
-                    feedback.text=Loc.T("ads.restored"); feedbackTime=2.5f;
+                    feedback.color=GameUI.Teal;feedback.text=Loc.T("ads.restored"); feedbackTime=2.5f;
                     Render(0);
                 }
                 else ShowAdNotice("ads.incomplete");

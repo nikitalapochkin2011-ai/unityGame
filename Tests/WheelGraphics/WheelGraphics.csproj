@@ -5,5 +5,7 @@
     <Compile Include="../../Assets/OneMoreFloor/Runtime/FortuneWheelGraphic.cs" Link="FortuneWheelGraphic.cs"/>
     <Compile Include="../../Assets/OneMoreFloor/Runtime/WheelRewardIcon.cs" Link="WheelRewardIcon.cs"/>
     <Compile Include="../../Assets/OneMoreFloor/Runtime/WheelPointerGraphic.cs" Link="WheelPointerGraphic.cs"/>
+    <Compile Include="../../Assets/OneMoreFloor/Runtime/UISurfaceGraphic.cs" Link="UISurfaceGraphic.cs"/>
+    <Compile Include="../../Assets/OneMoreFloor/Runtime/UIIconGraphic.cs" Link="UIIconGraphic.cs"/>
   </ItemGroup>
 </Project>

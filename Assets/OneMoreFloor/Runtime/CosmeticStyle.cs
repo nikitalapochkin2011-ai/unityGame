@@ -15,7 +15,7 @@ namespace OneMoreFloor
         }
         public static Color RarityColor(int index)
         {
-            string[] colors={"586A70","216E9C","8750A6","AC752D"};
+            string[] colors={"64766D","216E9C","8750A6","946A27"};
             return GameUI.Hex(colors[(int)Cosmetics.Rarity(index)]);
         }
         public static string Asset(CosmeticKind kind,int index)

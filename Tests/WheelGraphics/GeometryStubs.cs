@@ -24,17 +24,24 @@ namespace UnityEngine
     {
         public float r,g,b,a;
         public Color(float r,float g,float b,float a=1) { this.r=r; this.g=g; this.b=b; this.a=a; }
+        public static Color white { get { return new Color(1,1,1,1); } }
+        public static Color operator *(Color a,Color b) { return new Color(a.r*b.r,a.g*b.g,a.b*b.b,a.a*b.a); }
+        public static Color Lerp(Color a,Color b,float t) { t=Math.Clamp(t,0,1);return new Color(a.r+(b.r-a.r)*t,a.g+(b.g-a.g)*t,a.b+(b.b-a.b)*t,a.a+(b.a-a.a)*t); }
     }
     public struct Rect
     {
         public float width,height;
         public Rect(float width,float height) { this.width=width; this.height=height; }
         public Vector2 center { get { return Vector2.zero; } }
+        public float xMin { get { return -width/2; } }public float xMax { get { return width/2; } }
+        public float yMin { get { return -height/2; } }public float yMax { get { return height/2; } }
     }
     public sealed class RectTransform { public Rect rect=new Rect(400,400); }
     public static class Mathf
     {
-        public const float PI=(float)Math.PI;
+        public const float PI=(float)Math.PI,Deg2Rad=PI/180;
+        public static float Sqrt(float a) { return (float)Math.Sqrt(a); }
+        public static float Clamp(float x,float lo,float hi){return Math.Clamp(x,lo,hi);}
         public static float Sin(float a) { return (float)Math.Sin(a); }
         public static float Cos(float a) { return (float)Math.Cos(a); }
         public static float Min(float a,float b) { return Math.Min(a,b); }
@@ -45,6 +52,7 @@ namespace UnityEngine.UI
     using UnityEngine;
     public abstract class Graphic
     {
+        public Color color=Color.white;
         public readonly RectTransform rectTransform=new RectTransform();
         public int Dirtied { get; private set; }
         public void SetVerticesDirty() { Dirtied++; }
@@ -52,6 +60,7 @@ namespace UnityEngine.UI
         public VertexHelper Generate(float width,float height)
         { rectTransform.rect=new Rect(width,height); var vh=new VertexHelper(); OnPopulateMesh(vh); return vh; }
     }
+    public abstract class MaskableGraphic : Graphic { }
     public sealed class VertexHelper
     {
         public readonly List<(Vector2 position,Color color)> Vertices=new();
