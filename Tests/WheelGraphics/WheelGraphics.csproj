@@ -7,5 +7,7 @@
     <Compile Include="../../Assets/OneMoreFloor/Runtime/WheelPointerGraphic.cs" Link="WheelPointerGraphic.cs"/>
     <Compile Include="../../Assets/OneMoreFloor/Runtime/UISurfaceGraphic.cs" Link="UISurfaceGraphic.cs"/>
     <Compile Include="../../Assets/OneMoreFloor/Runtime/UIIconGraphic.cs" Link="UIIconGraphic.cs"/>
+    <Compile Include="../../Assets/OneMoreFloor/Runtime/UITheme.cs" Link="UITheme.cs"/>
+    <Compile Include="../../Assets/OneMoreFloor/Runtime/UIShapeImage.cs" Link="UIShapeImage.cs"/>
   </ItemGroup>
 </Project>

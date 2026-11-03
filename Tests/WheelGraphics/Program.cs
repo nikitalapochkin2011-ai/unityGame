@@ -50,6 +50,28 @@ foreach(UIIcon kind in Enum.GetValues(typeof(UIIcon)))
 }
 Check(new UISurfaceGraphic().Generate(0,100).Vertices.Count==0 && new UIIconGraphic().Generate(40,0).Vertices.Count==0,"zero-size layout does not produce invalid UI triangles");
 
+// Curves, shadow bounds and redraw behavior of the production premium surfaces.
+foreach(var size in new[]{(500f,80f),(48f,48f),(12f,24f)})
+foreach(float radius in new[]{0f,18f,1000f})
+{
+    var surface=new UIShapeImage{Radius=radius,ShadowOpacity=UITheme.CardShadow,ShadowBlur=7,ShadowOffset=2};
+    var mesh=surface.Generate(size.Item1,size.Item2);
+    Check(mesh.Vertices.Count<500 && mesh.Triangles.Count>0 && mesh.Vertices.All(v=>
+        float.IsFinite(v.position.x) && float.IsFinite(v.position.y) &&
+        Math.Abs(v.position.x)<=size.Item1/2+7.01f && v.position.y>=-size.Item2/2-9.01f && v.position.y<=size.Item2/2+5.01f),
+        "rounded face and soft shadow stay in finite expanded bounds "+size+" radius "+radius);
+    Check(mesh.Triangles.All(t=>t.a>=0 && t.b>=0 && t.c>=0 && t.a<mesh.Vertices.Count && t.b<mesh.Vertices.Count && t.c<mesh.Vertices.Count),"surface triangle indices valid");
+}
+var stateful=new UIShapeImage{color=UITheme.Terra};
+var original=stateful.Generate(200,60).Vertices.Last().color;
+stateful.SetState(true,0);var disabled=stateful.Generate(200,60).Vertices.Last().color;
+Check(stateful.Disabled && Math.Abs(disabled.r-original.r)>.01,"disabled state changes the real face mesh");
+int dirty=stateful.Dirtied;stateful.SetState(true,0);
+Check(stateful.Dirtied==dirty,"idle surface does not continuously rebuild geometry");
+stateful.SetState(false,1);var focusedMesh=stateful.Generate(200,60);
+Check(!stateful.Disabled && stateful.Dirtied==dirty+1 && focusedMesh.Vertices.First().color.a>0,"keyboard focus redraws outline without changing content");
+Check(new UIShapeImage().Generate(0,80).Vertices.Count==0 && new UIShapeImage().Generate(200,0).Vertices.Count==0,"collapsed premium surfaces have empty meshes");
+
 if(args.Length>0)
 {
     // A diagnostic drawing of the real generated triangles, not a Unity screenshot.

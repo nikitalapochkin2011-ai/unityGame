@@ -35,3 +35,9 @@ Assets/TextMesh Pro.meta
 
 # Local editor location remembered by OPEN_GAME.cmd.
 .unity-editor-path.txt
+
+!Tests/UIPresentation/UIPresentation.csproj
+
+!Tools/UIReview/Review.csproj
+Tools/**/bin/
+Tools/**/obj/

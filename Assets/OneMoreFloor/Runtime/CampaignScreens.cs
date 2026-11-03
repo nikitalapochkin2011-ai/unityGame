@@ -27,43 +27,43 @@ namespace OneMoreFloor
             int first=levelPage*Campaign.LevelsPerPage,last=Math.Min(Campaign.LevelCount,first+Campaign.LevelsPerPage);
             ScreenHeader(Loc.T("ui.allLevels"),Loc.T("campaign.progress",progress.Completed,Campaign.LevelCount),ShowMenu);
             ui.Progress("Overall chapter progress",overlay,.055f,.854f,.945f,.861f,progress.Completed/(float)Campaign.LevelCount);
-            ui.Pill("Chapter range",overlay,Loc.T("campaign.range",first+1,last),.055f,.790f,.945f,.838f,GameUI.Soft,GameUI.Ink,20);
+            ui.SectionHeader("Chapter range",overlay,Loc.T("campaign.range",first+1,last),.055f,.790f,.945f,.838f);
             for(int i=first;i<last;i++)
             {
                 int number=i+1; var level=Settings.Levels[i]; bool unlocked=progress.IsUnlocked(number);
                 float top=.770f-(i-first)*.119f;
                 var button=ui.Button("Level "+number,overlay,"",.055f,top-.108f,.945f,top,
-                    ()=>ChooseLevel(number),unlocked ? GameUI.Cream : GameUI.Soft);
+                    ()=>ChooseLevel(number),unlocked ? UITheme.Surface : UITheme.Secondary,UITheme.ButtonText,true,UIButtonStyle.Card);
                 button.interactable=unlocked;
-                var numberTile=ui.Panel("Number tile",button.transform,.035f,.18f,.165f,.82f,unlocked ? GameUI.Soft : GameUI.Border).rectTransform;
-                ui.Text("Level number",numberTile,number.ToString(),.04f,.05f,.96f,.95f,28,unlocked ? GameUI.Teal : GameUI.Muted,TextAnchor.MiddleCenter,true);
-                if(number==progress.Unlocked)ui.Panel("Current level marker",button.transform,.012f,.22f,.021f,.78f,GameUI.Teal);
-                ui.Icon("Level status",button.transform,!unlocked ? UIIcon.Lock : number<=progress.Completed ? UIIcon.Check : UIIcon.ArrowRight,.90f,.32f,.97f,.68f,unlocked ? GameUI.Teal : GameUI.Muted);
-                ui.Text("Level title",button.transform,LevelTitle(number),.19f,.47f,.88f,.9f,25,GameUI.Ink,TextAnchor.MiddleLeft,true);
+                var numberTile=ui.Surface("Number tile",button.transform,.040f,.20f,.160f,.80f,unlocked ? UITheme.Soft : UITheme.Secondary,UITheme.SmallRadius,false,false).rectTransform;
+                ui.Text("Level number",numberTile,number.ToString(),.04f,.05f,.96f,.95f,25,unlocked ? UITheme.Green : UITheme.Muted,TextAnchor.MiddleCenter);
+                if(number==progress.Unlocked)ui.Panel("Current level marker",button.transform,.017f,.24f,.021f,.76f,UITheme.Green);
+                ui.Icon("Level status",button.transform,!unlocked ? UIIcon.Lock : number<=progress.Completed ? UIIcon.Check : UIIcon.ArrowRight,.90f,.32f,.97f,.68f,unlocked ? UITheme.Green : UITheme.Muted);
+                ui.Text("Level title",button.transform,LevelTitle(number),.19f,.47f,.88f,.9f,UITheme.CardTitle,unlocked ? UITheme.Ink : UITheme.Muted,TextAnchor.MiddleLeft,number==progress.Unlocked);
                 string detail=unlocked ? Loc.T("campaign.detail",level.ActiveFloors,level.DeliveryGoal) : Loc.T("campaign.locked",i);
                 if(number<=progress.Completed) detail+=Loc.T("campaign.best",PlayerPrefs.GetInt("OneMoreFloor.LevelBest."+number,0));
-                ui.Text("Level detail",button.transform,detail,.19f,.09f,.94f,.47f,18,GameUI.Muted,TextAnchor.MiddleLeft);
+                ui.Text("Level detail",button.transform,detail,.19f,.09f,.88f,.47f,17,UITheme.Muted,TextAnchor.MiddleLeft);
 
             }
-            var previous=ui.SymbolButton("Previous levels",overlay,UIIcon.ArrowLeft,.055f,.105f,.155f,.162f,()=>{levelPage--; RenderLevelPage();},GameUI.Cream);
+            var previous=ui.SymbolButton("Previous levels",overlay,UIIcon.ArrowLeft,.055f,.105f,.155f,.162f,()=>{levelPage--; RenderLevelPage();},UITheme.Surface);
             previous.interactable=levelPage>0;
-            ui.Text("Level page",overlay,(levelPage+1)+" / "+Campaign.PageCount,.3f,.107f,.7f,.163f,22,GameUI.Ink,TextAnchor.MiddleCenter,true);
-            var next=ui.SymbolButton("Next levels",overlay,UIIcon.ArrowRight,.845f,.105f,.945f,.162f,()=>{levelPage++; RenderLevelPage();},GameUI.Cream);
+            ui.Text("Level page",overlay,(levelPage+1)+" / "+Campaign.PageCount,.3f,.107f,.7f,.163f,17,UITheme.Muted,TextAnchor.MiddleCenter);
+            var next=ui.SymbolButton("Next levels",overlay,UIIcon.ArrowRight,.845f,.105f,.945f,.162f,()=>{levelPage++; RenderLevelPage();},UITheme.Surface);
             next.interactable=levelPage<Campaign.PageCount-1;
-            ui.Button("Back to menu",overlay,Loc.T("common.menu"),.055f,.025f,.945f,.084f,ShowMenu,GameUI.Soft,21);
+            ui.Button("Back to menu",overlay,Loc.T("common.menu"),.055f,.025f,.945f,.084f,ShowMenu,UITheme.Soft,21);
         }
         void ChooseLevel(int number)
         {
             if(!progress.IsUnlocked(number)) return;
             currentLevel=number; var level=Settings.Levels[number-1]; ClearOverlay(true);
             var card=Modal(Loc.T("level.number",number,Campaign.LevelCount),LevelTitle(number));
-            ui.Text("Level goal",card,Loc.T("level.goal",level.DeliveryGoal),.08f,.52f,.92f,.67f,31,GameUI.Teal,TextAnchor.MiddleCenter,true);
+            ui.Text("Level goal",card,Loc.T("level.goal",level.DeliveryGoal),.08f,.52f,.92f,.67f,31,UITheme.Green,TextAnchor.MiddleCenter,true);
             string detail=Loc.T("level.floors",level.ActiveFloors,Settings.Rules.Capacity)+"\n";
             detail+=(level.Guided ? Loc.T("level.guided") : Loc.T("traffic."+level.Traffic))+"\n";
             detail+=Loc.T("level.rules",Settings.Rules.LossLimit);
-            ui.Text("Level briefing",card,detail,.07f,.29f,.93f,.53f,21,GameUI.Muted);
-            ui.Button("Begin level",card,level.Guided ? Loc.T("level.startTutorial") : Loc.T("level.start"),.09f,.15f,.91f,.27f,NewGame,GameUI.Coral);
-            ui.Button("Back to levels",card,Loc.T("common.levels"),.09f,.025f,.91f,.125f,ShowLevels,GameUI.Teal,23);
+            ui.Text("Level briefing",card,detail,.07f,.29f,.93f,.53f,21,UITheme.Muted);
+            ui.Button("Begin level",card,level.Guided ? Loc.T("level.startTutorial") : Loc.T("level.start"),.09f,.15f,.91f,.27f,NewGame,UITheme.Terra);
+            ui.Button("Back to levels",card,Loc.T("common.levels"),.09f,.025f,.91f,.125f,ShowLevels,UITheme.Secondary,UITheme.SecondaryText);
         }
         void ShowBoxIntroduction()
         {
@@ -74,11 +74,11 @@ namespace OneMoreFloor
             var person=new PassengerView(ui,card,2);
             person.Set(new Passenger(2,80,true,2),new Vector2(.5f,.41f),new Vector2(.25f,.29f),false,1);
             person.Tick(1);
-            ui.Text("Box explanation",card,Loc.T("box.detail"),.055f,.19f,.945f,.405f,21,GameUI.Muted);
+            ui.Text("Box explanation",card,Loc.T("box.detail"),.055f,.19f,.945f,.405f,21,UITheme.Muted);
             ui.Button("Box understood",card,Loc.T("box.start"),.09f,.045f,.91f,.16f,()=>
             {
                 PlayerPrefs.SetInt("OneMoreFloor.BoxExplained",1); PlayerPrefs.Save(); NewGame();
-            },GameUI.Coral,26);
+            },UITheme.Terra,26);
         }
         void WinLevel()
         {
@@ -89,27 +89,27 @@ namespace OneMoreFloor
             coachRoot.gameObject.SetActive(false); ClearOverlay(); Play(deliveryTone);
             bool last=currentLevel==Campaign.LevelCount;
             var card=Modal(Loc.T("win.eyebrow",currentLevel),last ? Loc.T("win.last",Campaign.LevelCount) : Loc.T("win.title"));
-            ui.Picture("Medal halo",card,"circle",.375f,.49f,.625f,.66f).color=GameUI.Soft;
-            ui.Icon("Win medal",card,UIIcon.Star,.425f,.525f,.575f,.625f,GameUI.Gold);
-            ui.Text("Win score",card,Loc.T("win.score",game.Score),.08f,.385f,.92f,.51f,41,GameUI.Ink,TextAnchor.MiddleCenter,true);
-            ui.Text("Win detail",card,Loc.T("win.delivered",game.Delivered)+"\n"+(last ? Loc.T("win.all") : Loc.T("win.unlocked",currentLevel+1,LevelTitle(currentLevel+1))),.07f,.29f,.93f,.39f,20,GameUI.Muted);
+            ui.Picture("Medal halo",card,"circle",.375f,.49f,.625f,.66f).color=UITheme.Soft;
+            ui.Icon("Win medal",card,UIIcon.Star,.425f,.525f,.575f,.625f,UITheme.Gold);
+            ui.Text("Win score",card,Loc.T("win.score",game.Score),.08f,.385f,.92f,.51f,41,UITheme.Ink,TextAnchor.MiddleCenter,true);
+            ui.Text("Win detail",card,Loc.T("win.delivered",game.Delivered)+"\n"+(last ? Loc.T("win.all") : Loc.T("win.unlocked",currentLevel+1,LevelTitle(currentLevel+1))),.07f,.29f,.93f,.39f,20,UITheme.Muted);
             ui.ActionButton("Advance",card,last ? Loc.T("common.levels") : Loc.T("win.next"),UIIcon.ArrowRight,.09f,.165f,.91f,.28f,
-                ()=>{ if(last) ShowLevels(); else ChooseLevel(currentLevel+1); },GameUI.Coral,25);
-            ui.Button("Replay",card,Loc.T("common.replay"),.09f,.035f,.49f,.13f,NewGame,GameUI.Soft,20);
-            ui.Button("Levels",card,Loc.T("common.levels"),.52f,.035f,.91f,.13f,ShowLevels,GameUI.Soft,20);
+                ()=>{ if(last) ShowLevels(); else ChooseLevel(currentLevel+1); },UITheme.Terra,25);
+            ui.Button("Replay",card,Loc.T("common.replay"),.09f,.035f,.49f,.13f,NewGame,UITheme.Soft,20);
+            ui.Button("Levels",card,Loc.T("common.levels"),.52f,.035f,.91f,.13f,ShowLevels,UITheme.Soft,20);
         }
         void BuildCoach()
         {
             coachRoot=ui.Rect("Live tutorial",safe,0,0,1,1);
             // This layer is above the house, below all modals, and never captures a tap.
             coachRoot.SetSiblingIndex(overlay.GetSiblingIndex());
-            coachCard=ui.Panel("Coach instructions",coachRoot,.04f,.012f,.96f,.135f,GameUI.Cream).rectTransform;
-            coachTitle=ui.Text("Coach step",coachCard,"",.04f,.58f,.96f,.95f,24,GameUI.Teal,TextAnchor.MiddleCenter,true);
-            coachDetail=ui.Text("Coach detail",coachCard,"",.04f,.05f,.96f,.58f,20,GameUI.Ink);
+            coachCard=ui.Surface("Coach instructions",coachRoot,.04f,.012f,.96f,.135f,UITheme.Surface,UITheme.SmallRadius).rectTransform;
+            coachTitle=ui.Text("Coach step",coachCard,"",.04f,.58f,.96f,.95f,24,UITheme.Green,TextAnchor.MiddleCenter,true);
+            coachDetail=ui.Text("Coach detail",coachCard,"",.04f,.05f,.96f,.58f,20,UITheme.Ink);
             coachPointer=ui.Rect("Arrow to actual floor",coachRoot,.08f,.2f,.57f,.25f);
-            ui.Text("Arrow",coachPointer,"←",0,0,.21f,1,40,GameUI.Coral,TextAnchor.MiddleCenter,true);
-            var label=ui.Panel("Arrow caption",coachPointer,.22f,.06f,1,.94f,GameUI.Gold);
-            pointerLabel=ui.Text("Tap caption",label.transform,"",.025f,.05f,.975f,.95f,19,GameUI.Ink,TextAnchor.MiddleCenter,true);
+            ui.Text("Arrow",coachPointer,"←",0,0,.21f,1,40,UITheme.Terra,TextAnchor.MiddleCenter,true);
+            var label=ui.Panel("Arrow caption",coachPointer,.22f,.06f,1,.94f,UITheme.Gold);
+            pointerLabel=ui.Text("Tap caption",label.transform,"",.025f,.05f,.975f,.95f,19,UITheme.Ink,TextAnchor.MiddleCenter,true);
             coachRoot.gameObject.SetActive(false);
         }
         void RenderCoach()

@@ -66,7 +66,7 @@ namespace OneMoreFloor
             int size = 26, Color? color = null, TextAnchor alignment = TextAnchor.MiddleCenter, bool bold = false)
         {
             var rect = Rect(name,parent,x0,y0,x1,y1); var text = rect.gameObject.AddComponent<TextMeshProUGUI>();
-            text.font = bold ? boldFont : regularFont; text.text = value; text.color = color ?? Ink; text.fontSize = size;
+            text.font = bold ? boldFont : regularFont; text.text = value; text.color = color ?? (IsArtwork(parent) ? Ink : UITheme.Ink); text.fontSize = size;
             text.alignment = Alignment(alignment);
             text.enableAutoSizing = true; text.fontSizeMin = Mathf.Min(size,Mathf.Max(12,size*.72f)); text.fontSizeMax = size;
             text.raycastTarget = false; text.richText = false; text.margin = Vector4.zero;
@@ -96,52 +96,94 @@ namespace OneMoreFloor
         public UIIconGraphic Icon(string name,Transform parent,UIIcon icon,float x0,float y0,float x1,float y1,Color? tint=null)
         {
             var graphic=Rect(name,parent,x0,y0,x1,y1).gameObject.AddComponent<UIIconGraphic>();
-            graphic.Icon=icon;graphic.color=tint ?? Ink;graphic.raycastTarget=false;return graphic;
+            graphic.Icon=icon;graphic.color=tint ?? (IsArtwork(parent) ? Ink : UITheme.Ink);graphic.raycastTarget=false;return graphic;
+        }
+        static bool IsArtwork(Transform node)
+        {
+            for(var t=node;t!=null;t=t.parent)if(t.GetComponent<UIArtwork>()!=null)return true;
+            return false;
+        }
+        public Image Surface(string name,Transform parent,float x0,float y0,float x1,float y1,Color fill,float radius=UITheme.CardRadius,bool depth=false,bool outlined=true,bool dark=false)
+        {
+            if(IsArtwork(parent))return Panel(name,parent,x0,y0,x1,y1,fill);
+            var image=Rect(name,parent,x0,y0,x1,y1).gameObject.AddComponent<UIShapeImage>();
+            image.color=fill;image.raycastTarget=false;image.Radius=radius;image.Dark=dark;
+            image.StrokeWidth=outlined ? UITheme.Stroke : 0;
+            image.StrokeColor=dark ? new Color(.72f,.78f,.65f,.12f) : UITheme.Border;
+            image.ShadowOpacity=depth ? UITheme.CardShadow : 0;return image;
         }
         public Image Card(string name,Transform parent,float x0,float y0,float x1,float y1,Color? tint=null)
+        {return Surface(name,parent,x0,y0,x1,y1,tint ?? UITheme.Surface,UITheme.CardRadius,true);}
+        public Image ModalSurface(string name,Transform parent,float x0,float y0,float x1,float y1)
         {
-            var image=Panel(name,parent,x0,y0,x1,y1,tint ?? Cream);
-            var shadow=image.gameObject.AddComponent<Shadow>();shadow.effectColor=new Color(.10f,.20f,.17f,.11f);shadow.effectDistance=new Vector2(0,-4);shadow.useGraphicAlpha=true;
-            return image;
+            var image=(UIShapeImage)Surface(name,parent,x0,y0,x1,y1,UITheme.Surface,UITheme.ModalRadius,true);
+            image.ShadowOpacity=UITheme.ModalShadow;image.ShadowBlur=10;image.ShadowOffset=3;return image;
         }
         public Image Progress(string name,Transform parent,float x0,float y0,float x1,float y1,float value,Color? tint=null)
         {
-            var track=Panel(name,parent,x0,y0,x1,y1,Border);
-            return Panel(name+" fill",track.transform,0,0,Mathf.Clamp01(value),1,tint ?? Teal);
+            var track=Surface(name,parent,x0,y0,x1,y1,UITheme.Border,1000,false,false);
+            return Surface(name+" fill",track.transform,0,0,Mathf.Clamp01(value),1,tint ?? UITheme.Green,1000,false,false);
         }
-        public Text Pill(string name,Transform parent,string label,float x0,float y0,float x1,float y1,Color? fill=null,Color? tint=null,int size=13)
+        public Text Pill(string name,Transform parent,string label,float x0,float y0,float x1,float y1,Color? fill=null,Color? tint=null,int size=UITheme.Caption)
         {
-            var card=Panel(name,parent,x0,y0,x1,y1,fill ?? Soft);
-            return Text(name+" label",card.transform,label,.06f,.08f,.94f,.92f,size,tint ?? Teal,TextAnchor.MiddleCenter,true);
+            bool artwork=IsArtwork(parent);var card=Surface(name,parent,x0,y0,x1,y1,fill ?? UITheme.Soft,UITheme.BadgeRadius,false,false);
+            return Text(name+" label",card.transform,label,.06f,.08f,.94f,.92f,size,tint ?? UITheme.Green,TextAnchor.MiddleCenter,artwork);
+        }
+        public Text SectionHeader(string name,Transform parent,string label,float x0,float y0,float x1,float y1)
+        {
+            var row=Rect(name,parent,x0,y0,x1,y1);
+            Panel(name+" rule",row,.46f,.49f,1,.51f,UITheme.Border,false);
+            return Text(name+" title",row,label,0,.05f,.44f,.95f,16,UITheme.Muted,TextAnchor.MiddleLeft);
         }
         static Color LabelColor(Color value)
-        {return value.r*.2126f+value.g*.7152f+value.b*.0722f>.64f ? Ink : Cream;}
+        {return value.r*.2126f+value.g*.7152f+value.b*.0722f>.64f ? UITheme.Ink : UITheme.Surface;}
         public Button IconButton(string name, Transform parent, string asset, float x0, float y0, float x1, float y1,
             System.Action action, Color? background = null)
         {
             if(asset=="gear")return SymbolButton(name,parent,UIIcon.Settings,x0,y0,x1,y1,action,background);
-            var fill=background ?? Teal;var button=Button(name,parent,"",x0,y0,x1,y1,action,fill);
+            var fill=background ?? UITheme.Green;var button=Button(name,parent,"",x0,y0,x1,y1,action,fill);
             Picture(name+" icon",button.transform,asset,.20f,.20f,.80f,.80f).color=LabelColor(fill);return button;
         }
         public Button SymbolButton(string name,Transform parent,UIIcon symbol,float x0,float y0,float x1,float y1,System.Action action,Color? background=null)
         {
-            var fill=background ?? Teal;
-            var button=Button(name,parent,"",x0,y0,x1,y1,action,fill);
+            var fill=background ?? UITheme.Green;
+            var button=Button(name,parent,"",x0,y0,x1,y1,action,fill,UITheme.ButtonText,true,UIButtonStyle.Icon);
             Icon(name+" icon",button.transform,symbol,.20f,.20f,.80f,.80f,LabelColor(fill));return button;
         }
-        public Button ActionButton(string name,Transform parent,string label,UIIcon icon,float x0,float y0,float x1,float y1,System.Action action,Color? fill=null,int size=25)
+        public Button ActionButton(string name,Transform parent,string label,UIIcon icon,float x0,float y0,float x1,float y1,System.Action action,Color? fill=null,int size=UITheme.ButtonText,UIButtonStyle? style=null)
         {
-            Color background=fill ?? Teal;var button=Button(name,parent,label.TrimEnd(' ','→','←'),x0,y0,x1,y1,action,background,size);
+            Color background=fill ?? UITheme.Green;var button=Button(name,parent,label.TrimEnd(' ','→','←'),x0,y0,x1,y1,action,background,size,true,style);
             bool trailing=icon==UIIcon.ArrowRight;
             Place(button.GetComponentInChildren<Text>().rectTransform,trailing ? .06f : .16f,.06f,trailing ? .84f : .92f,.94f);
-            Icon(name+" symbol",button.transform,icon,trailing ? .875f : .045f,.22f,trailing ? .95f : .13f,.78f,LabelColor(background));return button;
+            Icon(name+" symbol",button.transform,icon,trailing ? .875f : .045f,.22f,trailing ? .95f : .13f,.78f,style==UIButtonStyle.DarkSecondary ? UITheme.Gold : style==UIButtonStyle.DarkPrimary ? UITheme.Surface : LabelColor(background));return button;
         }
-        public Button Button(string name, Transform parent, string label, float x0, float y0, float x1, float y1,
-            System.Action action, Color? background = null, int size = 28,bool raised=true)
+        public Button Button(string name,Transform parent,string label,float x0,float y0,float x1,float y1,System.Action action,Color? background=null,int size=UITheme.ButtonText,bool raised=true,UIButtonStyle? style=null)
+        {
+            if(IsArtwork(parent))return ArtworkButton(name,parent,label,x0,y0,x1,y1,action,background,size);
+            Color fill=background ?? UITheme.Green;
+            var role=style ?? (!raised ? UIButtonStyle.Tab : Similar(fill,UITheme.Terra) ? UIButtonStyle.Primary : UIButtonStyle.Secondary);
+            bool dark=role==UIButtonStyle.DarkPrimary || role==UIButtonStyle.DarkSecondary;
+            float radius=role==UIButtonStyle.Icon ? 1000 : role==UIButtonStyle.Card ? UITheme.CardRadius : role==UIButtonStyle.Tab ? UITheme.SmallRadius : UITheme.ButtonRadius;
+            var image=(UIShapeImage)Surface(name,parent,x0,y0,x1,y1,fill,radius,false,role!=UIButtonStyle.Primary && role!=UIButtonStyle.Tab,dark);
+            image.raycastTarget=true;
+            image.ShadowOpacity=role==UIButtonStyle.Primary ? UITheme.ButtonShadow : role==UIButtonStyle.Card ? .025f : 0;
+            if(dark){image.StrokeColor=new Color(UITheme.Gold.r,UITheme.Gold.g,UITheme.Gold.b,role==UIButtonStyle.DarkPrimary ? .28f : .18f);}
+            if(role==UIButtonStyle.Danger){image.StrokeColor=new Color(UITheme.Terra.r,UITheme.Terra.g,UITheme.Terra.b,.24f);}
+            var button=image.gameObject.AddComponent<Button>();button.targetGraphic=image;
+            var colors=button.colors;colors.normalColor=Color.white;colors.selectedColor=Color.white;
+            colors.highlightedColor=new Color(1.035f,1.035f,1.025f,1);colors.pressedColor=new Color(.94f,.96f,.94f,1);
+            colors.disabledColor=Color.white;colors.fadeDuration=UITheme.ColorDuration;button.colors=colors;
+            button.onClick.AddListener(()=>{ClickSound?.Invoke();action?.Invoke();});
+            var text=Text("Label",image.transform,label,.07f,.08f,.93f,.92f,size,role==UIButtonStyle.Danger ? UITheme.Terra : dark ? (role==UIButtonStyle.DarkSecondary ? UITheme.Gold : UITheme.Surface) : LabelColor(fill),TextAnchor.MiddleCenter,role==UIButtonStyle.Primary && size>=25);
+            image.gameObject.AddComponent<UIButtonMotion>().Configure(false,role==UIButtonStyle.Card ? 1 : .62f);
+            return button;
+        }
+        static bool Similar(Color a,Color b){return Mathf.Abs(a.r-b.r)+Mathf.Abs(a.g-b.g)+Mathf.Abs(a.b-b.b)<.01f;}
+        Button ArtworkButton(string name, Transform parent, string label, float x0, float y0, float x1, float y1,
+            System.Action action, Color? background = null, int size = 28)
         {
             Color fill=background ?? Teal;
             var image = Panel(name,parent,x0,y0,x1,y1,fill); image.raycastTarget = true;
-            if(raised)
             {
                 var shadow=image.gameObject.AddComponent<Shadow>();shadow.effectColor=new Color(.10f,.20f,.17f,.17f);shadow.effectDistance=new Vector2(0,-3.5f);shadow.useGraphicAlpha=true;
                 Gradient("Soft button highlight",image.transform,.005f,.025f,.995f,.985f,new Color(1,1,1,.10f),new Color(1,1,1,0),20);
@@ -152,8 +194,8 @@ namespace OneMoreFloor
             colors.pressedColor = new Color(.88f,.92f,.89f,1);colors.selectedColor=Color.white;
             colors.disabledColor=new Color(.78f,.81f,.78f,1);colors.fadeDuration = .12f; button.colors = colors;
             button.onClick.AddListener(() => {ClickSound?.Invoke();action?.Invoke();});
-            Text("Label",image.transform,label,.07f,.06f,.93f,.94f,size,LabelColor(fill),TextAnchor.MiddleCenter,true);
-            image.gameObject.AddComponent<UIButtonMotion>();return button;
+            Text("Label",image.transform,label,.07f,.06f,.93f,.94f,size,Cream,TextAnchor.MiddleCenter,true);
+            image.gameObject.AddComponent<UIButtonMotion>().Configure(true,1);return button;
         }
     }
 }

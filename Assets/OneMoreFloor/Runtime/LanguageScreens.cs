@@ -24,28 +24,29 @@ namespace OneMoreFloor
             if(game!=null && game.State==PlayState.Playing) Pause();
             selectedLanguage=Loc.Language;
             foreach(Transform child in languageLayer) { child.gameObject.SetActive(false); Destroy(child.gameObject); }
-            languageLayer.gameObject.SetActive(true);
-            var scrim=ui.Panel("Language background",languageLayer,-.2f,-.1f,1.2f,1.1f,GameUI.Paper,false);
+            UIWindowMotion.Show(languageLayer.gameObject);
+            var scrim=ui.Panel("Language background",languageLayer,-.2f,-.1f,1.2f,1.1f,required ? UITheme.Background : UITheme.Scrim,false);
             scrim.raycastTarget=true;
-            var card=ui.Card("Language card",languageLayer,.055f,.06f,.945f,.94f,GameUI.Cream).rectTransform;
-            languageEyebrow=ui.Text("Language eyebrow",card,Loc.T("language.eyebrow"),.06f,.91f,.94f,.97f,13,GameUI.Teal,TextAnchor.MiddleCenter,true);
-            languageHeading=ui.Text("Language title",card,Loc.T("language.title"),.07f,.80f,.93f,.905f,34,GameUI.Ink,TextAnchor.MiddleCenter,true);
-            languageDescription=ui.Text("Language description",card,Loc.T("language.detail"),.07f,.72f,.93f,.80f,18,GameUI.Muted);
+            var card=ui.ModalSurface("Language card",languageLayer,.055f,.06f,.945f,.94f).rectTransform;
+            card.gameObject.AddComponent<UIPanelEntrance>();
+            languageEyebrow=ui.Text("Language eyebrow",card,Loc.T("language.eyebrow"),.06f,.91f,.94f,.97f,13,UITheme.Green,TextAnchor.MiddleCenter,true);
+            languageHeading=ui.Text("Language title",card,Loc.T("language.title"),.07f,.80f,.93f,.905f,34,UITheme.Ink,TextAnchor.MiddleCenter,true);
+            languageDescription=ui.Text("Language description",card,Loc.T("language.detail"),.07f,.72f,.93f,.80f,18,UITheme.Muted);
             languageCards=new Image[GameLanguages.Count];languageChoices=new RectTransform[GameLanguages.Count];
             for(int i=0;i<GameLanguages.Count;i++)
             {
                 var language=(GameLanguage)i; float top=.695f-i*.074f;
                 var button=ui.Button("Language "+GameLanguages.Code(language),card,GameLanguages.NativeName(language),.09f,top-.063f,.91f,top,
-                    ()=>{ selectedLanguage=language; UpdateLanguageCards(); },GameUI.Cream,22);
+                    ()=>{ selectedLanguage=language; UpdateLanguageCards(); },UITheme.Surface,22);
                 languageCards[i]=button.GetComponent<Image>();
                 var label=button.GetComponentInChildren<Text>();label.alignment=TMPro.TextAlignmentOptions.Left;
                 GameUI.Place(label.rectTransform,.07f,.08f,.82f,.92f);
                 languageChoices[i]=ui.Rect("Chosen language",button.transform,.86f,.25f,.94f,.75f);
-                ui.Icon("Chosen language tick",languageChoices[i],UIIcon.Check,0,0,1,1,GameUI.Teal);
+                ui.Icon("Chosen language tick",languageChoices[i],UIIcon.Check,0,0,1,1,UITheme.Green);
             }
-            languageConfirm=ui.Button("Confirm language",card,Loc.T("language.confirm"),.09f,.105f,.91f,.175f,()=>ApplyLanguage(required),GameUI.Coral,26).GetComponentInChildren<Text>();
+            languageConfirm=ui.Button("Confirm language",card,Loc.T("language.confirm"),.09f,.105f,.91f,.175f,()=>ApplyLanguage(required),UITheme.Terra,26).GetComponentInChildren<Text>();
             languageCancel=null;
-            if(!required) languageCancel=ui.Button("Cancel language",card,Loc.T("language.cancel"),.09f,.025f,.91f,.09f,()=>languageLayer.gameObject.SetActive(false),GameUI.Teal,23).GetComponentInChildren<Text>();
+            if(!required) languageCancel=ui.Button("Cancel language",card,Loc.T("language.cancel"),.09f,.025f,.91f,.09f,()=>UIWindowMotion.Hide(languageLayer.gameObject),UITheme.Secondary,UITheme.SecondaryText).GetComponentInChildren<Text>();
             UpdateLanguageCards();
         }
         void UpdateLanguageCards()
@@ -58,9 +59,9 @@ namespace OneMoreFloor
             for(int i=0;i<languageCards.Length;i++)
             {
                 bool chosen=i==(int)selectedLanguage;
-                languageCards[i].color=chosen ? GameUI.Soft : GameUI.Cream;
+                languageCards[i].color=chosen ? UITheme.Soft : UITheme.Surface;
                 languageChoices[i].gameObject.SetActive(chosen);
-                languageCards[i].GetComponentInChildren<Text>().color=GameUI.Ink;
+                languageCards[i].GetComponentInChildren<Text>().color=UITheme.Ink;
             }
         }
         void ApplyLanguage(bool firstChoice)
@@ -77,7 +78,7 @@ namespace OneMoreFloor
                 Render(.25f); // Settle visual fades only; the paused game is never ticked here.
                 RenderPauseScreen();
             }
-            if(!firstChoice) { UpdateSoundLabel(); settingsLayer.gameObject.SetActive(true); }
+            if(!firstChoice) { UpdateSoundLabel(); UIWindowMotion.Show(settingsLayer.gameObject); }
         }
         bool RequireLanguage()
         {

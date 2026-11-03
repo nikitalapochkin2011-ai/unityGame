@@ -222,3 +222,4 @@ ui.level	Level {0}	Уровень {0}	Bölüm {0}	Nivel {0}	Level {0}	Niveau {0}
 ui.allLevels	All levels	Все уровни	Tüm bölümler	Todos los niveles	Alle Level	Tous les niveaux	全部关卡
 ui.howToPlay	How to play	Как играть	Nasıl oynanır	Cómo jugar	Spielhilfe	Comment jouer	玩法说明
 ui.collectionCount	{0} of {1} unlocked	Открыто: {0} из {1}	{0} / {1} açıldı	{0} de {1} desbloqueados	{0} von {1} freigeschaltet	{0} sur {1} débloqués	已解锁：{0}/{1}
+wheel.adDaily	Once every 24 hours	Один раз в 24 часа	24 saatte bir	Una vez cada 24 horas	Einmal alle 24 Stunden	Une fois par 24 heures	每24小时一次

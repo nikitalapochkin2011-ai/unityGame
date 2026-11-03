@@ -30,16 +30,19 @@ namespace UnityEngine
     }
     public struct Rect
     {
-        public float width,height;
-        public Rect(float width,float height) { this.width=width; this.height=height; }
-        public Vector2 center { get { return Vector2.zero; } }
-        public float xMin { get { return -width/2; } }public float xMax { get { return width/2; } }
-        public float yMin { get { return -height/2; } }public float yMax { get { return height/2; } }
+        public float width,height,xMin,yMin;
+        public Rect(float width,float height):this(-width/2,-height/2,width,height) { }
+        public Rect(float x,float y,float width,float height) { xMin=x;yMin=y;this.width=width;this.height=height; }
+        public Vector2 center { get { return new Vector2(xMin+width/2,yMin+height/2); } }
+        public float xMax { get { return xMin+width; } }
+        public float yMax { get { return yMin+height; } }
     }
     public sealed class RectTransform { public Rect rect=new Rect(400,400); }
     public static class Mathf
     {
         public const float PI=(float)Math.PI,Deg2Rad=PI/180;
+        public static float Abs(float a)=>Math.Abs(a);
+        public static float Max(float a,float b)=>Math.Max(a,b);
         public static float Sqrt(float a) { return (float)Math.Sqrt(a); }
         public static float Clamp(float x,float lo,float hi){return Math.Clamp(x,lo,hi);}
         public static float Sin(float a) { return (float)Math.Sin(a); }
@@ -61,6 +64,7 @@ namespace UnityEngine.UI
         { rectTransform.rect=new Rect(width,height); var vh=new VertexHelper(); OnPopulateMesh(vh); return vh; }
     }
     public abstract class MaskableGraphic : Graphic { }
+    public class Image:MaskableGraphic { protected override void OnPopulateMesh(VertexHelper vh) { } }
     public sealed class VertexHelper
     {
         public readonly List<(Vector2 position,Color color)> Vertices=new();

@@ -29,8 +29,8 @@ namespace OneMoreFloor
             else if(game!=null && game.State==PlayState.GameOver) EndGame();
             if(overlay!=null)
             {
-                var notice=ui.Card("Ad notice",overlay,.08f,wheel ? .35f : .88f,.92f,wheel ? .407f : .94f,GameUI.Deep).rectTransform;
-                ui.Text("Ad result",notice,Loc.T(key),.05f,.08f,.95f,.92f,16,GameUI.Cream);
+                var notice=ui.Surface("Ad notice",overlay,.08f,wheel ? .35f : .88f,.92f,wheel ? .407f : .94f,UITheme.Deep,UITheme.SmallRadius,false,true,true).rectTransform;
+                ui.Text("Ad result",notice,Loc.T(key),.05f,.08f,.95f,.92f,16,UITheme.Surface);
                 StartCoroutine(HideAdNotice(notice.gameObject));
             }
         }
@@ -58,8 +58,8 @@ namespace OneMoreFloor
                 if(earned && session.ContinueAfterAd())
                 {
                     if(!Application.isFocused) { session.Pause(); RenderPauseScreen(); return; }
-                    overlay.gameObject.SetActive(false);
-                    feedback.color=GameUI.Teal;feedback.text=Loc.T("ads.restored"); feedbackTime=2.5f;
+                    DismissOverlay();
+                    feedback.color=UITheme.Green;feedback.text=Loc.T("ads.restored"); feedbackTime=2.5f;
                     Render(0);
                 }
                 else ShowAdNotice("ads.incomplete");
