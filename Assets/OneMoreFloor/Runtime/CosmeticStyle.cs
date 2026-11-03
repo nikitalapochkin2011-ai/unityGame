@@ -3,14 +3,37 @@ using UnityEngine.UI;
 
 namespace OneMoreFloor
 {
-    // Ten coordinated materials. Index zero deliberately preserves all original artwork.
+    // Original ten materials stay intact; authored replacement sprites define new silhouettes.
     public static class CosmeticStyle
     {
         static readonly string[] Colors={"FFFFFF","86C9ED","F3B1A4","A4D9AC","CEB0E9","EFCB79","8CD6D6","B5BFE5","CFAD91","A5AEBC"};
-        public static Color Tint(int index) { return GameUI.Hex(Colors[index]); }
+        public static Color Tint(int index) { return index>=10 ? Color.white : GameUI.Hex(Colors[Mathf.Clamp(index,0,9)]); }
+        public static Color DoorTint(int index)
+        {
+            string[] colors={"267D8C","398B89","785582","B86F82","365B8E","6B939E","769B78","438594","605581","98506C","9E7954","98534B","D5A65F","7C82A6","D9E2D8"};
+            return index<10 ? Tint(index) : GameUI.Hex(colors[Mathf.Clamp(index-10,0,14)]);
+        }
+        public static Color RarityColor(int index)
+        {
+            string[] colors={"586A70","216E9C","8750A6","AC752D"};
+            return GameUI.Hex(colors[(int)Cosmetics.Rarity(index)]);
+        }
+        public static string Asset(CosmeticKind kind,int index)
+        {
+            string original=kind==CosmeticKind.Background ? "skyline" : kind==CosmeticKind.Floor ? "hallway" : "cabin";
+            string prefix=kind==CosmeticKind.Background ? "background_" : kind==CosmeticKind.Floor ? "interior_" : "lift_";
+            return index<10 ? original : prefix+index;
+        }
+        public static void Preview(GameUI ui,Transform parent,CosmeticKind kind,int index)
+        {
+            ui.Picture("Style model",parent,Asset(kind,index),0,0,1,1,false).color=Tint(index);
+            if(kind==CosmeticKind.Background) Background(ui,parent,index);
+            else Detail(ui,parent,index,kind==CosmeticKind.Lift);
+        }
         public static void Background(GameUI ui,Transform parent,int index)
         {
             if(index==0) return;
+            if(index>=10) { ui.Picture("Themed background",parent,Asset(CosmeticKind.Background,index),0,0,1,1,false); return; }
             ui.Panel("Sky material",parent,0,0,1,1,Color.Lerp(GameUI.Hex("203E4D"),Tint(index),.68f),false);
             // Distinct skyline silhouettes and celestial arrangements, with no gameplay geometry.
             for(int i=0;i<12;i++)
@@ -27,7 +50,7 @@ namespace OneMoreFloor
         }
         public static void Detail(GameUI ui,Transform parent,int index,bool lift)
         {
-            if(index==0) return;
+            if(index==0 || index>=10) return; // New models include their own trim and details.
             // Different trim arrangements supplement the material colour in each unlock.
             for(int i=0;i<index%3+1;i++)
             {

@@ -25,13 +25,17 @@ namespace OneMoreFloor
     }
     public sealed class Passenger
     {
+        public const int HumanAppearanceCount=16, RaccoonAppearance=16;
+        public const int RaccoonChancePercent=4;
+        public bool IsRaccoon { get; private set; }
+        public int DeliveryUnits { get { return IsRaccoon ? 2 : 1; } }
         public int Destination { get; private set; }
         public bool HasBox { get; private set; }
         public int SpaceRequired { get { return HasBox ? 2 : 1; } }
         public int Appearance { get; private set; }
         public float Remaining { get; internal set; }
-        public Passenger(int destination, float patience, bool hasBox=false, int appearance=0)
-        { Destination = destination; Remaining = patience; HasBox=hasBox; Appearance=Math.Max(0,appearance)%8; }
+        public Passenger(int destination, float patience, bool hasBox=false, int appearance=0, bool isRaccoon=false)
+        { Destination = destination; Remaining = patience; IsRaccoon=isRaccoon; HasBox=hasBox && !isRaccoon; Appearance=isRaccoon ? RaccoonAppearance : Math.Max(0,appearance)%HumanAppearanceCount; }
     }
     public sealed class Elevator
     {
@@ -113,10 +117,10 @@ namespace OneMoreFloor
     }
     public sealed class PassengerSpawner
     {
-        readonly Random random;
+        readonly Random random, specialRandom;
         public int Spawned { get; private set; }
         float countdown = 1.5f;
-        public PassengerSpawner(int seed) { random = new Random(seed); }
+        public PassengerSpawner(int seed) { random = new Random(seed); specialRandom=new Random(unchecked(seed ^ 0x51EC7A)); }
         internal void Tick(float dt, GameSession game)
         {
             if(game.Level!=null && (Spawned>=game.SpawnBudget || (game.IsGuiding && Spawned>0))) return;
@@ -167,8 +171,9 @@ namespace OneMoreFloor
                 if(destination>=floor) destination++;
             }
             bool box=game.Level!=null && game.Rules.Capacity>=2 && random.NextDouble()<game.Level.BoxChance;
-            int appearance=game.Level==null ? Spawned%8 : random.Next(8);
-            if(!game.Queues.TryEnqueue(floor,new Passenger(destination,game.PassengerPatience,box,appearance))) return false;
+            int appearance=random.Next(Passenger.HumanAppearanceCount);
+            bool raccoon=specialRandom.Next(100)<Passenger.RaccoonChancePercent;
+            if(!game.Queues.TryEnqueue(floor,new Passenger(destination,game.PassengerPatience,box,appearance,raccoon))) return false;
             Spawned++; return true;
         }
     }
@@ -254,8 +259,11 @@ namespace OneMoreFloor
             for (int i = Lift.Riders.Count - 1; i >= 0; i--)
                 if (Lift.Riders[i].Destination == Lift.CurrentFloor)
                 {
-                    Lift.Riders.RemoveAt(i); Score += Rules.DeliveryPoints * Multiplier;
-                    Streak++; Delivered++; delivered++;
+                    int units=Lift.Riders[i].DeliveryUnits;
+                    Lift.Riders.RemoveAt(i);
+                    // Exactly equivalent to sequential ordinary deliveries, including streak thresholds.
+                    for(int unit=0;unit<units;unit++)
+                    { Score += Rules.DeliveryPoints * Multiplier; Streak++; Delivered++; delivered++; }
                 }
             if(Level!=null && Delivered>=Level.DeliveryGoal)
             {

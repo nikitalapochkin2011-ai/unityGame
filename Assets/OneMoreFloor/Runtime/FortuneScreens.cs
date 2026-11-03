@@ -34,9 +34,9 @@ namespace OneMoreFloor
         float countdownTick;
         static long UtcNow { get { return DateTimeOffset.UtcNow.ToUnixTimeSeconds(); } }
         void SaveCosmetics() { if(!wheelTestMode) CosmeticStore.Save(cosmetics); }
-        string ItemName(int id) { return Loc.T("cosmetic."+(id%10)); }
+        string ItemName(int id) { return Loc.T("cosmetic."+(id%Cosmetics.PerKind)); }
         string Category(int kind) { return Loc.T("collection.kind."+kind); }
-        string RewardName(int id) { return Category(id/10)+": "+ItemName(id); }
+        string RewardName(int id) { return Category(id/Cosmetics.PerKind)+": "+ItemName(id)+" · "+Loc.T("rarity."+(int)Cosmetics.Rarity(id%Cosmetics.PerKind)); }
         Text Wallet(Transform parent,bool golden=false)
         { return ui.Text("Wallet",parent,Loc.T("wheel.coins",cosmetics.Coins),.06f,.88f,.94f,.925f,23,golden ? GameUI.Gold : GameUI.Teal,TextAnchor.MiddleCenter,true); }
         void ShowWheel(SpinReward result=null,int stoppedSector=0)
@@ -46,7 +46,13 @@ namespace OneMoreFloor
             ui.Panel("Velvet backdrop",overlay,-.2f,-.1f,1.2f,1.1f,GameUI.Hex("192D36"),false);
             ui.Text("Title",overlay,Loc.T("wheel.title"),.04f,.925f,.96f,.99f,36,GameUI.Gold,TextAnchor.MiddleCenter,true);
             wheelWallet=Wallet(overlay,true);
-            ui.Text("Wheel help",overlay,Loc.T("wheel.tryLuck"),.06f,.795f,.94f,.875f,29,GameUI.Gold,TextAnchor.MiddleCenter,true);
+            ui.Text("Wheel help",overlay,Loc.T("wheel.tryLuck"),.06f,.837f,.94f,.875f,25,GameUI.Gold,TextAnchor.MiddleCenter,true);
+            ui.Text("Rarity odds",overlay,Loc.T("wheel.rarityOdds",
+                cosmetics.RarityChance(CosmeticRarity.Common).ToString("0.#",System.Globalization.CultureInfo.InvariantCulture),
+                cosmetics.RarityChance(CosmeticRarity.Rare).ToString("0.#",System.Globalization.CultureInfo.InvariantCulture),
+                cosmetics.RarityChance(CosmeticRarity.Epic).ToString("0.#",System.Globalization.CultureInfo.InvariantCulture),
+                cosmetics.RarityChance(CosmeticRarity.Legendary).ToString("0.#",System.Globalization.CultureInfo.InvariantCulture)),
+                .04f,.785f,.96f,.835f,13,GameUI.Cream);
             // A square viewport keeps the wheel circular at all portrait safe-area sizes.
             var slot=ui.Rect("Wheel slot",overlay,.14f,.415f,.86f,.78f);
             var viewport=ui.Rect("Wheel viewport",slot,0,0,1,1);
@@ -76,10 +82,9 @@ namespace OneMoreFloor
                 if(result.IsCoins) RewardIcon(prizeCard,-1,.015f,.08f,.15f,.92f);
                 else
                 {
-                    int id=result.CosmeticId,kind=id/10,index=id%10;
+                    int id=result.CosmeticId,kind=id/Cosmetics.PerKind,index=id%Cosmetics.PerKind;
                     var preview=ui.Panel("Revealed style",prizeCard,.015f,.08f,.15f,.92f,GameUI.Hex("BDD4D0"),false).rectTransform;
-                    if(kind==0) { ui.Picture("Sky",preview,"skyline",0,0,1,1,false); CosmeticStyle.Background(ui,preview,index); }
-                    else { ui.Picture("Style",preview,kind==1 ? "hallway" : "cabin",0,0,1,1,false).color=CosmeticStyle.Tint(index); CosmeticStyle.Detail(ui,preview,index,kind==2); }
+                    CosmeticStyle.Preview(ui,preview,(CosmeticKind)kind,index);
                 }
                 ui.Text("Revealed reward",prizeCard,result.IsCoins ? Loc.T("wheel.coinReward",result.CoinAmount) : Loc.T("wheel.reward",RewardName(result.CosmeticId)),.17f,.06f,.98f,.94f,22,GameUI.Gold,TextAnchor.MiddleCenter,true);
             }
@@ -154,7 +159,7 @@ namespace OneMoreFloor
             var icon=AddWheelGraphic<WheelRewardIcon>(ui.Rect("Prize emblem",parent,x0,y0,x1,y1));
             icon.Kind=kind; icon.raycastTarget=false;
         }
-        void ShowCollection(int kind=0)
+        void ShowCollection(int kind=0,int rarity=0)
         {
             if(RequireLanguage()) return;
             ClearOverlay(true); wheelDisk=null;
@@ -163,23 +168,31 @@ namespace OneMoreFloor
             for(int k=0;k<3;k++)
             {
                 int tab=k; float x=.035f+k*.32f;
-                ui.Button("Category",overlay,Category(k),x,.79f,x+.29f,.865f,()=>ShowCollection(tab),k==kind ? GameUI.Coral : GameUI.Teal,20);
+                ui.Button("Category",overlay,Category(k),x,.79f,x+.29f,.865f,()=>ShowCollection(tab,rarity),k==kind ? GameUI.Coral : GameUI.Teal,20);
             }
-            for(int i=0;i<10;i++)
+            for(int r=0;r<4;r++)
             {
-                int index=i; float x=.045f+(i%2)*.48f,y=.765f-(i/2)*.131f;
-                bool owned=cosmetics.Owns((CosmeticKind)kind,i),selected=cosmetics.Selected((CosmeticKind)kind)==i;
-                var card=ui.Panel("Cosmetic card",overlay,x,y-.12f,x+.43f,y,selected ? GameUI.Gold : GameUI.Cream).rectTransform;
-                var preview=ui.Panel("Preview",card,.02f,.14f,.32f,.91f,GameUI.Hex("BDD4D0"),false).rectTransform;
-                if(kind==0) { ui.Picture("Original neighborhood",preview,"skyline",0,0,1,1,false); CosmeticStyle.Background(ui,preview,i); }
-                else { ui.Picture("Material preview",preview,kind==1 ? "hallway" : "cabin",0,0,1,1,false).color=CosmeticStyle.Tint(i); CosmeticStyle.Detail(ui,preview,i,kind==2); }
-                ui.Text("Item name",card,ItemName(i),.34f,.58f,.98f,.98f,19,GameUI.Ink,TextAnchor.MiddleCenter,true);
+                int filter=r; float x=.035f+r*.24f;
+                ui.Button("Rarity filter",overlay,Loc.T("rarity."+r),x,.727f,x+.225f,.782f,
+                    ()=>ShowCollection(kind,filter),r==rarity ? CosmeticStyle.RarityColor(r==0 ? 0 : r==1 ? 10 : r==2 ? 15 : 20) : GameUI.Ink,15);
+            }
+            int start=rarity==0 ? 0 : 10+(rarity-1)*5, count=rarity==0 ? 10 : 5;
+            for(int slot=0;slot<count;slot++)
+            {
+                int index=start+slot; float x=.045f+(slot%2)*.48f,y=.714f-(slot/2)*.117f;
+                bool owned=cosmetics.Owns((CosmeticKind)kind,index),selected=cosmetics.Selected((CosmeticKind)kind)==index;
+                var card=ui.Panel("Cosmetic card",overlay,x,y-.108f,x+.43f,y,selected ? GameUI.Gold : GameUI.Cream).rectTransform;
+                ui.Panel("Rarity accent",card,0,.08f,.012f,.92f,CosmeticStyle.RarityColor(index),false);
+                var preview=ui.Panel("Preview",card,.025f,.09f,.33f,.92f,GameUI.Hex("BDD4D0"),false).rectTransform;
+                CosmeticStyle.Preview(ui,preview,(CosmeticKind)kind,index);
+                ui.Text("Item name",card,ItemName(index),.35f,.65f,.98f,.98f,17,GameUI.Ink,TextAnchor.MiddleCenter,true);
+                ui.Text("Rarity",card,Loc.T("rarity."+rarity),.35f,.43f,.98f,.67f,13,CosmeticStyle.RarityColor(index));
                 string status=selected ? "collection.selected" : owned ? "collection.select" : "collection.locked";
-                var button=ui.Button("Select cosmetic",card,Loc.T(status),.35f,.06f,.97f,.54f,()=>
+                var button=ui.Button("Select cosmetic",card,Loc.T(status),.35f,.055f,.97f,.43f,()=>
                 {
                     if(!cosmetics.Select((CosmeticKind)kind,index)) return;
-                    SaveCosmetics(); RebuildCosmeticUI(); ShowCollection(kind);
-                },selected ? GameUI.Teal : GameUI.Ink,17);
+                    SaveCosmetics(); RebuildCosmeticUI(); ShowCollection(kind,rarity);
+                },selected ? GameUI.Teal : GameUI.Ink,15);
                 button.interactable=owned && !selected;
             }
             ui.Text("Cosmetic note",overlay,Loc.T("collection.detail"),.05f,.072f,.95f,.115f,17,GameUI.Ink);

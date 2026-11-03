@@ -20,13 +20,13 @@ static class CosmeticsTests
     public static void Run()
     {
         var c=new Cosmetics(); var rng=new DecorationRoll();
-        for(int k=0;k<3;k++) for(int i=0;i<10;i++) Check(c.Owns((CosmeticKind)k,i)==(i==0),"only original starts unlocked "+k+"/"+i);
+        for(int k=0;k<3;k++) for(int i=0;i<Cosmetics.PerKind;i++) Check(c.Owns((CosmeticKind)k,i)==(i==0),"only original starts unlocked "+k+"/"+i);
         Check(c.Coins==0 && c.FreeIn(100)==0,"first free spin immediately available");
         Check(!c.Select(CosmeticKind.Floor,1) && !c.Select((CosmeticKind)9,0),"locked and invalid selections rejected");
         string before=c.Save();
         Check(c.Spin(false,100,rng)==null && c.Save()==before,"insufficient funds do not mutate state");
         var reward=c.Spin(true,100,rng);
-        Check(reward!=null && !reward.IsCoins && reward.CosmeticId%10!=0 && c.FreeIn(100)==86400,"free awards a new style and starts 24h timer");
+        Check(reward!=null && !reward.IsCoins && reward.CosmeticId%Cosmetics.PerKind!=0 && c.FreeIn(100)==86400,"free awards a new style and starts 24h timer");
         before=c.Save();
         Check(c.Spin(true,86499,rng)==null && before==c.Save(),"free rejected one second before deadline");
         Check(c.FreeIn(50)==86450,"clock rollback does not grant a free spin");
@@ -35,19 +35,19 @@ static class CosmeticsTests
         c.OnDelivered(49,new Roll(0)); Check(c.Coins==50,"coins accumulate once per delivered passenger");
         long timer=c.NextFree; reward=c.Spin(false,86501,rng);
         Check(reward!=null && c.Coins==0 && c.NextFree==timer,"paid spin costs exactly 50 and preserves free deadline");
-        Check(c.Select((CosmeticKind)(reward.CosmeticId/10),reward.CosmeticId%10),"new reward selectable");
+        Check(c.Select((CosmeticKind)(reward.CosmeticId/Cosmetics.PerKind),reward.CosmeticId%Cosmetics.PerKind),"new reward selectable");
         c.OnDelivered(7,new Roll(0));
         CosmeticStore.Save(c); var restored=CosmeticStore.Load();
         Check(restored.Save()==c.Save(),"actual PlayerPrefs adapter restores coins ownership selections and timer");
         Check(UnityEngine.PlayerPrefs.GetString("OneMoreFloor.Campaign.Completed","")=="5","cosmetics preserve campaign preferences");
         c=new Cosmetics(); var seen=new HashSet<int>();
-        for(int i=0;i<27;i++)
+        for(int i=0;i<Cosmetics.Total-3;i++)
         {
             int id=c.Spin(true,100+i*86400L,rng).CosmeticId;
             Check(id>=0 && seen.Add(id),"unique reward "+i);
             c=Cosmetics.Load(c.Save());
         }
-        Check(c.Complete && seen.Count==27,"all 27 rewards fill 30-item collection including defaults");
+        Check(c.Complete && seen.Count==Cosmetics.Total-3,"all 72 rewards fill 75-item collection including defaults");
         c.OnDelivered(100,new Roll(0)); before=c.Save();
         Check(c.Spin(false,99999999,rng)==null && c.Spin(true,99999999,rng)==null && before==c.Save(),"complete collection never charges coins or free timer");
         foreach(string broken in new[]{"", "bad", "1|-1|1|0|0|0|0", "1|5|2147483647|0|0|0|0", "1|5|1|0|0|0|-1"})
@@ -94,7 +94,7 @@ static class CosmeticsTests
         var sectorCounts=new int[4];
         for(int i=0;i<FortuneWheelLayout.Sectors;i++) sectorCounts[FortuneWheelLayout.KindAt(i)+1]++;
         Check(sectorCounts[0]==6 && sectorCounts[1]==6 && sectorCounts[2]==0 && sectorCounts[3]==0,"disk has six coin and six mystery sectors");
-        for(int id=-1;id<30;id++)
+        for(int id=-1;id<Cosmetics.Total;id++)
             for(int variant=0;variant<6;variant++)
             {
                 var award=new SpinReward(id,id<0 ? 20 : 0);
@@ -115,7 +115,7 @@ static class CosmeticsTests
         string realSave=sandbox.Save();
         var preview=sandbox.SpinPreview(100,new DecorationRoll());
         Check(preview!=null && !preview.IsCoins && sandbox.Coins==0 && sandbox.NextFree==999999,"editor preview ignores timer and charges no coins");
-        for(int i=0;i<26;i++) Check(sandbox.SpinPreview(100,new DecorationRoll())!=null,"editor preview remains repeatable at the same time");
+        for(int i=0;i<Cosmetics.Total-4;i++) Check(sandbox.SpinPreview(100,new DecorationRoll())!=null,"editor preview remains repeatable at the same time");
         Check(sandbox.Complete,"preview can test entire collection");
         Check(sandbox.SpinPreview(100,new Sequence(0,0)).IsCoins,"preview continues with coins after full collection");
         Check(Cosmetics.Load(realSave).Coins==0 && !Cosmetics.Load(realSave).Complete && Cosmetics.Load(realSave).NextFree==999999,"preview leaves original snapshot unchanged");

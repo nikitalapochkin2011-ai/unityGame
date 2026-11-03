@@ -42,7 +42,7 @@ namespace OneMoreFloor
                 int floor = f;
                 var row = ui.Rect("Floor "+(f+1),root,0,(float)f/rules.Floors,1,(float)(f+1)/rules.Floors);
                 // Every floor uses the same detailed interior and materials.
-                var room = ui.Picture("Unified hallway interior",row,"hallway",BuildingLayout.HallLeft,.055f,BuildingLayout.HallRight,.97f,false);
+                var room = ui.Picture("Unified hallway interior",row,CosmeticStyle.Asset(CosmeticKind.Floor,floorStyle),BuildingLayout.HallLeft,.055f,BuildingLayout.HallRight,.97f,false);
                 room.color=roomTint; CosmeticStyle.Detail(ui,row,floorStyle,false);
                 rooms[f] = room; room.raycastTarget = true;
                 var tap = room.gameObject.AddComponent<Button>(); tap.targetGraphic = room; tap.onClick.AddListener(()=>select(floor));
@@ -56,7 +56,7 @@ namespace OneMoreFloor
                 lockedLabels[f]=ui.Text("Locked floor",row,"",.17f,.37f,.63f,.66f,19,GameUI.Ink,TextAnchor.MiddleCenter,true);
             }
             cabin = ui.Rect("Moving elevator",root,BuildingLayout.LiftLeft,0,BuildingLayout.LiftRight,1f/rules.Floors);
-            ui.Picture("Cabin",cabin,"cabin",0,.025f,1,.99f,false).color=CosmeticStyle.Tint(liftStyle);
+            ui.Picture("Cabin",cabin,CosmeticStyle.Asset(CosmeticKind.Lift,liftStyle),0,.025f,1,.99f,false).color=CosmeticStyle.Tint(liftStyle);
             CosmeticStyle.Detail(ui,cabin,liftStyle,true);
             cabinDisplay = ui.Text("Cabin floor display",cabin,"1",.29f,.87f,.71f,.98f,18,GameUI.Gold,TextAnchor.MiddleCenter,true);
             cabinDisplay.fontSizeMin=10;
@@ -64,9 +64,9 @@ namespace OneMoreFloor
             doors = ui.Rect("Moving glass doors",root,BuildingLayout.DoorLeft,.065f/rules.Floors,BuildingLayout.DoorRight,.855f/rules.Floors);
             doors.gameObject.AddComponent<RectMask2D>();
             leftDoor = ui.Picture("Left door",doors,"door",0,0,.5f,1,false).rectTransform;
-            leftDoor.GetComponent<Image>().color=CosmeticStyle.Tint(liftStyle);
+            leftDoor.GetComponent<Image>().color=CosmeticStyle.DoorTint(liftStyle);
             rightDoor = ui.Picture("Right door",doors,"door",.5f,0,1,1,false).rectTransform;
-            rightDoor.GetComponent<Image>().color=CosmeticStyle.Tint(liftStyle);
+            rightDoor.GetComponent<Image>().color=CosmeticStyle.DoorTint(liftStyle);
             // Door edges sit above the people, while transparent glass keeps destinations readable.
             ui.Picture("Roof",root,"roof",-.005f,1.0f,1,1.085f,false);
             ui.Text("Building name",root,Loc.T("building.name"),.35f,1.046f,.7f,1.08f,17,GameUI.Ink,TextAnchor.MiddleCenter,true);
@@ -141,7 +141,7 @@ namespace OneMoreFloor
                 if(delivered) { view.Leave(true); departures.Add(view); }
                 else view.Destroy(); // A replacement must not produce an eighth waiting silhouette.
                 removed.Add(pair.Key);
-                Float(Loc.T(delivered ? "building.thanks" : "building.left"),center,delivered ? GameUI.Teal : GameUI.Coral);
+                Float(delivered && pair.Key.IsRaccoon ? Loc.T("raccoon.delivered") : Loc.T(delivered ? "building.thanks" : "building.left"),center,delivered ? GameUI.Teal : GameUI.Coral);
             }
             foreach(var p in removed) people.Remove(p);
             foreach(var view in people.Values) view.Tick(dt);

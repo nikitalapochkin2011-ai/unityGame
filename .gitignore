@@ -28,3 +28,10 @@ __pycache__/
 Assets/OneMoreFloor/Resources/Fonts/* SDF.asset*
 Assets/TextMesh Pro/
 Assets/TextMesh Pro.meta
+
+# Standalone verification projects are maintained, unlike generated Unity projects.
+!Tests/LogicTests.csproj
+!Tests/SourceChecks/SourceChecks.csproj
+
+# Local editor location remembered by OPEN_GAME.cmd.
+.unity-editor-path.txt

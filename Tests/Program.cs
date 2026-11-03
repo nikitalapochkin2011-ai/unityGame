@@ -178,5 +178,6 @@ class Program
         CampaignTests.MainChecks();
         LocalizationTests.Run();
         CosmeticsTests.Run();
+        ExpansionTests.Run();
     }
 }

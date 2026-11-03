@@ -26,7 +26,7 @@ namespace OneMoreFloor
             this.appearance = appearance;
             Root = ui.Rect("Passenger " + appearance,parent,0,0,0,0);
             opacity = Root.gameObject.AddComponent<CanvasGroup>(); opacity.blocksRaycasts = false; opacity.interactable = false;
-            portrait = ui.Picture("Person",Root,"person_"+(appearance%8),0,.06f,1,.67f);
+            portrait = ui.Picture("Person",Root,"person_"+appearance,0,.06f,1,.67f);
             // A parcel held in front of the torso. In the lift it occupies a second slot.
             box=ui.Panel("Cardboard parcel",Root,.18f,.16f,.96f,.41f,GameUI.Hex("C08B52")).rectTransform;
             ui.Panel("Parcel face",box,.035f,.05f,.965f,.90f,GameUI.Hex("DCAF71"),false);
@@ -40,6 +40,9 @@ namespace OneMoreFloor
             badge.rectTransform.sizeDelta=new Vector2(30,28);
             destination = ui.Text("Destination",badge.transform,"",0,0,1,1,23,GameUI.Ink,TextAnchor.MiddleCenter,true);
             destination.enableAutoSizing=false; destination.fontSize=22;
+            var bonusBadge=ui.Panel("Double delivery badge",Root,.55f,.49f,.99f,.67f,GameUI.Gold).rectTransform;
+            ui.Text("Raccoon double delivery",bonusBadge,"×2",.02f,0,.98f,1,15,GameUI.Ink,TextAnchor.MiddleCenter,true);
+            bonusBadge.gameObject.SetActive(appearance==Passenger.RaccoonAppearance);
             patienceTrack = ui.Panel("Patience track",Root,.09f,.015f,.91f,.055f,GameUI.Ink).rectTransform;
             patience = ui.Panel("Patience",patienceTrack,0,0,1,1,GameUI.Teal,false);
         }
@@ -71,7 +74,7 @@ namespace OneMoreFloor
             if (Departing) return;
             Departing = true; departureTime = 0;
             target = position + new Vector2(delivered ? .12f : -.1f,.035f);
-            destination.text = delivered ? "✓" : "!";
+            destination.text = delivered ? (appearance==Passenger.RaccoonAppearance ? "+2" : "✓") : "!";
             badge.color = delivered ? GameUI.Gold : GameUI.Coral;
             patienceTrack.gameObject.SetActive(false);
         }

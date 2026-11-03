@@ -188,3 +188,24 @@ wheel.mystery	Your prize is revealed after the wheel stops	Награда отк
 wheel.coinReward	You won {0} coins!	Вы выиграли {0} монет!	{0} para kazandın!	¡Has ganado {0} monedas!	Du gewinnst {0} Münzen!	Vous gagnez {0} pièces !	你获得了{0}金币！
 wheel.tryLuck	Try your luck	Испытай удачу	Şansını dene	Prueba tu suerte	Versuch dein Glück	Tentez votre chance	试试运气
 wheel.decoration	Decoration	Оформление	Dekorasyon	Decoración	Gestaltung	Décoration	外观
+rarity.0	Common	Обычная	Sıradan	Común	Gewöhnlich	Commune	普通
+rarity.1	Rare	Редкая	Nadir	Rara	Selten	Rare	稀有
+rarity.2	Epic	Эпическая	Epik	Épica	Episch	Épique	史诗
+rarity.3	Legendary	Легендарная	Efsanevi	Legendaria	Legendär	Légendaire	传说
+cosmetic.10	Peacock	Павлиний шёлк	Tavus kuşu	Pavo real	Pfauenseide	Paon	孔雀
+cosmetic.11	Coral lagoon	Коралловая лагуна	Mercan lagünü	Laguna coral	Korallenlagune	Lagon corail	珊瑚泻湖
+cosmetic.12	Amethyst	Аметист	Ametist	Amatista	Amethyst	Améthyste	紫水晶
+cosmetic.13	Rose quartz	Розовый кварц	Pembe kuvars	Cuarzo rosa	Rosenquarz	Quartz rose	蔷薇石英
+cosmetic.14	Sapphire dusk	Сапфировый вечер	Safir akşam	Ocaso zafiro	Saphirabend	Soir saphir	蓝宝石暮色
+cosmetic.15	Winter holiday	Новогодний	Yılbaşı	Fiesta invernal	Winterfest	Fête hivernale	冬日庆典
+cosmetic.16	Conservatory	Оранжерея	Sera	Invernadero	Wintergarten	Serre	花房
+cosmetic.17	Aquarium	Аквариум	Akvaryum	Acuario	Aquarium	Aquarium	水族馆
+cosmetic.18	Star atlas	Звёздный атлас	Yıldız atlası	Atlas estelar	Sternenatlas	Atlas stellaire	星图
+cosmetic.19	Velvet theatre	Бархатный театр	Kadife tiyatro	Teatro de terciopelo	Samttheater	Théâtre de velours	天鹅绒剧院
+cosmetic.20	Elven forest	Эльфийский лес	Elf ormanı	Bosque élfico	Elfenwald	Forêt elfique	精灵森林
+cosmetic.21	Dragon sanctuary	Обитель дракона	Ejderha tapınağı	Santuario dragón	Drachenhort	Sanctuaire du dragon	龙之圣所
+cosmetic.22	Clockwork	Часовой механизм	Saat mekanizması	Mecanismo de reloj	Uhrwerk	Horlogerie	钟表机关
+cosmetic.23	Crystal grotto	Кристальный грот	Kristal mağara	Gruta de cristal	Kristallgrotte	Grotte de cristal	水晶洞窟
+cosmetic.24	Sky palace	Небесный дворец	Gökyüzü sarayı	Palacio celeste	Himmelspalast	Palais céleste	天空宫殿
+raccoon.delivered	+2 • Thank you!	+2 • Спасибо!	+2 • Teşekkürler!	+2 • ¡Gracias!	+2 • Danke!	+2 • Merci !	+2 • 谢谢！
+wheel.rarityOdds	Styles: common {0}% · rare {1}%\nepic {2}% · legendary {3}%	Оформления: обычная {0}% · редкая {1}%\nэпическая {2}% · легендарная {3}%	Stiller: sıradan %{0} · nadir %{1}\nepik %{2} · efsanevi %{3}	Estilos: común {0}% · rara {1}%\népica {2}% · legendaria {3}%	Stile: gewöhnlich {0}% · selten {1}%\nepisch {2}% · legendär {3}%	Styles : commune {0}% · rare {1}%\népique {2}% · légendaire {3}%	外观：普通{0}% · 稀有{1}%\n史诗{2}% · 传说{3}%

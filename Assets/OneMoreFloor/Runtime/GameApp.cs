@@ -132,9 +132,11 @@ namespace OneMoreFloor
             ui.Panel("Lobby floor",hero,.02f,.015f,.98f,.09f,GameUI.Hex("C19B7A"),false);
             ui.Picture("Lobby window",hero,"window",.045f,.38f,.31f,.89f);
             ui.Picture("Lobby plant",hero,"plant",.045f,.085f,.23f,.39f);
-            ui.Picture("Lobby elevator",hero,"lobby_cabin",.52f,.06f,.94f,.97f).color=CosmeticStyle.Tint(cosmetics.Selected(CosmeticKind.Lift));
-            MenuPerson(hero,0,.24f,.09f,.47f,.77f,"4");
-            MenuPerson(hero,1,.40f,.08f,.63f,.74f,"2");
+            int lobbyLift=cosmetics.Selected(CosmeticKind.Lift), lobbyFloor=cosmetics.Selected(CosmeticKind.Floor);
+            if(lobbyFloor>=10) ui.Picture("Themed lobby",hero,CosmeticStyle.Asset(CosmeticKind.Floor,lobbyFloor),0,0,1,1,false);
+            ui.Picture("Lobby elevator",hero,lobbyLift>=10 ? "lobby_lift_"+lobbyLift : "lobby_cabin",.52f,.06f,.94f,.97f).color=CosmeticStyle.Tint(lobbyLift);
+            MenuPerson(hero,8,.24f,.09f,.47f,.77f,"4");
+            MenuPerson(hero,12,.40f,.08f,.63f,.74f,"2");
             MenuPerson(hero,4,.68f,.13f,.87f,.74f,"6");
             ui.Text("Lobby plaque",hero,Loc.T("menu.welcome"),.04f,.9f,.48f,.98f,12,GameUI.Teal,TextAnchor.MiddleCenter,true);
             ui.Button("Play",overlay,Loc.T("menu.play"),.12f,.237f,.88f,.313f,StartShift,GameUI.Coral,31);

@@ -11,6 +11,16 @@ namespace OneMoreFloor.Editor
         const string ScenePath = "Assets/OneMoreFloor/Scenes/Game.unity";
         const string AttemptKey = "OneMoreFloor.FirstOpenAttempted";
 
+        const string LauncherKey = "OneMoreFloor.OpenFromLauncher";
+
+        // Unity invokes this after importing and compiling the project. SessionState
+        // preserves the request across a domain reload caused by TMP resource import.
+        public static void OpenFromLauncher()
+        {
+            SessionState.SetBool(LauncherKey, true);
+            EditorApplication.delayCall += Prepare;
+        }
+
         static FirstOpenSetup()
         {
             AssetDatabase.importPackageCompleted += name => EditorApplication.delayCall += Prepare;
@@ -26,6 +36,12 @@ namespace OneMoreFloor.Editor
                 return;
             }
             if (!TypographySetup.EnsureReady()) return;
+            if (SessionState.GetBool(LauncherKey, false))
+            {
+                SessionState.SetBool(LauncherKey, false);
+                SceneSetup.CreateScene();
+                return;
+            }
             if (File.Exists(ScenePath) || SessionState.GetBool(AttemptKey, false)) return;
             SessionState.SetBool(AttemptKey, true);
             var active = SceneManager.GetActiveScene();

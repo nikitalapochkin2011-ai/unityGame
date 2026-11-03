@@ -119,7 +119,7 @@ static class CampaignTests
         game.Pause(); elapsed=game.Elapsed; Run(game,5);
         Check(game.Elapsed==elapsed && game.IsGuiding,"pause preserves live tutorial"); game.Resume();
         game.SelectFloor(origin); Run(game,4); game.SelectFloor(first.Destination); Run(game,4);
-        Check(game.Delivered==1 && !game.IsGuiding,"guided pickup and delivery hand off to normal gameplay");
+        Check(game.Delivered==first.DeliveryUnits && !game.IsGuiding,"guided pickup and delivery hand off to normal gameplay");
         Run(game,12); Check(game.Spawned>1,"normal spawning resumes after first delivery");
         bool variedGuidance=false; int firstGuidedFloor=-1;
         for(int seed=0;seed<20;seed++)
@@ -151,7 +151,7 @@ static class CampaignTests
             }
         }
         foreach(bool seen in seenBoxes) boxesOnEveryFloor &= seen;
-        Check(allRoutes && origins.Count==6 && destinations.Count==6 && looks.Count==8,"random appearances and valid origins/destinations span every unlocked floor");
+        Check(allRoutes && origins.Count==6 && destinations.Count==6 && looks.Count==17,"random appearances and valid origins/destinations span every unlocked floor");
         Check(boxesOnEveryFloor && firstBoxPositions.Count>12 && boxCount>total*.20 && boxCount<total*.30 && normalCount>0,"box floors and first appearance vary across seeded attempts at configured probability");
         Check(firstSignatures.Count>80,"retries produce varied first passengers and routes");
         bool deterministic=true; var a=new GameSession(new GameRules(),19,levels[4],5); var b=new GameSession(new GameRules(),19,levels[4],5);
@@ -268,9 +268,9 @@ static class CampaignTests
                 }
             }
             allLevelRandomness &= observedOrigins.Count==probe.ActiveFloors && firstChoices.Count>=6;
-            allAppearancesRandom &= observedLooks.Count==8;
+            allAppearancesRandom &= observedLooks.Count==17;
         }
-        Check(allLevelRandomness && allAppearancesRandom,"every level uses all unlocked origin floors, all eight appearances and varied first passengers");
+        Check(allLevelRandomness && allAppearancesRandom,"every level uses all unlocked origin floors, all seventeen appearances and varied first passengers");
         Check(profileRoutes && burstsSeen,"short and long route rules hold, wave levels actually spawn pairs");
 
         int simulated=0;
