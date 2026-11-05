@@ -37,6 +37,7 @@ namespace OneMoreFloor
         }
         public bool IsDinosaur { get; private set; }
         public bool IsAlien { get; private set; }
+        public bool IsFinalGuest { get; private set; }
         public bool IsRaccoon { get; private set; }
         public int DeliveryUnits { get { return 1; } }
         public int Destination { get; private set; }
@@ -44,12 +45,14 @@ namespace OneMoreFloor
         public int SpaceRequired { get { return HasBox ? 2 : 1; } }
         public int Appearance { get; private set; }
         public float Remaining { get; internal set; }
-        public Passenger(int destination, float patience, bool hasBox=false, int appearance=0, bool isRaccoon=false, bool isDinosaur=false, bool isAlien=false)
+        public Passenger(int destination, float patience, bool hasBox=false, int appearance=0, bool isRaccoon=false, bool isDinosaur=false, bool isAlien=false, int finaleAppearance=-1)
         {
-            Destination=destination;Remaining=patience;IsAlien=isAlien;IsDinosaur=!isAlien && isDinosaur;
-            IsRaccoon=!isAlien && !isDinosaur && isRaccoon;
-            HasBox=hasBox && !IsDinosaur && !IsAlien;
-            Appearance=IsAlien ? AlienAppearance : IsDinosaur ? DinosaurAppearance : IsRaccoon ? RaccoonAppearance : Math.Max(0,appearance)%HumanAppearanceCount;
+            if(finaleAppearance>=0 && RooftopFinales.ForAppearance(finaleAppearance)==null)throw new ArgumentOutOfRangeException(nameof(finaleAppearance));
+            if(finaleAppearance<0 && isAlien)finaleAppearance=AlienAppearance;
+            Destination=destination;Remaining=patience;IsFinalGuest=finaleAppearance>=0;IsAlien=finaleAppearance==AlienAppearance;
+            IsDinosaur=!IsFinalGuest && isDinosaur;IsRaccoon=!IsFinalGuest && !isDinosaur && isRaccoon;
+            HasBox=hasBox && !IsDinosaur && !IsFinalGuest;
+            Appearance=IsFinalGuest ? finaleAppearance : IsDinosaur ? DinosaurAppearance : IsRaccoon ? RaccoonAppearance : Math.Max(0,appearance)%HumanAppearanceCount;
         }
     }
     public sealed class Elevator
@@ -195,10 +198,10 @@ namespace OneMoreFloor
             bool box=game.Level!=null && game.Rules.Capacity>=2 && random.NextDouble()<game.Level.BoxChance;
             int appearance=random.Next(Passenger.HumanAppearanceCount);
             int special=Passenger.SpecialAppearance(specialRandom.Next(Passenger.AppearanceRollSize));
-            bool alien=game.FinalAlienReady;
-            if(!game.Queues.TryEnqueue(floor,new Passenger(alien ? game.RoofFloor : destination,game.PassengerPatience,box,appearance,
-                isRaccoon:!alien && special==Passenger.RaccoonAppearance,
-                isDinosaur:!alien && special==Passenger.DinosaurAppearance,isAlien:alien)))return false;
+            bool finale=game.FinalGuestReady;
+            var passenger=finale ? new Passenger(game.RoofFloor,game.PassengerPatience,finaleAppearance:game.Finale.Appearance) :
+                new Passenger(destination,game.PassengerPatience,box,appearance,isRaccoon:special==Passenger.RaccoonAppearance,isDinosaur:special==Passenger.DinosaurAppearance);
+            if(!game.Queues.TryEnqueue(floor,passenger))return false;
             Spawned++; return true;
         }
     }
@@ -224,16 +227,21 @@ namespace OneMoreFloor
         public int SpawnBudget { get { return Level==null ? int.MaxValue : (int)Math.Min(int.MaxValue,(long)Level.DeliveryGoal+ReservePassengers); } }
         // Replacements use the reserve only after someone actually leaves. Do not
         // populate a surplus queue once all remaining deliveries are already present.
-        public bool HasAlienFinale { get { return Level!=null && LevelNumber==10; } }
+        public FinaleDefinition Finale { get { return Level==null ? null : RooftopFinales.ForLevel(LevelNumber); } }
+        public bool HasRooftopFinale { get { return Finale!=null; } }
         public int RoofFloor { get { return Rules.Floors; } }
-        public bool AlienDelivered { get; private set; }
-        public bool FinalAlienReady { get { return HasAlienFinale && Delivered>=Level.DeliveryGoal-1 && ActivePassengerCount==0; } }
+        public bool FinalGuestDelivered { get; private set; }
+        public bool FinalGuestReady { get { return HasRooftopFinale && Delivered>=Level.DeliveryGoal-1 && ActivePassengerCount==0; } }
+        // Original level-10 queries remain specific to the alien for compatibility.
+        public bool HasAlienFinale { get { return HasRooftopFinale && LevelNumber==10; } }
+        public bool AlienDelivered { get { return HasAlienFinale && FinalGuestDelivered; } }
+        public bool FinalAlienReady { get { return HasAlienFinale && FinalGuestReady; } }
         public bool NeedsMorePassengers
         {
             get
             {
                 if(Level==null)return true;
-                int goal=HasAlienFinale && Delivered<Level.DeliveryGoal-1 ? Level.DeliveryGoal-1 : Level.DeliveryGoal;
+                int goal=HasRooftopFinale && Delivered<Level.DeliveryGoal-1 ? Level.DeliveryGoal-1 : Level.DeliveryGoal;
                 return (long)Delivered+ActivePassengerCount<goal;
             }
         }
@@ -322,7 +330,7 @@ namespace OneMoreFloor
             for (int i = Lift.Riders.Count - 1; i >= 0; i--)
                 if (Lift.Riders[i].Destination == Lift.CurrentFloor)
                 {
-                    if(Lift.Riders[i].IsAlien && Lift.CurrentFloor==RoofFloor)AlienDelivered=true;
+                    if(Lift.Riders[i].IsFinalGuest && Lift.CurrentFloor==RoofFloor)FinalGuestDelivered=true;
                     Lift.Riders.RemoveAt(i);
                     Score += Rules.DeliveryPoints * Multiplier;
                     Streak++; Delivered++; delivered++;

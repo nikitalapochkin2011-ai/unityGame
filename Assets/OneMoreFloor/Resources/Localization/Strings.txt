@@ -231,3 +231,14 @@ route.roofNext	 · Next: roof	 · Далее: крыша	 · Sonraki: çatı	 ·
 feedback.roof	Welcome to the roof	Приехали на крышу	Çatıya geldik	Llegamos a la azotea	Auf dem Dach angekommen	Bienvenue sur le toit	已到达屋顶
 roof.departing	Our visitor is flying home…	Наш гость отправляется домой…	Misafirimiz evine uçuyor…	Nuestro visitante vuela a casa…	Unser Gast fliegt nach Hause…	Notre visiteur rentre chez lui…	客人正在飞回家……
 roof.briefing	Last guest: to the UFO on the roof.	Последний гость — на крышу к НЛО.	Son misafir: çatıdaki UFO’ya.	Último pasajero: al ovni de la azotea.	Letzter Gast: zum UFO auf dem Dach.	Dernier passager : l’ovni sur le toit.	最后一位乘客要去屋顶的飞碟。
+finale.alien	Green visitor	Инопланетянин	Yeşil ziyaretçi	Visitante verde	Grüner Besucher	Visiteur vert	外星访客
+finale.aviator	Fox pilot	Лис-пилот	Tilki pilot	Zorro piloto	Fuchspilot	Renard pilote	狐狸飞行员
+finale.robot	Clockwork robot	Заводной робот	Kurmalı robot	Robot de cuerda	Uhrwerkroboter	Robot à ressort	发条机器人
+finale.cat	Cat magician	Кот-чародей	Büyücü kedi	Gato mago	Zauberkater	Chat magicien	魔法猫
+finale.captain	Owl captain	Сова-капитан	Baykuş kaptan	Búho capitán	Eulenkapitän	Hibou capitaine	猫头鹰船长
+vehicle.ufo	Flying saucer	Летающая тарелка	Uçan daire	Platillo volante	Fliegende Untertasse	Soucoupe volante	飞碟
+vehicle.plane	Biplane	Биплан	Çift kanatlı uçak	Biplano	Doppeldecker	Biplan	双翼飞机
+vehicle.rocket	Retro rocket	Ретро-ракета	Retro roket	Cohete retro	Retrorakete	Fusée rétro	复古火箭
+vehicle.broom	Enchanted broom	Волшебная метла	Sihirli süpürge	Escoba encantada	Zauberbesen	Balai enchanté	魔法扫帚
+vehicle.airship	Airship	Дирижабль	Zeplin	Dirigible	Luftschiff	Dirigeable	飞艇
+roof.briefingGuest	Final guest: {0}. {1} awaits on the roof.	Финальный гость: {0}. На крыше ждёт {1}.	Son misafir: {0}. {1} çatıda bekliyor.	Último pasajero: {0}. {1} espera en la azotea.	Letzter Gast: {0}. {1} wartet auf dem Dach.	Dernier invité : {0}. {1} attend sur le toit.	最后乘客：{0}。屋顶的{1}正在等待。

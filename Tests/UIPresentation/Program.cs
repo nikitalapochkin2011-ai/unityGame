@@ -125,4 +125,38 @@ Check(!root.GetComponentsInChildren<Image>().Any(x=>x.gameObject.name=="Waiting 
 var notice=new GameObject("Notice test");var fade=notice.AddComponent<UIToastMotion>();
 Check(notice.GetComponent<CanvasGroup>().alpha==0 && !notice.GetComponent<CanvasGroup>().blocksRaycasts,"new transient notices begin transparent and do not block input");
 Step(fade,5);Check(notice.GetComponent<CanvasGroup>().alpha>.9f,"transient notice fades in smoothly");
+// Every new milestone must bind unique art, animate the same retained guest and end once.
+var flightPositions=new List<string>();
+foreach(int number in new[]{20,30,40,50})
+{
+ Time.unscaledDeltaTime=.05f;Set(app,"currentLevel",number);Set(app,"progress",new CampaignProgress(number-1));Set(app,"sound",true);
+ app.Settings.Levels[number-1].DeliveryGoal=1;Call(app,"NewGame");game=Get<GameSession>(app,"game");
+ var craft=root.GetComponentsInChildren<Image>().Single(x=>x.gameObject.name=="Waiting rooftop vehicle");
+ var rider=craft.transform.children.Single(t=>t.gameObject.name=="Vehicle passenger seat").gameObject.GetComponentsInChildren<Image>().Single();
+ Check(craft.gameObject.activeInHierarchy && craft.sprite.AssetName==game.Finale.VehicleAsset,"correct unique craft waits from the start of level "+number);
+ Check(rider.sprite.AssetName=="person_"+game.Finale.Appearance && !rider.gameObject.activeInHierarchy,"correct matching crew is hidden until boarding: "+number);
+ int celebrations=source.Played.Count(x=>x=="Airy celebration");
+ for(int frame=0;frame<1800 && !game.Finished;frame++)
+ {
+  if(!game.Lift.Moving)
+  {
+   if(game.Lift.Riders.Count>0)game.SelectFloor(game.Lift.Riders[0].Destination);
+   else for(int f=0;f<game.Queues.Floors.Count;f++)if(game.Queues.Floors[f].Count>0){game.SelectFloor(f);break;}
+  }
+  Call(app,"Update");foreach(var m in root.GetComponentsInChildren<UIWindowMotion>())GameObject.Invoke(m,"Update");
+ }
+ Check(game.State==PlayState.Won && game.FinalGuestDelivered && Get<bool>(app,"awaitingRoofFinale") && Get<CampaignProgress>(app,"progress").Completed==number,"roof epilogue starts and progress saves before departure: "+number);
+ Check(!root.GetComponentsInChildren<UIConfetti>().Any(),"victory particles wait for the matching departure: "+number);
+ for(int frame=0;frame<40;frame++)Call(app,"Update");
+ Check(rider.gameObject.activeInHierarchy,"the matching guest appears seated aboard its craft: "+number);
+ var flight=(RectTransform)craft.transform.parent;
+ flightPositions.Add(flight.anchorMin.x+"/"+flight.anchorMin.y+"/"+craft.transform.localEulerAngles.z);
+ Check(craft.GetComponent<AspectRatioFitter>().aspectRatio>0 && ((RectTransform)craft.transform).Bounds.width>0 && ((RectTransform)craft.transform).Bounds.height>0,"craft aspect ratio is valid and geometry is nonempty: "+number);
+ for(int frame=0;frame<40;frame++)Call(app,"Update");
+ Check(!Get<bool>(app,"awaitingRoofFinale") && !craft.gameObject.activeSelf && source.Played.Count(x=>x=="Airy celebration")==celebrations+1 && root.GetComponentsInChildren<UIConfetti>().Count()==1,"one departure, one victory sound and one confetti burst: "+number);
+ for(int frame=0;frame<10;frame++)Call(app,"Update");
+ Check(source.Played.Count(x=>x=="Airy celebration")==celebrations+1,"completed frames never replay the milestone celebration: "+number);
+}
+Check(flightPositions.Distinct().Count()==4,"all four new aircraft have distinct takeoff motion");
+Check(Get<CampaignProgress>(app,"progress").Completed==50 && root.GetComponentsInChildren<Button>().Any(b=>b.gameObject.name=="Advance"),"level 50 keeps its final campaign victory controls and progress");
 Console.WriteLine(passed+" UI presentation checks passed with SDK substitutes; Unity rendering, native input and lifecycle remain unverified.");

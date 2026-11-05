@@ -76,7 +76,7 @@ namespace UnityEngine
   public static float Distance(Vector2 a,Vector2 b)=>Mathf.Sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y));public static Vector2 Lerp(Vector2 a,Vector2 b,float n)=>a+(b-a)*Mathf.Clamp01(n);
   public static implicit operator Vector3(Vector2 a)=>new(a.x,a.y,0);
  }
- public struct Vector3{public float x,y,z;public Vector3(float a,float b,float c){x=a;y=b;z=c;}public static Vector3 one=>new(1,1,1);public static Vector3 operator*(Vector3 a,float n)=>new(a.x*n,a.y*n,a.z*n);public static implicit operator Vector2(Vector3 a)=>new(a.x,a.y);}
+ public struct Vector3{public float x,y,z;public Vector3(float a,float b,float c){x=a;y=b;z=c;}public static Vector3 one=>new(1,1,1);public static Vector3 zero=>new(0,0,0);public static Vector3 operator*(Vector3 a,float n)=>new(a.x*n,a.y*n,a.z*n);public static implicit operator Vector2(Vector3 a)=>new(a.x,a.y);}
  public struct Vector2Int{public int x,y;public Vector2Int(int a,int b){x=a;y=b;}public static Vector2Int zero=>new(0,0);public static bool operator==(Vector2Int a,Vector2Int b)=>a.x==b.x&&a.y==b.y;public static bool operator!=(Vector2Int a,Vector2Int b)=>!(a==b);public override bool Equals(object v)=>v is Vector2Int b&&this==b;public override int GetHashCode()=>x^y;}
  public struct Vector4{public float x,y,z,w;public Vector4(float a,float b,float c,float d){x=a;y=b;z=c;w=d;}public static Vector4 zero=>new(0,0,0,0);}
  public struct Rect

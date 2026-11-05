@@ -43,20 +43,24 @@ static class Capture
    foreach(var entrance in root.GetComponentsInChildren<UIPanelEntrance>())for(int i=0;i<20;i++)GameObject.Invoke(entrance,"Update");
    foreach(var exit in root.GetComponentsInChildren<UIWindowMotion>())for(int i=0;i<20;i++)GameObject.Invoke(exit,"Update");
    File.WriteAllText(Path.Combine(folder,name+".json"),JsonSerializer.Serialize(Export(root.transform)));}
-  if(args.Length>6 && args[6]=="rooftop")
+  if(args.Length>6 && (args[6]=="rooftop" || args[6]=="finale"))
   {
-   Time.unscaledDeltaTime=.05f;Set(app,"currentLevel",10);Set(app,"progress",new CampaignProgress(9));Call(app,"NewGame");Save("roof-start");
+   int number=args[6]=="finale" ? int.Parse(args[7]) : 10;
+   if(RooftopFinales.ForLevel(number)==null)throw new ArgumentException("No finale for this level");
+   string prefix=args[6]=="finale" ? "level"+number+"-" : "roof-";
+   Time.unscaledDeltaTime=.05f;Set(app,"currentLevel",number);Set(app,"progress",new CampaignProgress(number-1));
+   Call(app,"ChooseLevel",number);Save(prefix+"briefing");Call(app,"NewGame");Save(prefix+"start");
    var final=Get<GameSession>(app,"game");typeof(GameSession).GetProperty("Delivered").SetValue(final,final.Level.DeliveryGoal-1);
    int previewScore=0;for(int delivered=0;delivered<final.Delivered;delivered++)previewScore+=10*Math.Min(3,1+delivered/5);
    typeof(GameSession).GetProperty("Score").SetValue(final,previewScore);typeof(GameSession).GetProperty("Streak").SetValue(final,final.Delivered);
-   for(int i=0;i<50 && final.ActivePassengerCount==0;i++)Call(app,"Update");for(int i=0;i<6;i++)Call(app,"Update");Save("roof-visitor");
+   for(int i=0;i<50 && final.ActivePassengerCount==0;i++)Call(app,"Update");for(int i=0;i<6;i++)Call(app,"Update");Save(prefix+"visitor");
    for(int i=0;i<1000 && final.Lift.Riders.Count==0;i++)
    {for(int f=0;f<final.Queues.Floors.Count;f++)if(final.Queues.Floors[f].Count>0){final.SelectFloor(f);break;}Call(app,"Update");}
-   Save("roof-cabin");
-   final.SelectFloor(final.RoofFloor);for(int i=0;i<1000 && !final.Finished;i++)Call(app,"Update");Save("roof-boarding");
-   for(int i=0;i<36;i++)Call(app,"Update");Save("roof-takeoff");
-   for(int i=0;i<30;i++)Call(app,"Update");foreach(var burst in root.GetComponentsInChildren<UIConfetti>())Set(burst,"age",.45f);Save("roof-victory");
-   Console.WriteLine("Captured six rooftop source-layout previews; not Unity screenshots.");return;
+   Save(prefix+"cabin");
+   final.SelectFloor(final.RoofFloor);for(int i=0;i<1000 && !final.Finished;i++)Call(app,"Update");Save(prefix+"boarding");
+   for(int i=0;i<36;i++)Call(app,"Update");Save(prefix+"takeoff");
+   for(int i=0;i<30;i++)Call(app,"Update");foreach(var burst in root.GetComponentsInChildren<UIConfetti>())Set(burst,"age",.45f);Save(prefix+"victory");
+   Console.WriteLine("Captured seven rooftop source-layout previews; not Unity screenshots.");return;
   }
   if(args.Length>6){Set(app,"cosmetics",Cosmetics.Load("2|"+(args[6]=="cooldown"?160:0)+"|1.1.1|0|0|0|"+(args[6]=="cooldown"?DateTimeOffset.UtcNow.ToUnixTimeSeconds()+86399:0)));Call(app,"ShowWheel",null,0);Save("wheel-"+args[6]);return;}
   Save("menu");Call(app,"ShowLevels");Save("levels");Call(app,"ChooseLevel",3);Save("briefing");Call(app,"ShowWheel",null,0);Save("wheel");Call(app,"ShowCollection",2,3,0);Save("collection");Call(app,"ShowCollection",0,0,0);Save("collection-common");Call(app,"ShowCollection",0,1,0);Save("collection-rare");Call(app,"ShowCollection",1,2,0);Save("collection-epic");Call(app,"ShowCollection",0,0,1);Save("collection-page2");Call(app,"CollectionDetail",2,20,3,0);Save("detail");

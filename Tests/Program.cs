@@ -182,5 +182,6 @@ class Program
         ExpansionTests.Run();
         RewardedGameplayTests.Run();
         RooftopTests.Run();
+        FinaleTests.Run();
     }
 }

@@ -52,16 +52,16 @@ namespace OneMoreFloor
             bool wide=riding && passenger.HasBox;
             badge.rectTransform.anchorMin=badge.rectTransform.anchorMax=new Vector2(wide ? .25f : .5f,.7f);
             badge.rectTransform.sizeDelta=new Vector2(badgeWidth,28);
-            destination.enableAutoSizing=passenger.IsAlien;
-            destination.fontSize=passenger.IsAlien ? 16 : 22;destination.fontSizeMax=16;destination.fontSizeMin=12;
-            if(passenger.IsAlien)badge.rectTransform.sizeDelta=new Vector2(62,28);
+            destination.enableAutoSizing=passenger.IsFinalGuest;
+            destination.fontSize=passenger.IsFinalGuest ? 16 : 22;destination.fontSizeMax=16;destination.fontSizeMin=12;
+            if(passenger.IsFinalGuest)badge.rectTransform.sizeDelta=new Vector2(62,28);
             GameUI.Place(portrait.rectTransform,0,.06f,wide ? .5f : 1,.67f);
             box.gameObject.SetActive(passenger.HasBox);
             GameUI.Place(box,wide ? .39f : .18f,.16f,.96f,.41f);
             if (riding && WasRiding && initialized) position.y = center.y;
             WasRiding = riding;
             if (!initialized) { position = target + new Vector2(-.008f,0); initialized = true; }
-            destination.text=passenger.IsAlien ? Loc.T("roof.title") : (passenger.Destination+1).ToString();
+            destination.text=passenger.IsFinalGuest ? Loc.T("roof.title") : (passenger.Destination+1).ToString();
             badge.color = riding ? GameUI.Gold : GameUI.Cream;
             patienceTrack.gameObject.SetActive(!riding);
             patience.rectTransform.anchorMax = new Vector2(Mathf.Clamp01(patienceRatio),1);

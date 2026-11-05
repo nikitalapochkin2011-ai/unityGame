@@ -61,7 +61,8 @@ namespace OneMoreFloor
             string detail=Loc.T("level.floors",level.ActiveFloors,Settings.Rules.Capacity)+"\n";
             detail+=(level.Guided ? Loc.T("level.guided") : Loc.T("traffic."+level.Traffic))+"\n";
             detail+=Loc.T("level.rules",Settings.Rules.LossLimit);
-            if(number==10)detail+="\n"+Loc.T("roof.briefing");
+            var finale=RooftopFinales.ForLevel(number);
+            if(finale!=null)detail+="\n"+Loc.T("roof.briefingGuest",Loc.T(finale.CharacterKey),Loc.T(finale.VehicleKey));
             ui.Text("Level briefing",card,detail,.07f,.29f,.93f,.53f,21,UITheme.Muted);
             ui.Button("Begin level",card,level.Guided ? Loc.T("level.startTutorial") : Loc.T("level.start"),.09f,.15f,.91f,.27f,NewGame,UITheme.Terra);
             ui.Button("Back to levels",card,Loc.T("common.levels"),.09f,.025f,.91f,.125f,ShowLevels,UITheme.Secondary,UITheme.SecondaryText);
@@ -92,7 +93,7 @@ namespace OneMoreFloor
         void PresentVictory()
         {
             SaveVictory(); // Persist the won level before its optional visual epilogue.
-            if(game.HasAlienFinale && !building.RoofFinaleComplete)
+            if(game.HasRooftopFinale && !building.RoofFinaleComplete)
             {
                 awaitingRoofFinale=true;coachRoot.gameObject.SetActive(false);
                 feedback.text=Loc.T("roof.departing");feedback.color=UITheme.Green;return;

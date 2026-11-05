@@ -146,13 +146,13 @@ namespace OneMoreFloor
                 var center=(view.Root.anchorMin+view.Root.anchorMax)*.5f;
                 if(delivered)
                 {
-                    if(pair.Key.IsAlien && game.AlienDelivered)view.LeaveToShip(new Vector2(.465f,1.025f));
+                    if(pair.Key.IsFinalGuest && game.FinalGuestDelivered)view.LeaveToShip(new Vector2(.465f,1.025f));
                     else view.Leave(true);
                     departures.Add(view);
                 }
                 else view.Destroy(); // A replacement must not produce an eighth waiting silhouette.
                 removed.Add(pair.Key);
-                if(!pair.Key.IsAlien || !delivered)
+                if(!pair.Key.IsFinalGuest || !delivered)
                     Float(Loc.T(delivered ? "building.thanks" : "building.left"),center,delivered ? GameUI.Teal : GameUI.Coral);
             }
             foreach(var p in removed) people.Remove(p);
