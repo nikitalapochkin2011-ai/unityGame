@@ -21,7 +21,10 @@ namespace OneMoreFloor
         {
             float pixels=Mathf.Min(Screen.safeArea.width,Screen.safeArea.height*600f/1060f);
             float width=Mathf.Max(.133f,44f/Mathf.Max(1,pixels)),height=UtilityHeight;
-            var button=ui.SymbolButton(name,overlay,icon,centerX-width*.5f,centerY-height*.5f,centerX+width*.5f,centerY+height*.5f,action,UITheme.Surface);
+            // FitInParent drives anchors to the whole parent. Reserve a small slot first,
+            // so Unity fits the circular button to this slot rather than the screen overlay.
+            var slot=ui.Rect(name+" slot",overlay,centerX-width*.5f,centerY-height*.5f,centerX+width*.5f,centerY+height*.5f);
+            var button=ui.SymbolButton(name,slot,icon,0,0,1,1,action,UITheme.Surface);
             var fit=button.gameObject.AddComponent<AspectRatioFitter>();fit.aspectMode=AspectRatioFitter.AspectMode.FitInParent;fit.aspectRatio=1;
             return button;
         }

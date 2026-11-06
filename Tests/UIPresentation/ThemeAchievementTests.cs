@@ -83,13 +83,29 @@ static class ThemeAchievementTests
   Call(app,"ClaimAchievement",0,0,0);
   Check(CosmeticStore.Load().Coins==22 && sandbox.Coins==2005 && CosmeticStore.LoadAccount().Milestones.Claimed(0),"editor wheel preview cannot leak its fake coin balance into an achievement claim");
   Call(app,"SaveCosmetics");Check(CosmeticStore.Load().Coins==22,"subsequent preview saves retain the canonical wallet and claimed flag");
-  foreach(var viewport in new[]{(360,640,0,0),(360,800,28,18),(390,844,47,34),(430,932,59,34)})
+  foreach(var viewport in new[]{(360,640,0,0),(360,800,28,18),(390,844,47,34),(430,932,59,34),(542,678,0,0),(862,667,0,0),(986,659,0,0)})
   {
    Screen.width=viewport.Item1;Screen.height=viewport.Item2;Screen.safeArea=new Rect(0,viewport.Item4,Screen.width,Screen.height-viewport.Item3-viewport.Item4);Call(app,"ApplySafeArea");Call(app,"ShowMenu");
    var utilities=new[]{Button("Menu settings"),Button("Achievements")};
    Check(utilities.All(b=>{var r=((RectTransform)b.transform).Bounds;return r.width*Screen.height/1060>=43.9f && r.height*Screen.height/1060>=43.9f;}),"new circular menu controls keep at least 44 screen pixels of tap area: "+viewport);
    var upper=((RectTransform)utilities[0].transform).Bounds;var lower=((RectTransform)utilities[1].transform).Bounds;
    Check(upper.yMin>lower.yMax && upper.yMax<=Get<RectTransform>(app,"safe").Bounds.yMax+.1f,"stacked controls never overlap or leave the safe area: "+viewport);
+   var safeBounds=Get<RectTransform>(app,"safe").Bounds;
+   Check(utilities.All(b=>{var r=((RectTransform)b.transform).Bounds;return r.width<=safeBounds.width*.18f && r.height<=safeBounds.height*.10f && Math.Abs(r.width-r.height)<.1f;}),"menu controls remain small circles rather than filling their screen parent: "+viewport);
+   foreach(bool dark in new[]{false,true})
+   {
+    UITheme.UseDark(dark);
+    for(int category=0;category<2;category++)for(int page=0;page<(category==0 ? 2 : 3);page++)
+    {
+     Call(app,"ShowAchievements",category,page);
+     var left=((RectTransform)Button("Previous achievements").transform).Bounds;
+     var right=((RectTransform)Button("Next achievements").transform).Bounds;
+     float cardsBottom=root.GetComponentsInChildren<Image>().Where(x=>x.gameObject.name.StartsWith("Achievement card ")).Min(x=>((RectTransform)x.transform).Bounds.yMin);
+     Check(left.xMax<safeBounds.xMin+safeBounds.width*.30f && right.xMin>safeBounds.xMin+safeBounds.width*.70f && left.yMax<cardsBottom && right.yMax<cardsBottom && Math.Abs(left.width-left.height)<.1f && Math.Abs(right.width-right.height)<.1f,
+      "achievement arrows stay at the lower corners and never cover cards: "+viewport+" theme "+dark+" category "+category+" page "+page);
+    }
+   }
+
   }
   Console.WriteLine(passed+" theme and achievement presentation checks passed with SDK substitutes.");return passed;
  }

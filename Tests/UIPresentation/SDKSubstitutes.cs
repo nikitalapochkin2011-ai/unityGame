@@ -62,7 +62,9 @@ namespace UnityEngine
     var p=((RectTransform)parent).Bounds;var lo=offsetMin;var hi=offsetMax;
     var r=new Rect(p.xMin+p.width*anchorMin.x+lo.x,p.yMin+p.height*anchorMin.y+lo.y,p.width*(anchorMax.x-anchorMin.x)+hi.x-lo.x,p.height*(anchorMax.y-anchorMin.y)+hi.y-lo.y);
     var fitter=GetComponent<UnityEngine.UI.AspectRatioFitter>();
-    if(fitter!=null && fitter.aspectMode==UnityEngine.UI.AspectRatioFitter.AspectMode.FitInParent){float w=Math.Min(r.width,r.height*fitter.aspectRatio),h=w/fitter.aspectRatio;return new Rect(r.xMin+(r.width-w)/2,r.yMin+(r.height-h)/2,w,h);}
+    // Native FitInParent drives the child's anchors/size to fit its PARENT rectangle.
+    // It does not constrain itself to the child's previously assigned anchor slot.
+    if(fitter!=null && fitter.aspectMode==UnityEngine.UI.AspectRatioFitter.AspectMode.FitInParent){float w=Math.Min(p.width,p.height*fitter.aspectRatio),h=w/fitter.aspectRatio;return new Rect(p.xMin+(p.width-w)/2,p.yMin+(p.height-h)/2,w,h);}
     return r;
    }
   }
