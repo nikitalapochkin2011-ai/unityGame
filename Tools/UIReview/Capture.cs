@@ -34,6 +34,7 @@ static class Capture
  public static class Fonts{public static TMP_FontAsset Regular=new(),Bold=new();}
  public static void Main(string[] args)
  {
+  bool dark=args.Contains("--dark");args=args.Where(a=>a!="--dark").ToArray();PlayerPrefs.SetInt("OneMoreFloor.DarkTheme",dark ? 1 : 0);
   if(args.Length>3){Screen.width=int.Parse(args[2]);Screen.height=int.Parse(args[3]);float top=args.Length>4?float.Parse(args[4]):0,bottom=args.Length>5?float.Parse(args[5]):0;Screen.safeArea=new Rect(0,bottom,Screen.width,Screen.height-top-bottom);}
   string lang=args.Length>1?args[1]:"ru";PlayerPrefs.SetString("OneMoreFloor.Language",lang);PlayerPrefs.SetInt("OneMoreFloor.Campaign.Completed",2);PlayerPrefs.SetInt("OneMoreFloor.Best",1840);PlayerPrefs.SetInt("OneMoreFloor.BoxExplained",1);PlayerPrefs.SetString("OneMoreFloor.Cosmetics.v1","2|160|1082375.1082375.1082375|0|0|0|0");
   var root=new GameObject("Preview root");var app=root.AddComponent<GameApp>();Call(app,"Start");
@@ -43,6 +44,24 @@ static class Capture
    foreach(var entrance in root.GetComponentsInChildren<UIPanelEntrance>())for(int i=0;i<20;i++)GameObject.Invoke(entrance,"Update");
    foreach(var exit in root.GetComponentsInChildren<UIWindowMotion>())for(int i=0;i<20;i++)GameObject.Invoke(exit,"Update");
    File.WriteAllText(Path.Combine(folder,name+".json"),JsonSerializer.Serialize(Export(root.transform)));}
+  if(args.Length>6 && args[6]=="achievements")
+  {
+   Set(app,"achievements",Achievements.Load("1|49|0|0"));
+   Call(app,"ShowAchievements",0,0);Save("achievements-locked-deliveries");
+   Call(app,"ShowAchievements",1,0);Save("achievements-locked-roof");
+   var earned=new Achievements();earned.RecordDeliveries(2000);for(int n=10;n<=100;n+=10)earned.RecordDeliveries(1,n);Set(app,"achievements",earned);
+   Call(app,"ShowMenu");Save("achievements-menu-pending");
+   for(int category=0;category<2;category++)for(int page=0;page<(category==0 ? 2 : 3);page++)
+   {Call(app,"ShowAchievements",category,page);Save("achievements-ready-"+category+"-"+page);}
+   Call(app,"ClaimAchievement",0,0,0);Save("achievements-claimed-one");
+   var wallet=Get<Cosmetics>(app,"cosmetics");for(int id=1;id<Achievements.Count;id++)earned.Claim(id,wallet);
+   Call(app,"ShowAchievements",0,0);Save("achievements-collected");Call(app,"ShowMenu");Save("achievements-menu-cleared");
+   Set(app,"currentLevel",2);Call(app,"NewGame");var threshold=Achievements.Load("1|49|0|0");Set(app,"achievements",threshold);
+   Call(app,"QueueAchievementNotices",threshold.RecordDeliveries(1));Call(app,"TickAchievementNotice",.25f);Save("achievement-notification");
+   var session=Get<GameSession>(app,"game");for(int i=0;i<4;i++)session.Lift.Riders.Add(new Passenger(1,100));Call(app,"Render",0f);Save("game-full-capacity");
+   Call(app,"ShowSettings");Save("achievement-settings-paused");
+   Console.WriteLine("Captured achievement layouts with production UI and SDK substitutes, not Unity screenshots.");return;
+  }
   if(args.Length>6 && args[6]=="campaign")
   {
    foreach(int completed in new[]{49,50,99,100})

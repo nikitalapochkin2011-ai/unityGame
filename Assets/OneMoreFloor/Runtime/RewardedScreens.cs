@@ -30,7 +30,7 @@ namespace OneMoreFloor
             if(overlay!=null)
             {
                 var notice=ui.Surface("Ad notice",overlay,.08f,wheel ? .35f : .88f,.92f,wheel ? .407f : .94f,UITheme.Deep,UITheme.SmallRadius,false,true,true).rectTransform;
-                ui.Text("Ad result",notice,Loc.T(key),.05f,.08f,.95f,.92f,16,UITheme.Surface);
+                ui.Text("Ad result",notice,Loc.T(key),.05f,.08f,.95f,.92f,16,UITheme.OnDark);
                 notice.gameObject.AddComponent<UIToastMotion>();
             }
         }

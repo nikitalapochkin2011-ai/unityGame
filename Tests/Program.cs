@@ -183,5 +183,6 @@ class Program
         RewardedGameplayTests.Run();
         RooftopTests.Run();
         FinaleTests.Run();
+        AchievementTests.Run();
     }
 }

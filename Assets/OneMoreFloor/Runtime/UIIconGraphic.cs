@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 namespace OneMoreFloor
 {
-    public enum UIIcon { Lift,Play,ArrowLeft,ArrowRight,Settings,Wheel,Collection,Person,Star,Check,Lock,Heart,Video,Home,Pause,Help,Flag,Close,Coin }
+    public enum UIIcon { Lift,Play,ArrowLeft,ArrowRight,Settings,Wheel,Collection,Person,Star,Check,Lock,Heart,Video,Home,Pause,Help,Flag,Close,Coin,Moon,Sun }
     [RequireComponent(typeof(CanvasRenderer))]
     public sealed class UIIconGraphic : MaskableGraphic
     {
@@ -38,6 +38,8 @@ namespace OneMoreFloor
                 case UIIcon.Video:Path(true,-.86f,-.62f,.29f,-.62f,.29f,.62f,-.86f,.62f);Path(true,.30f,.28f,.85f,.59f,.85f,-.59f,.30f,-.28f);break;
                 case UIIcon.Home:Path(false,-.9f,.04f,0,.84f,.9f,.04f);Path(false,-.64f,.19f,-.64f,-.8f,-.17f,-.8f,-.17f,-.22f,.23f,-.22f,.23f,-.8f,.65f,-.8f,.65f,.19f);break;
                 case UIIcon.Help:Path(false,-.42f,.53f,-.22f,.78f,.23f,.78f,.46f,.56f,.43f,.23f,0,-.1f,0,-.30f);Dot(0,-.74f,.11f);break;
+                case UIIcon.Moon:Path(false,.34f,.83f,-.10f,.80f,-.53f,.50f,-.73f,.05f,-.62f,-.44f,-.24f,-.77f,.26f,-.83f,.71f,-.55f,.87f,-.20f,.45f,-.32f,.10f,-.15f,-.03f,.18f,.06f,.53f,.34f,.83f);break;
+                case UIIcon.Sun:Circle(0,0,.38f);for(int i=0;i<8;i++){float a=i*Mathf.PI/4;Line(Mathf.Cos(a)*.62f,Mathf.Sin(a)*.62f,Mathf.Cos(a)*.87f,Mathf.Sin(a)*.87f,.10f);}break;
                 case UIIcon.Flag:Line(-.64f,-.86f,-.64f,.85f);Path(true,-.64f,.76f,.64f,.76f,.39f,.32f,.64f,-.03f,-.64f,-.03f);break;
                 default:Circle(0,0,.80f);Circle(0,0,.56f);Line(0,-.30f,0,.30f,.19f);break;
             }

@@ -18,6 +18,8 @@ namespace OneMoreFloor
             string[] colors={"64766D","216E9C","8750A6","946A27"};
             return GameUI.Hex(colors[(int)Cosmetics.Rarity(index)]);
         }
+        public static Color RarityInk(int index)
+        {return UITheme.IsDark ? Color.Lerp(RarityColor(index),UITheme.OnDark,.45f) : RarityColor(index);}
         public static string Asset(CosmeticKind kind,int index)
         {
             string original=kind==CosmeticKind.Background ? "skyline" : kind==CosmeticKind.Floor ? "hallway" : "cabin";

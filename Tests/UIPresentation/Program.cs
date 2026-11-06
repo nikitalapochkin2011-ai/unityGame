@@ -172,4 +172,5 @@ var retainedAds=app.Settings.Ads;var retainedRules=app.Settings.Rules;
 var originalSeason=app.Settings.Levels.Take(50).Select(l=>l.Copy()).ToArray();originalSeason[7].Title="Retained custom title";originalSeason[7].PatienceSeconds=287;
 app.Settings.Levels=originalSeason;app.Settings.CampaignBalanceVersion=2;app.Settings.Prepare();
 Check(app.Settings.Levels.Length==100 && app.Settings.Levels[7].Title=="Retained custom title" && app.Settings.Levels[7].PatienceSeconds==287 && ReferenceEquals(retainedAds,app.Settings.Ads) && ReferenceEquals(retainedRules,app.Settings.Rules),"actual settings migration appends 50 stages while retaining edits, ads and common lift rules");
+passed+=ThemeAchievementTests.Run(app);
 Console.WriteLine(passed+" UI presentation checks passed with SDK substitutes; Unity rendering, native input and lifecycle remain unverified.");

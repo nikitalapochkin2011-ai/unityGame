@@ -17,6 +17,7 @@ namespace OneMoreFloor
         CanvasGroup screenFade;
         Text score, multiplier, occupancy, route, feedback, record, soundLabel, streak, lossesLabel, difficultyLabel;
         Image loadCard, soundTrack;
+        Graphic capacitySymbol;
         RectTransform soundThumb;
         Graphic[] lossMarks, streakMarks;
         int best, tutorialPage;
@@ -37,7 +38,8 @@ namespace OneMoreFloor
             if(Settings==null) Settings=ScriptableObject.CreateInstance<GameSettings>();
             Settings.Prepare();
             progress=new CampaignProgress(PlayerPrefs.GetInt("OneMoreFloor.Campaign.Completed",0));
-            cosmetics=CosmeticStore.Load(); InitializeWheelTesting();
+            var account=CosmeticStore.LoadAccount();cosmetics=account.Wallet;achievements=account.Milestones;
+            UITheme.LoadPreference(); InitializeWheelTesting();
             Loc.Initialize(); InitializeAds(); ui=CreateUI();
             best=PlayerPrefs.GetInt("OneMoreFloor.Best",0);
             sound=PlayerPrefs.GetInt("OneMoreFloor.Sound",1)!=0;
@@ -76,11 +78,11 @@ namespace OneMoreFloor
             canvas.additionalShaderChannels|=AdditionalCanvasShaderChannels.TexCoord1;
             var scaler=root.GetComponent<CanvasScaler>(); scaler.uiScaleMode=CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution=new Vector2(600,1060); scaler.matchWidthOrHeight=1;
-            ui.Panel("Evening sky",root.transform,0,0,1,1,GameUI.Paper,false);
+            ui.Panel("Evening sky",root.transform,0,0,1,1,UITheme.Background,false);
             ui.Picture("Distant neighborhood",root.transform,"skyline",0,0,1,.62f,false);
             CosmeticStyle.Background(ui,root.transform,cosmetics.Selected(CosmeticKind.Background));
-            ui.Gradient("Game atmosphere",root.transform,0,0,1,1,new Color(.98f,.96f,.92f,.94f),new Color(.95f,.96f,.90f,.72f));
-            ui.Gradient("Quiet sky",root.transform,0,.66f,1,1,GameUI.Paper,new Color(.96f,.94f,.90f,0));
+            ui.Gradient("Game atmosphere",root.transform,0,0,1,1,UITheme.IsDark ? new Color(.067f,.102f,.086f,.96f) : new Color(.98f,.96f,.92f,.94f),UITheme.IsDark ? new Color(.067f,.102f,.086f,.88f) : new Color(.95f,.96f,.90f,.72f));
+            ui.Gradient("Quiet sky",root.transform,0,.66f,1,1,UITheme.Background,new Color(UITheme.Background.r,UITheme.Background.g,UITheme.Background.b,0));
             safe=ui.Rect("Portrait safe area",root.transform,0,0,1,1);
             var header=ui.Surface("Game header",safe,.036f,.920f,.964f,.988f,UITheme.Surface).rectTransform;
             ui.Icon("Lift mark",header,UIIcon.Lift,.025f,.21f,.095f,.80f,UITheme.Green);
@@ -97,7 +99,7 @@ namespace OneMoreFloor
             streakMarks=new Graphic[5];
             for(int i=0;i<5;i++) streakMarks[i]=ui.Panel("Streak dot",scoreCard,.49f+i*.09f,.20f,.55f+i*.09f,.26f,UITheme.Border);
             var load=ui.Surface("Occupancy card",safe,.663f,.839f,.964f,.912f,UITheme.Surface);loadCard=load;
-            ui.Icon("Capacity symbol",load.transform,UIIcon.Person,.39f,.52f,.61f,.87f,UITheme.Green);
+            capacitySymbol=ui.Icon("Capacity symbol",load.transform,UIIcon.Person,.39f,.52f,.61f,.87f,UITheme.Green);
             occupancy=ui.Text("Occupancy",load.transform,Loc.T("hud.occupancy",0,Settings.Rules.Capacity),.05f,.11f,.95f,.48f,19,UITheme.Ink,TextAnchor.MiddleCenter,true);
             var losses=ui.Surface("Lost card",safe,.036f,.792f,.964f,.826f,UITheme.Surface,UITheme.SmallRadius,false,false).rectTransform;
             lossesLabel=ui.Text("Lost caption",losses,Loc.T("hud.losses",0,Settings.Rules.LossLimit),.035f,.08f,.65f,.92f,15,UITheme.Muted,TextAnchor.MiddleLeft);
@@ -113,12 +115,12 @@ namespace OneMoreFloor
             building=new BuildingView(ui,buildingRoot,Settings.Rules,SelectFloor,cosmetics.Selected(CosmeticKind.Floor),cosmetics.Selected(CosmeticKind.Lift));
             var routeCard=ui.Surface("Route",safe,.036f,.078f,.964f,.130f,UITheme.Deep,UITheme.ButtonRadius,false,false,true).rectTransform;
             ui.Icon("Route icon",routeCard,UIIcon.Lift,.025f,.22f,.085f,.78f,UITheme.Gold);
-            route=ui.Text("Route",routeCard,Loc.T("route.choose"),.12f,.08f,.96f,.92f,18,UITheme.Surface,TextAnchor.MiddleLeft);
+            route=ui.Text("Route",routeCard,Loc.T("route.choose"),.12f,.08f,.96f,.92f,18,UITheme.OnDark,TextAnchor.MiddleLeft);
             ui.Panel("Footer clarity",safe,.02f,0,.98f,.071f,UITheme.Background,false);
             feedback=ui.Text("Feedback",safe,"",.06f,.026f,.94f,.064f,16,UITheme.Ink);
             overlay=ui.Rect("Screen overlay",safe,0,0,1,1);
             screenFade=overlay.gameObject.AddComponent<CanvasGroup>();
-            BuildCoach(); BuildSettings(); BuildLanguageLayer(); ApplySafeArea();
+            BuildCoach(); BuildSettings(); BuildLanguageLayer(); BuildAchievementNotice(); ApplySafeArea();
         }
         void ClearOverlay(bool menu=false)
         {
@@ -128,7 +130,7 @@ namespace OneMoreFloor
             var scrim=ui.Panel("Modal background",overlay,-.2f,-.1f,1.2f,1.1f,
                 menu ? UITheme.Background : UITheme.Scrim,false);
             scrim.raycastTarget=true;
-            if(menu) ui.Gradient("Paper wash",overlay,-.2f,-.1f,1.2f,1.1f,UITheme.Surface,GameUI.Hex("E5ECDD"));
+            if(menu) ui.Gradient("Paper wash",overlay,-.2f,-.1f,1.2f,1.1f,UITheme.Surface,UITheme.MenuWash);
         }
         RectTransform Modal(string eyebrow,string title,Transform parent=null)
         {
@@ -142,16 +144,22 @@ namespace OneMoreFloor
         }
         void ShowMenu()
         {
-            game=null; coachRoot.gameObject.SetActive(false); building.Reset(); buildingRoot.gameObject.SetActive(false); settingsLayer.gameObject.SetActive(false); ClearOverlay(true);
+            game=null;ResetAchievementNotices(); coachRoot.gameObject.SetActive(false); building.Reset(); buildingRoot.gameObject.SetActive(false); settingsLayer.gameObject.SetActive(false); ClearOverlay(true);
             ui.Picture("Menu skyline",overlay,"skyline",0,0,1,.65f,false).color=new Color(1,1,1,.32f);
             CosmeticStyle.Background(ui,overlay,cosmetics.Selected(CosmeticKind.Background));
+            if(UITheme.IsDark)ui.Panel("Night scenery veil",overlay,0,0,1,1,new Color(.04f,.08f,.05f,.78f),false);
             ui.Gradient("Menu lower wash",overlay,0,0,1,.37f,UITheme.Background,UITheme.Background);
             ui.Gradient("Legible menu sky",overlay,0,.69f,1,1,UITheme.Surface,UITheme.Surface);
             var logo=ui.Panel("App mark",overlay,.055f,.923f,.137f,.970f,UITheme.Soft).rectTransform;
             ui.Icon("App mark lift",logo,UIIcon.Lift,.20f,.15f,.80f,.85f,UITheme.Green);
             ui.Text("House label",overlay,Loc.T("menu.house"),.16f,.928f,.82f,.964f,13,UITheme.Muted,TextAnchor.MiddleLeft,true);
-            ui.SymbolButton("Menu settings",overlay,UIIcon.Settings,.845f,.919f,.945f,.976f,ShowSettings,UITheme.Surface);
-            ui.Text("Game title",overlay,Loc.T("app.menuTitle"),.065f,.771f,.94f,.914f,65,UITheme.Ink,TextAnchor.MiddleLeft,true);
+            MenuUtility("Menu settings",UIIcon.Settings,.931f,.989f,ShowSettings);
+            var achievementButton=MenuUtility("Achievements",UIIcon.Flag,.861f,.919f,()=>ShowAchievements());
+            achievementAlert=ui.Picture("Achievement alert",achievementButton.transform,"circle",.65f,.61f,1.10f,1.10f).rectTransform;
+            achievementAlert.GetComponent<Image>().color=UITheme.Terra;
+            ui.Text("Unclaimed achievements",achievementAlert,"!",.02f,0,.98f,1,20,UITheme.OnDark,TextAnchor.MiddleCenter,true);
+            achievementAlert.gameObject.SetActive(achievements.PendingCount>0);
+            ui.Text("Game title",overlay,Loc.T("app.menuTitle"),.065f,.771f,.795f,.914f,65,UITheme.Ink,TextAnchor.MiddleLeft,true);
             ui.Text("Tagline",overlay,Loc.T("menu.tagline"),.07f,.708f,.93f,.771f,19,UITheme.Muted,TextAnchor.MiddleLeft);
             var frame=ui.Card("Lobby frame",overlay,.055f,.368f,.945f,.687f).rectTransform;
             var hero=ui.Panel("Lobby illustration",frame,.025f,.045f,.975f,.965f,GameUI.Hex("E8D3B5")).rectTransform;
@@ -202,7 +210,11 @@ namespace OneMoreFloor
         {
             if(soundLabel!=null) soundLabel.text=Loc.T(sound ? "settings.soundOn" : "settings.soundOff");
             if(soundTrack!=null) soundTrack.color=sound ? UITheme.Green : UITheme.Border;
-            if(soundThumb!=null) GameUI.Place(soundThumb,sound ? .55f : .05f,.1f,sound ? .95f : .45f,.9f);
+            if(soundThumb!=null)
+            {
+                GameUI.Place(soundThumb,sound ? .55f : .05f,.1f,sound ? .95f : .45f,.9f);
+                soundThumb.GetComponent<Image>().color=UITheme.ContrastText(sound ? UITheme.Green : UITheme.Border);
+            }
         }
         void BuildSettings()
         {
@@ -210,16 +222,21 @@ namespace OneMoreFloor
             var scrim=ui.Panel("Settings scrim",settingsLayer,-.2f,-.1f,1.2f,1.1f,UITheme.Scrim,false);
             scrim.raycastTarget=true;
             var card=Modal(Loc.T("settings.eyebrow"),Loc.T("settings.title"),settingsLayer);
-            ui.Icon("Settings gear",card,UIIcon.Settings,.43f,.58f,.57f,.66f,UITheme.Green);
-            ui.Text("Settings description",card,Loc.T("settings.detail"),.08f,.49f,.92f,.60f,22,UITheme.Muted);
-            var toggle=ui.Button("Sound switch",card,"",.09f,.34f,.91f,.46f,ToggleSound,GameUI.Hex("E0E9DB"),25);
+            ui.Text("Settings description",card,Loc.T("settings.detail"),.08f,.55f,.92f,.65f,19,UITheme.Muted);
+            var theme=ui.Button("Theme switch",card,"",.09f,.405f,.91f,.525f,ToggleTheme,UITheme.Soft,22);
+            ui.Icon("Theme symbol",theme.transform,UITheme.IsDark ? UIIcon.Moon : UIIcon.Sun,.035f,.25f,.13f,.75f,UITheme.Green);
+            var themeLabel=theme.GetComponentInChildren<Text>();themeLabel.text=Loc.T("settings.darkTheme");themeLabel.color=UITheme.Ink;themeLabel.alignment=TextAlignmentOptions.Left;
+            GameUI.Place(themeLabel.rectTransform,.17f,.08f,.71f,.92f);
+            var themeTrack=ui.Panel("Theme track",theme.transform,.75f,.29f,.94f,.71f,UITheme.IsDark ? UITheme.Green : UITheme.Border);
+            ui.Picture("Theme thumb",themeTrack.transform,"circle",UITheme.IsDark ? .55f : .05f,.10f,UITheme.IsDark ? .95f : .45f,.90f).color=UITheme.ContrastText(themeTrack.color);
+            var toggle=ui.Button("Sound switch",card,"",.09f,.27f,.91f,.39f,ToggleSound,UITheme.Soft,22);
             soundLabel=toggle.GetComponentInChildren<Text>(); soundLabel.color=UITheme.Ink; soundLabel.alignment=TextAlignmentOptions.Left;
             GameUI.Place(soundLabel.rectTransform,.06f,.1f,.69f,.9f);
-            soundTrack=ui.Panel("Switch track",toggle.transform,.73f,.29f,.94f,.71f,UITheme.Green);
+            soundTrack=ui.Panel("Switch track",toggle.transform,.75f,.29f,.94f,.71f,UITheme.Green);
             soundThumb=ui.Picture("Switch thumb",soundTrack.transform,"circle",.55f,.1f,.95f,.9f).rectTransform;
-            ui.Button("Language settings",card,Loc.T("settings.language",GameLanguages.NativeName(Loc.Language)),.09f,.205f,.91f,.315f,()=>ShowLanguagePicker(false),UITheme.Secondary,UITheme.SecondaryText);
+            ui.Button("Language settings",card,Loc.T("settings.language",GameLanguages.NativeName(Loc.Language)),.09f,.15f,.91f,.255f,()=>ShowLanguagePicker(false),UITheme.Secondary,UITheme.SecondaryText);
             UpdateSoundLabel();
-            ui.Button("Settings close",card,Loc.T("common.done"),.09f,.075f,.91f,.19f,()=>UIWindowMotion.Hide(settingsLayer.gameObject),UITheme.Terra);
+            ui.Button("Settings close",card,Loc.T("common.done"),.09f,.025f,.91f,.13f,()=>UIWindowMotion.Hide(settingsLayer.gameObject),UITheme.Terra);
             settingsLayer.gameObject.SetActive(false);
         }
         void ShowSettings()
@@ -347,7 +364,7 @@ namespace OneMoreFloor
         }
         void Update()
         {
-            ApplySafeArea(); UpdateWheel(); RefreshContinueAd();
+            ApplySafeArea(); UpdateWheel(); RefreshContinueAd(); TickAchievementNotice(Mathf.Min(Time.unscaledDeltaTime,.1f));
             if(overlay!=null && overlay.gameObject.activeSelf && !UIWindowMotion.IsClosing(overlay.gameObject))
             { screenAge+=Time.unscaledDeltaTime; screenFade.alpha=Mathf.SmoothStep(0,1,Mathf.Clamp01(screenAge/UITheme.ModalIn)); }
             if(game==null)return;
@@ -359,14 +376,20 @@ namespace OneMoreFloor
             }
             if(game.Finished && building.AnimationsPending)building.Render(game,Mathf.Min(Time.unscaledDeltaTime,.1f));
             var before=game.State;
-            int deliveredBefore=game.Delivered;
+            int deliveredBefore=game.Delivered;bool finalGuestBefore=game.FinalGuestDelivered;
             game.Tick(Time.unscaledDeltaTime);
             // The winning stop emits Won instead of Delivered. Count the model delta so
             // its passengers also roll for coins, exactly once, including multi-frame ticks.
             int coinsEarned=cosmetics.OnDelivered(game.Delivered-deliveredBefore,cosmeticRandom);
+            int deliveredNow=game.Delivered-deliveredBefore;
+            if(deliveredNow>0)
+            {
+                int unlocked=achievements.RecordDeliveries(deliveredNow,!finalGuestBefore && game.FinalGuestDelivered ? game.LevelNumber : 0);
+                SaveCosmetics();QueueAchievementNotices(unlocked);
+            }
             if(coinsEarned>0)
             {
-                SaveCosmetics(); feedback.text+=" · "+Loc.T("wheel.drop",coinsEarned); feedbackTime=2.2f;
+                feedback.text+=" · "+Loc.T("wheel.drop",coinsEarned); feedbackTime=2.2f;
             }
             if(before==PlayState.Playing)
             {
@@ -386,6 +409,7 @@ namespace OneMoreFloor
             for(int i=0;i<lossMarks.Length;i++) lossMarks[i].color=i<game.Lost ? UITheme.Border : UITheme.Terra;
             occupancy.text=Loc.T("hud.occupancy",game.Lift.OccupiedSpaces,game.Rules.Capacity);
             loadCard.color=game.Lift.OccupiedSpaces==game.Rules.Capacity ? UITheme.Gold : UITheme.Soft;
+            occupancy.color=UITheme.ContrastText(loadCard.color);capacitySymbol.color=occupancy.color;
             lossesLabel.text=Loc.T("hud.losses",game.Lost,game.Rules.LossLimit);
             route.text=game.Lift.Moving ? (game.Lift.TargetFloor==game.RoofFloor ? Loc.T("route.roofMoving") : Loc.T("route.moving",game.Lift.TargetFloor+1)) :
                 (game.Lift.CurrentFloor==game.RoofFloor ? Loc.T("route.roofStopped") : Loc.T("route.stopped",game.Lift.CurrentFloor+1));

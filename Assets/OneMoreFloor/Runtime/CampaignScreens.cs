@@ -22,7 +22,7 @@ namespace OneMoreFloor
         void RenderLevelPage()
         {
             levelPage=Math.Max(0,Math.Min(Campaign.PageCount-1,levelPage));
-            game=null; building.Reset(); buildingRoot.gameObject.SetActive(false);
+            game=null;ResetAchievementNotices(); building.Reset(); buildingRoot.gameObject.SetActive(false);
             coachRoot.gameObject.SetActive(false); settingsLayer.gameObject.SetActive(false); ClearOverlay(true);
             int first=levelPage*Campaign.LevelsPerPage,last=Math.Min(Campaign.LevelCount,first+Campaign.LevelsPerPage);
             ScreenHeader(Loc.T("ui.allLevels"),Loc.T("campaign.progress",progress.Completed,Campaign.LevelCount),ShowMenu);

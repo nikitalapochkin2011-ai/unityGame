@@ -75,6 +75,16 @@ namespace UnityEngine.UI
         public void AddTriangle(int a,int b,int c) { Triangles.Add((a,b,c)); }
     }
 }
+namespace UnityEngine
+{
+ public static class PlayerPrefs
+ {
+  static readonly System.Collections.Generic.Dictionary<string,int> values=new();
+  public static int GetInt(string key,int fallback)=>values.TryGetValue(key,out var value) ? value : fallback;
+  public static void SetInt(string key,int value){values[key]=value;}
+  public static void Save(){}
+ }
+}
 namespace OneMoreFloor
 {
     using UnityEngine;

@@ -29,7 +29,7 @@ feedback.box	A box needs 2 free spaces.	Для коробки нужны 2 св�
 feedback.won	Level complete!	Уровень пройден!	Bölüm tamamlandı!	¡Nivel superado!	Level geschafft!	Niveau terminé !	通关成功！
 settings.eyebrow	MAKE YOURSELF AT HOME	УСТРОЙТЕСЬ ПОУДОБНЕЕ	KENDİNİZİ EVİNİZDE HİSSEDİN	COMO EN CASA	MACH ES DIR GEMÜTLICH	FAITES COMME CHEZ VOUS	按你的喜好设置
 settings.title	Settings	Настройки	Ayarlar	Ajustes	Einstellungen	Paramètres	设置
-settings.detail	Your sound and language choices\nare saved on this device.	Настройки звука и языка\nсохраняются на этом устройстве.	Ses ve dil tercihleriniz\nbu cihazda kaydedilir.	Tus ajustes de sonido e idioma\nse guardan en este dispositivo.	Ton und Sprache werden\nauf diesem Gerät gespeichert.	Vos choix de son et de langue\nsont enregistrés sur cet appareil.	声音和语言设置\n将保存在此设备上。
+settings.detail	Make yourself comfortable.\nYour choices are saved on this device.	Настройте игру под себя.\nВыбор сохранится на этом устройстве.	Kendinizi rahat hissedin.\nTercihleriniz bu cihazda saklanır.	Ponte a gusto.\nTus preferencias se guardan aquí.	Mach es dir gemütlich.\nDeine Auswahl wird hier gespeichert.	Installez-vous confortablement.\nVos choix sont enregistrés ici.	按你的喜好设置。\n你的选择会保存在此设备上。
 settings.soundOn	Sound on	Звук включён	Ses açık	Sonido activado	Ton an	Son activé	声音已开启
 settings.soundOff	Sound off	Звук выключен	Ses kapalı	Sonido desactivado	Ton aus	Son désactivé	声音已关闭
 settings.language	Language: {0}	Язык: {0}	Dil: {0}	Idioma: {0}	Sprache: {0}	Langue : {0}	语言：{0}
@@ -302,3 +302,26 @@ vehicle.balloon	hot-air balloon	воздушный шар	sıcak hava balonu	glo
 vehicle.gyrocopter	gyrocopter	автожир	jirokopter	autogiro	Tragschrauber	autogire	旋翼机
 vehicle.sailboat	flying sailboat	летающий парусник	uçan yelkenli	velero volador	fliegendes Segelboot	voilier volant	飞行帆船
 vehicle.moon	moon carriage	лунная колесница	ay arabası	carroza lunar	Mondkutsche	carrosse lunaire	月亮马车
+settings.darkTheme	Dark theme	Тёмная тема	Koyu tema	Tema oscuro	Dunkles Design	Thème sombre	深色主题
+achievement.title	Achievements	Достижения	Başarımlar	Logros	Erfolge	Succès	成就
+achievement.summary	Earned {0} of {1}	Выполнено {0} из {1}	{1} başarımdan {0} tanesi	{0} de {1} completados	{0} von {1} erreicht	{0} succès sur {1}	已完成 {0}/{1}
+achievement.deliveries	Deliveries	Доставки	Yolcu taşıma	Entregas	Fahrgäste	Livraisons	送达乘客
+achievement.rooftops	Rooftop guests	Гости на крыше	Çatı misafirleri	Visitas a la azotea	Dachgäste	Invités sur le toit	屋顶的客人
+achievement.deliver	Deliver {0} passengers	Доставь {0} пассажиров	{0} yolcu taşı	Transporta a {0} pasajeros	Bringe {0} Fahrgäste ans Ziel	Transportez {0} passagers	送达{0}名乘客
+achievement.level	Level {0} • to the roof	Уровень {0} • на крышу	Bölüm {0} • çatıya	Nivel {0} • a la azotea	Level {0} • aufs Dach	Niveau {0} • vers le toit	第{0}关 • 前往屋顶
+achievement.progress	{0}/{1} delivered	{0}/{1} доставлено	{0}/{1} taşındı	{0}/{1} transportados	{0}/{1} angekommen	{0}/{1} transportés	已送达 {0}/{1}
+achievement.reward	{0} coins	{0} монет	{0} para	{0} monedas	{0} Münzen	{0} pièces	{0}金币
+achievement.claim	Collect\n{0} coins	Забрать\n{0} монет	Al\n{0} para	Recibir\n{0} monedas	Abholen\n{0} Münzen	Recevoir\n{0} pièces	领取\n{0}金币
+achievement.received	Collected	Получено	Alındı	Recibido	Abgeholt	Reçue	已领取
+achievement.claimed	Reward collected	Награда получена	Ödül alındı	Recompensa recibida	Belohnung abgeholt	Récompense reçue	奖励已领取
+achievement.earned	ACHIEVEMENT EARNED	ДОСТИЖЕНИЕ ВЫПОЛНЕНО	BAŞARIM KAZANILDI	LOGRO CONSEGUIDO	ERFOLG FREIGESCHALTET	SUCCÈS DÉBLOQUÉ	成就已达成
+achievement.roof.10	Take the alien to the roof	Доставь пришельца на крышу	Uzaylıyı çatıya götür	Lleva al alienígena a la azotea	Bring den Alien aufs Dach	Amenez l’extraterrestre sur le toit	把外星人送到屋顶
+achievement.roof.20	Take the fox aviator to the roof	Доставь лиса-пилота на крышу	Tilki pilotu çatıya götür	Lleva al zorro piloto a la azotea	Bring den Fuchspiloten aufs Dach	Amenez le renard pilote sur le toit	把狐狸飞行员送到屋顶
+achievement.roof.30	Take the robot to the roof	Доставь робота на крышу	Robotu çatıya götür	Lleva al robot a la azotea	Bring den Roboter aufs Dach	Amenez le robot sur le toit	把机器人送到屋顶
+achievement.roof.40	Take the cat magician to the roof	Доставь кота-чародея на крышу	Sihirbaz kediyi çatıya götür	Lleva al gato mago a la azotea	Bring den Zauberkater aufs Dach	Amenez le chat magicien sur le toit	把魔法猫送到屋顶
+achievement.roof.50	Take the owl captain to the roof	Доставь сову-капитана на крышу	Baykuş kaptanı çatıya götür	Lleva al búho capitán a la azotea	Bring den Eulenkapitän aufs Dach	Amenez le hibou capitaine sur le toit	把猫头鹰船长送到屋顶
+achievement.roof.60	Take the rabbit courier to the roof	Доставь зайца-почтальона на крышу	Tavşan postacıyı çatıya götür	Lleva al conejo cartero a la azotea	Bring den Hasenpostboten aufs Dach	Amenez le lapin facteur sur le toit	把兔子邮差送到屋顶
+achievement.roof.70	Take the badger to the roof	Доставь барсука-метеоролога на крышу	Porsuk meteoroloğu çatıya götür	Lleva al tejón meteorólogo a la azotea	Bring den Dachs-Meteorologen aufs Dach	Amenez le blaireau météo sur le toit	把獾气象员送到屋顶
+achievement.roof.80	Take the hedgehog to the roof	Доставь ежа-исследователя на крышу	Kirpi kâşifi çatıya götür	Lleva al erizo explorador a la azotea	Bring den Igel-Entdecker aufs Dach	Amenez le hérisson explorateur sur le toit	把刺猬探险家送到屋顶
+achievement.roof.90	Take the turtle to the roof	Доставь черепаху-штурмана на крышу	Kaplumbağa kaptanı çatıya götür	Lleva a la tortuga a la azotea	Bring die Schildkröte aufs Dach	Amenez la tortue navigatrice sur le toit	把海龟领航员送到屋顶
+achievement.roof.100	Take the deer to the roof	Доставь оленя-астронома на крышу	Geyik gökbilimciyi çatıya götür	Lleva al ciervo astrónomo a la azotea	Bring den Hirsch-Astronomen aufs Dach	Amenez le cerf astronome sur le toit	把鹿天文学家送到屋顶

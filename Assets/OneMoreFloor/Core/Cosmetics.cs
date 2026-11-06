@@ -42,6 +42,8 @@ namespace OneMoreFloor
         public Cosmetics() { for(int k=0;k<3;k++) owned[k*PerKind]=true; }
         public int Coins { get; private set; }
         public long NextFree { get; private set; }
+        public void AddCoins(int amount)
+        {if(amount<0)throw new ArgumentOutOfRangeException(nameof(amount));Coins=(int)Math.Min(int.MaxValue,(long)Coins+amount);}
         public bool Complete { get { foreach(bool item in owned) if(!item) return false; return true; } }
         public static CosmeticRarity Rarity(int index)
         { return index<10 ? CosmeticRarity.Common : index<15 ? CosmeticRarity.Rare : index<20 ? CosmeticRarity.Epic : CosmeticRarity.Legendary; }

@@ -67,18 +67,21 @@ namespace OneMoreFloor
         void ApplyLanguage(bool firstChoice)
         {
             Loc.Choose(selectedLanguage);
-            // Rebuild visual elements, preserving the paused model, riders, route and elapsed time.
-            building.Reset(); uiRoot.SetActive(false); Destroy(uiRoot);
-            lastScreen=Vector2Int.zero;
-            ui=CreateUI(); BuildUI();
-            if(game==null) ShowMenu();
-            else
-            {
-                buildingRoot.gameObject.SetActive(true);
-                Render(.25f); // Settle visual fades only; the paused game is never ticked here.
-                RenderPauseScreen();
-            }
+            RebuildPresentation();
             if(!firstChoice) { UpdateSoundLabel(); UIWindowMotion.Show(settingsLayer.gameObject); }
+        }
+        void RebuildPresentation()
+        {
+            // Rebuild only presentation; the retained session remains paused and unticked.
+            building.Reset();uiRoot.SetActive(false);Destroy(uiRoot);lastScreen=Vector2Int.zero;
+            ui=CreateUI();BuildUI();
+            if(game==null)ShowMenu();
+            else {buildingRoot.gameObject.SetActive(true);Render(.25f);RenderPauseScreen();}
+        }
+        void ToggleTheme()
+        {
+            UITheme.SavePreference(!UITheme.IsDark);RebuildPresentation();
+            UIWindowMotion.Show(settingsLayer.gameObject);
         }
         bool RequireLanguage()
         {

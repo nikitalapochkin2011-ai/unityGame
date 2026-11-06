@@ -136,7 +136,7 @@ namespace OneMoreFloor
             return Text(name+" title",row,label,0,.05f,.44f,.95f,16,UITheme.Muted,TextAnchor.MiddleLeft);
         }
         static Color LabelColor(Color value)
-        {return value.r*.2126f+value.g*.7152f+value.b*.0722f>.64f ? UITheme.Ink : UITheme.Surface;}
+        {return UITheme.ContrastText(value);}
         public Button IconButton(string name, Transform parent, string asset, float x0, float y0, float x1, float y1,
             System.Action action, Color? background = null)
         {
@@ -155,7 +155,7 @@ namespace OneMoreFloor
             Color background=fill ?? UITheme.Green;var button=Button(name,parent,label.TrimEnd(' ','→','←'),x0,y0,x1,y1,action,background,size,true,style);
             bool trailing=icon==UIIcon.ArrowRight;
             Place(button.GetComponentInChildren<Text>().rectTransform,trailing ? .06f : .16f,.06f,trailing ? .84f : .92f,.94f);
-            Icon(name+" symbol",button.transform,icon,trailing ? .875f : .045f,.22f,trailing ? .95f : .13f,.78f,style==UIButtonStyle.DarkSecondary ? UITheme.Gold : style==UIButtonStyle.DarkPrimary ? UITheme.Surface : LabelColor(background));return button;
+            Icon(name+" symbol",button.transform,icon,trailing ? .875f : .045f,.22f,trailing ? .95f : .13f,.78f,style==UIButtonStyle.DarkSecondary ? UITheme.Gold : style==UIButtonStyle.DarkPrimary ? UITheme.OnDark : LabelColor(background));return button;
         }
         public Button Button(string name,Transform parent,string label,float x0,float y0,float x1,float y1,System.Action action,Color? background=null,int size=UITheme.ButtonText,bool raised=true,UIButtonStyle? style=null)
         {
@@ -174,7 +174,7 @@ namespace OneMoreFloor
             colors.highlightedColor=new Color(1.035f,1.035f,1.025f,1);colors.pressedColor=new Color(.94f,.96f,.94f,1);
             colors.disabledColor=Color.white;colors.fadeDuration=UITheme.ColorDuration;button.colors=colors;
             button.onClick.AddListener(()=>{ClickSound?.Invoke();action?.Invoke();});
-            var text=Text("Label",image.transform,label,.07f,.08f,.93f,.92f,size,role==UIButtonStyle.Danger ? UITheme.Terra : dark ? (role==UIButtonStyle.DarkSecondary ? UITheme.Gold : UITheme.Surface) : LabelColor(fill),TextAnchor.MiddleCenter,role==UIButtonStyle.Primary && size>=25);
+            var text=Text("Label",image.transform,label,.07f,.08f,.93f,.92f,size,role==UIButtonStyle.Danger ? UITheme.DangerInk : dark ? (role==UIButtonStyle.DarkSecondary ? UITheme.Gold : UITheme.OnDark) : LabelColor(fill),TextAnchor.MiddleCenter,role==UIButtonStyle.Primary && size>=25);
             image.gameObject.AddComponent<UIButtonMotion>().Configure(false,role==UIButtonStyle.Card ? 1 : .62f);
             return button;
         }
