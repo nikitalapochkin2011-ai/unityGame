@@ -33,7 +33,7 @@ namespace OneMoreFloor
 
     public static class Campaign
     {
-        public const int LevelCount = 50, LevelsPerPage = 5, BalanceVersion = 2;
+        public const int LevelCount = 100, LevelsPerPage = 5, BalanceVersion = 2;
         public const int PageCount = (LevelCount+LevelsPerPage-1)/LevelsPerPage;
         public static int PageForLevel(int number)
         { return (Math.Max(1,Math.Min(LevelCount,number))-1)/LevelsPerPage; }
@@ -57,7 +57,7 @@ namespace OneMoreFloor
                 "Огни в окнах", "Минутная встреча", "Вид с высоты", "Соседи собрались", "Дом обжит",
                 "Последний круг", "Добрые знакомые", "От первого до крыши", "Праздник во дворе", "Пятьдесят историй"
             };
-            for(int i=5;i<LevelCount;i++)
+            for(int i=5;i<50;i++)
             {
                 int chapter=(i-5)/5, variant=(i-5)%5;
                 var pattern=(TrafficPattern)variant;
@@ -73,6 +73,32 @@ namespace OneMoreFloor
                     125+chapter*3+(pattern==TrafficPattern.LongTrips ? 15 : 0),5,boxes,
                     pattern==TrafficPattern.Waves ? 7 : 6);
                 level.Traffic=pattern; levels[i]=level;
+            }
+            // A second, unhurried season: variety comes from routes, not escalating pressure.
+            string[] seasonNames={
+                "Новая смена", "Утренние письма", "К соседу с открыткой", "Весточка издалека", "Посылка для друга",
+                "Почтовый переулок", "Добрые вести", "Письмо на верхний этаж", "До встречи наверху", "Крылья почтальона",
+                "После дождя", "Чай у окна", "Тихий ветер", "Облака над домом", "Тёплый прогноз",
+                "Радуга во дворе", "Солнечный просвет", "Соседи с зонтиками", "Небо проясняется", "Выше облаков",
+                "День открытий", "Карта подъезда", "Маленькая экспедиция", "За поворотом", "Находки для дома",
+                "Тропинка к друзьям", "В гости налегке", "Вид с балкона", "Попутный ветер", "Смелый исследователь",
+                "Морской бриз", "Ракушки на полке", "Гости из порта", "Паруса за окном", "Домашняя гавань",
+                "Соседский причал", "Письма с побережья", "Тихая волна", "Курс на крышу", "Воздушная регата",
+                "Вечерняя смена", "Звёзды в окнах", "Ночной визит", "Созвездие соседей", "Лунный свет",
+                "Добрый вечер", "Истории под звёздами", "Путь к созвездиям", "Все свои", "Сто историй одного дома"
+            };
+            for(int i=50;i<LevelCount;i++)
+            {
+                int chapter=(i-50)/10,variant=(i-50)%10;
+                var pattern=(TrafficPattern)(variant%5);
+                float interval=4.1f+chapter*.04f+(pattern==TrafficPattern.Waves ? 1f : 0);
+                if(pattern==TrafficPattern.Neighbors)interval-=.25f;
+                if(pattern==TrafficPattern.LongTrips)interval+=.30f;
+                int goal=18+(variant%3)*2; // Short sessions; milestone guests are included in this goal.
+                var level=Make(seasonNames[i-50],6,goal,interval,interval-.15f,
+                    170+chapter*4+(pattern==TrafficPattern.LongTrips ? 20 : 0),5,
+                    pattern==TrafficPattern.MovingDay ? .24f : .12f,pattern==TrafficPattern.Waves ? 6 : 5);
+                level.Traffic=pattern;levels[i]=level;
             }
             return levels;
         }

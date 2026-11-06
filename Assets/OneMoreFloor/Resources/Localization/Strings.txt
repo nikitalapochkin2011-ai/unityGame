@@ -2,7 +2,7 @@ key	en	ru	tr	es	de	fr	zh-Hans
 app.title	One More Floor	Ещё один этаж	Bir Kat Daha	Un piso más	Noch ein Stockwerk	Encore un étage	再上一层
 app.menuTitle	One More\nFloor	Ещё один\nэтаж	Bir Kat\nDaha	Un piso\nmás	Noch ein\nStockwerk	Encore\nun étage	再上一层
 menu.house	BUILDING 6 • A NEW SHIFT	ДОМ № 6 • НОВАЯ СМЕНА	BİNA 6 • YENİ BİR VARDİYA	EDIFICIO 6 • UN NUEVO TURNO	HAUS 6 • EINE NEUE SCHICHT	IMMEUBLE 6 • UNE NOUVELLE JOURNÉE	6号楼 • 新的一天
-menu.tagline	Some are heading home. Some are visiting.\nFifty stories, one building.	Кому-то домой. Кому-то в гости.\nПятьдесят историй одного дома.	Kimi evine, kimi misafirliğe.\nBir binada elli hikâye.	Unos vuelven a casa. Otros van de visita.\nCincuenta historias en un edificio.	Manche wollen heim, andere zu Besuch.\nFünfzig Geschichten in einem Haus.	Certains rentrent, d’autres rendent visite.\nCinquante histoires dans un immeuble.	有人回家，有人串门。\n一栋楼，五十个故事。
+menu.tagline	Some are heading home. Some are visiting.\nA hundred stories, one building.	Кому-то домой. Кому-то в гости.\nСто историй одного дома.	Kimi evine, kimi misafirliğe.\nBir binada yüz hikâye.	Unos vuelven a casa. Otros van de visita.\nCien historias en un edificio.	Manche wollen heim, andere zu Besuch.\nHundert Geschichten in einem Haus.	Certains rentrent, d’autres rendent visite.\nCent histoires dans un immeuble.	有人回家，有人串门。\n一栋楼，一百个故事。
 menu.welcome	WELCOME HOME	ДОБРО ПОЖАЛОВАТЬ	HOŞ GELDİNİZ	BIENVENIDOS	WILLKOMMEN	BIENVENUE	欢迎回家
 menu.play	Choose a level →	Выбрать уровень →	Bölüm seç →	Elegir nivel →	Level wählen →	Choisir un niveau →	选择关卡 →
 menu.learn	How to play	Как играть? Обучение	Nasıl oynanır?	Cómo jugar	Spielanleitung	Comment jouer	玩法说明
@@ -91,7 +91,7 @@ tutorial.step	TUTORIAL {0} / 4	ОБУЧЕНИЕ {0} / 4	EĞİTİM {0} / 4	TUTORI
 tutorial.title.0	Meet the neighbours	Знакомьтесь: соседи	Komşularla tanışın	Conoce a los vecinos	Lerne die Nachbarn kennen	Rencontrez les voisins	认识邻居
 tutorial.title.1	You control the lift	Вы управляете лифтом	Asansör sizin kontrolünüzde	Tú controlas el ascensor	Du steuerst den Aufzug	Vous gérez l’ascenseur	电梯由你掌控
 tutorial.title.2	Earn points	Копите очки	Puan kazanın	Consigue puntos	Sammle Punkte	Gagnez des points	赚取分数
-tutorial.title.3	Fifty stories, one building	Пятьдесят историй дома	Bir binada elli hikâye	Cincuenta historias en un edificio	Fünfzig Geschichten im Haus	Cinquante histoires à découvrir	五十个故事，一栋楼
+tutorial.title.3	A hundred stories, one building	Сто историй дома	Bir binada yüz hikâye	Cien historias en un edificio	Hundert Geschichten im Haus	Cent histoires à découvrir	一百个故事，一栋楼
 tutorial.detail.0	A 3 above someone’s head means they want floor 3.\nThe bar below shows their patience.\nPatience does not decrease inside the lift.	Цифра 3 над головой — нужен третий этаж.\nПолоска под ногами — терпение.\nВнутри лифта терпение не уменьшается.	Başının üstündeki 3, gitmek istediği katı gösterir.\nAltındaki çubuk, kalan sabır süresidir.\nAsansörün içinde sabır azalmaz.	Un 3 sobre la cabeza indica que quiere ir a la planta 3.\nLa barra de abajo muestra su paciencia.\nDentro del ascensor no pierde paciencia.	Eine 3 über dem Kopf bedeutet: Ziel ist Stockwerk 3.\nDer Balken darunter zeigt die Geduld.\nIm Aufzug nimmt die Geduld nicht ab.	Un 3 au-dessus de la tête indique l’étage souhaité.\nLa barre en dessous représente la patience.\nDans l’ascenseur, la patience ne diminue pas.	头顶的3表示这位乘客想去3层。\n脚下的进度条表示耐心。\n进入电梯后，耐心不会减少。
 tutorial.detail.1	Tap a floor number or its hallway.\nThe lift has {0} spaces: people leave, then others board.\nWhile moving, choose the next stop.\nYour last tap replaces that next stop.	Нажимайте номер этажа или коридор.\nВ лифте {0} места: сначала выходят, затем входят.\nВо время поездки можно выбрать следующую остановку.\nПоследнее нажатие её заменяет.	Kat numarasına veya koridora dokunun.\nAsansörde {0} yer var: önce inilir, sonra binilir.\nHareket ederken sonraki durağı seçebilirsiniz.\nSon dokunuş, sonraki durağı değiştirir.	Toca el número de planta o su pasillo.\nHay {0} plazas: primero bajan, después suben.\nDurante el trayecto puedes elegir la próxima parada.\nEl último toque sustituye esa próxima parada.	Tippe auf die Stockwerknummer oder den Flur.\nEs gibt {0} Plätze: erst aussteigen, dann einsteigen.\nWähle während der Fahrt den nächsten Halt.\nDein letzter Tipp ersetzt diesen nächsten Halt.	Touchez le numéro d’étage ou son couloir.\nIl y a {0} places : on descend, puis on monte.\nEn route, vous pouvez choisir le prochain arrêt.\nVotre dernier choix remplace cet arrêt.	点击楼层数字或对应的走廊。\n电梯有{0}个位置，先下后上。\n行驶中可以选择下一站，\n最后一次点击会更改下一站。
 tutorial.detail.2	Each person delivered earns {0} points × multiplier.\nEvery 5 deliveries in a row raises it: ×1 → ×2 → ×3.\nSomeone leaving resets the streak.\nThe attempt ends after {1} people leave.	За доставленного человека — {0} очков × множитель.\nКаждые 5 доставок подряд повышают его: ×1 → ×2 → ×3.\nУшедший сбрасывает серию.\nПосле {1} уходов попытка закончится.	Ulaştırılan her kişi {0} puan × çarpan kazandırır.\nArt arda her 5 kişide çarpan artar: ×1 → ×2 → ×3.\nBirinin vazgeçmesi seriyi sıfırlar.\n{1} kişi vazgeçince deneme sona erer.	Cada persona transportada da {0} puntos × multiplicador.\nCada 5 seguidas, el multiplicador sube: ×1 → ×2 → ×3.\nSi alguien se va, la racha se reinicia.\nEl intento termina cuando se van {1} personas.	Pro Person am Ziel: {0} Punkte × Multiplikator.\nAlle 5 in Folge steigt er: ×1 → ×2 → ×3.\nGeht jemand weg, wird die Serie zurückgesetzt.\nNach {1} Abgängen endet der Versuch.	Chaque personne arrivée rapporte {0} points × multiplicateur.\nToutes les 5 d’affilée, il augmente : ×1 → ×2 → ×3.\nUn départ remet la série à zéro.\nLa tentative se termine après {1} départs.	每送达一位乘客，获得{0}分×倍率。\n连续送达5人可提升倍率：×1 → ×2 → ×3。\n有人离开，连击就会重置。\n共有{1}名乘客离开时，本次挑战结束。
@@ -242,3 +242,63 @@ vehicle.rocket	Retro rocket	Ретро-ракета	Retro roket	Cohete retro	Ret
 vehicle.broom	Enchanted broom	Волшебная метла	Sihirli süpürge	Escoba encantada	Zauberbesen	Balai enchanté	魔法扫帚
 vehicle.airship	Airship	Дирижабль	Zeplin	Dirigible	Luftschiff	Dirigeable	飞艇
 roof.briefingGuest	Final guest: {0}. {1} awaits on the roof.	Финальный гость: {0}. На крыше ждёт {1}.	Son misafir: {0}. {1} çatıda bekliyor.	Último pasajero: {0}. {1} espera en la azotea.	Letzter Gast: {0}. {1} wartet auf dem Dach.	Dernier invité : {0}. {1} attend sur le toit.	最后乘客：{0}。屋顶的{1}正在等待。
+level.51	A new shift	Новая смена	Yeni vardiya	Un nuevo turno	Eine neue Schicht	Une nouvelle journée	新的班次
+level.52	Morning letters	Утренние письма	Sabah mektupları	Cartas de la mañana	Morgenpost	Courrier du matin	清晨的信件
+level.53	A postcard next door	К соседу с открыткой	Komşuya kartpostal	Una postal al vecino	Postkarte für nebenan	Une carte au voisin	邻居的明信片
+level.54	News from afar	Весточка издалека	Uzaktan haber	Noticias de lejos	Nachricht aus der Ferne	Des nouvelles de loin	远方的消息
+level.55	A parcel for a friend	Посылка для друга	Arkadaşa paket	Un paquete para un amigo	Ein Paket für Freunde	Un colis pour un ami	给朋友的包裹
+level.56	The postal lane	Почтовый переулок	Posta sokağı	El callejón del correo	Die Postgasse	La ruelle du courrier	邮差小巷
+level.57	Good news	Добрые вести	Güzel haberler	Buenas noticias	Gute Nachrichten	De bonnes nouvelles	好消息
+level.58	A letter upstairs	Письмо на верхний этаж	Üst kata mektup	Una carta al piso de arriba	Ein Brief nach oben	Une lettre à l’étage	楼上的来信
+level.59	See you upstairs	До встречи наверху	Yukarıda görüşürüz	Nos vemos arriba	Bis gleich oben	À tout à l’heure là-haut	楼上见
+level.60	The courier’s wings	Крылья почтальона	Postacının kanatları	Las alas del cartero	Die Flügel des Postboten	Les ailes du facteur	邮差的翅膀
+level.61	After the rain	После дождя	Yağmurdan sonra	Después de la lluvia	Nach dem Regen	Après la pluie	雨后时光
+level.62	Tea by the window	Чай у окна	Pencere kenarında çay	Té junto a la ventana	Tee am Fenster	Un thé à la fenêtre	窗边喝茶
+level.63	A gentle breeze	Тихий ветер	Hafif esinti	Una brisa suave	Eine sanfte Brise	Une douce brise	微风轻拂
+level.64	Clouds above home	Облака над домом	Evin üstünde bulutlar	Nubes sobre la casa	Wolken über dem Haus	Des nuages sur la maison	屋顶的白云
+level.65	A warm forecast	Тёплый прогноз	Sıcak hava tahmini	Un pronóstico cálido	Warme Aussichten	Une météo clémente	温暖的预报
+level.66	Courtyard rainbow	Радуга во дворе	Avluda gökkuşağı	Arcoíris en el patio	Regenbogen im Hof	Un arc-en-ciel dans la cour	院里的彩虹
+level.67	A break in the clouds	Солнечный просвет	Bulutların arasından güneş	Un rayo entre las nubes	Sonne zwischen Wolken	Une éclaircie	云间的阳光
+level.68	Neighbors with umbrellas	Соседи с зонтиками	Şemsiyeli komşular	Vecinos con paraguas	Nachbarn mit Schirmen	Des voisins sous leurs parapluies	撑伞的邻居
+level.69	The sky clears	Небо проясняется	Gökyüzü açılıyor	El cielo se despeja	Der Himmel klart auf	Le ciel se dégage	天空放晴
+level.70	Above the clouds	Выше облаков	Bulutların üstünde	Por encima de las nubes	Über den Wolken	Au-dessus des nuages	云端之上
+level.71	A day of discoveries	День открытий	Keşif günü	Un día de descubrimientos	Ein Tag der Entdeckungen	Une journée de découvertes	发现之日
+level.72	A map of the building	Карта подъезда	Binanın haritası	Un mapa del edificio	Ein Plan des Hauses	Le plan de l’immeuble	楼里的地图
+level.73	A little expedition	Маленькая экспедиция	Küçük bir keşif	Una pequeña expedición	Eine kleine Expedition	Une petite expédition	小小探险队
+level.74	Around the corner	За поворотом	Köşeyi dönünce	A la vuelta de la esquina	Um die Ecke	Au coin du couloir	转角之后
+level.75	Finds for home	Находки для дома	Ev için buluntular	Hallazgos para casa	Fundstücke fürs Zuhause	Des trouvailles pour la maison	家中的新发现
+level.76	A path to friends	Тропинка к друзьям	Arkadaşlara giden yol	Un camino a los amigos	Ein Weg zu Freunden	Un chemin vers les amis	通往朋友的小路
+level.77	A lighthearted visit	В гости налегке	Hafif bir ziyaret	Una visita sin equipaje	Ein unbeschwerter Besuch	Une visite en toute légèreté	轻装做客
+level.78	The balcony view	Вид с балкона	Balkondan manzara	La vista del balcón	Der Blick vom Balkon	La vue du balcon	阳台风景
+level.79	A following wind	Попутный ветер	Arkadan esen rüzgâr	Viento a favor	Rückenwind	Un vent favorable	一路顺风
+level.80	The brave explorer	Смелый исследователь	Cesur kâşif	El explorador valiente	Der mutige Entdecker	L’explorateur courageux	勇敢的探险家
+level.81	A sea breeze	Морской бриз	Deniz meltemi	Brisa marina	Meeresbrise	La brise marine	海风吹来
+level.82	Shells on the shelf	Ракушки на полке	Rafta deniz kabukları	Conchas en la estantería	Muscheln im Regal	Des coquillages sur l’étagère	架上的贝壳
+level.83	Guests from the harbor	Гости из порта	Limandan misafirler	Visitas del puerto	Gäste aus dem Hafen	Des visiteurs du port	港口来的客人
+level.84	Sails outside the window	Паруса за окном	Pencerede yelkenler	Velas tras la ventana	Segel vor dem Fenster	Des voiles à la fenêtre	窗外的帆影
+level.85	A harbor at home	Домашняя гавань	Ev limanı	Un puerto en casa	Ein Hafen zu Hause	Un havre chez soi	温馨的港湾
+level.86	The neighbors’ pier	Соседский причал	Komşuların iskelesi	El muelle de los vecinos	Der Nachbarssteg	Le quai des voisins	邻里的码头
+level.87	Letters from the coast	Письма с побережья	Kıyıdan mektuplar	Cartas de la costa	Briefe von der Küste	Des lettres de la côte	海岸的来信
+level.88	A quiet wave	Тихая волна	Sakin dalga	Una ola tranquila	Eine ruhige Welle	Une vague paisible	宁静的海浪
+level.89	Set course for the roof	Курс на крышу	Rotamız çatı	Rumbo a la azotea	Kurs aufs Dach	Cap sur le toit	向屋顶出发
+level.90	The sky regatta	Воздушная регата	Gökyüzü yarışı	La regata del cielo	Die Himmelsregatta	La régate aérienne	空中帆船赛
+level.91	An evening shift	Вечерняя смена	Akşam vardiyası	Un turno de tarde	Eine Abendschicht	Le service du soir	傍晚的班次
+level.92	Stars in the windows	Звёзды в окнах	Pencerelerde yıldızlar	Estrellas en las ventanas	Sterne in den Fenstern	Des étoiles aux fenêtres	窗里的星光
+level.93	A nighttime visit	Ночной визит	Gece ziyareti	Una visita nocturna	Ein nächtlicher Besuch	Une visite nocturne	夜晚的来访
+level.94	A constellation of neighbors	Созвездие соседей	Komşular takımyıldızı	Una constelación de vecinos	Ein Sternbild aus Nachbarn	Une constellation de voisins	邻居的星座
+level.95	Moonlight	Лунный свет	Ay ışığı	Luz de luna	Mondlicht	Clair de lune	月光洒落
+level.96	Good evening	Добрый вечер	İyi akşamlar	Buenas tardes	Guten Abend	Bonsoir	晚上好
+level.97	Stories under the stars	Истории под звёздами	Yıldızların altında hikâyeler	Historias bajo las estrellas	Geschichten unter Sternen	Des histoires sous les étoiles	星空下的故事
+level.98	A path to the constellations	Путь к созвездиям	Takımyıldızlara yol	Camino a las constelaciones	Der Weg zu den Sternbildern	Le chemin des constellations	通往星座之路
+level.99	Everyone belongs	Все свои	Herkes bizden	Aquí somos de casa	Alle gehören dazu	Tout le monde est chez soi	都是一家人
+level.100	A hundred stories at home	Сто историй одного дома	Bir evde yüz hikâye	Cien historias en casa	Hundert Geschichten daheim	Cent histoires à la maison	一栋楼的一百个故事
+finale.courier	Rabbit courier	Заяц-почтальон	Tavşan postacı	Conejo cartero	Hasenpostbote	Lapin facteur	兔子邮差
+finale.meteorologist	Badger meteorologist	Барсук-метеоролог	Porsuk meteorolog	Tejón meteorólogo	Dachs-Meteorologe	Blaireau météorologue	獾气象员
+finale.explorer	Hedgehog explorer	Ёж-исследователь	Kirpi kâşif	Erizo explorador	Igel-Entdecker	Hérisson explorateur	刺猬探险家
+finale.navigator	Turtle navigator	Черепаха-штурман	Kaplumbağa kaptan	Tortuga navegante	Schildkröten-Navigator	Tortue navigatrice	海龟领航员
+finale.astronomer	Deer astronomer	Олень-астроном	Geyik gökbilimci	Ciervo astrónomo	Hirsch-Astronom	Cerf astronome	鹿天文学家
+vehicle.ornithopter	ornithopter	орнитоптер	kanatlı uçak	ornitóptero	Flügelflieger	ornithoptère	扑翼机
+vehicle.balloon	hot-air balloon	воздушный шар	sıcak hava balonu	globo aerostático	Heißluftballon	montgolfière	热气球
+vehicle.gyrocopter	gyrocopter	автожир	jirokopter	autogiro	Tragschrauber	autogire	旋翼机
+vehicle.sailboat	flying sailboat	летающий парусник	uçan yelkenli	velero volador	fliegendes Segelboot	voilier volant	飞行帆船
+vehicle.moon	moon carriage	лунная колесница	ay arabası	carroza lunar	Mondkutsche	carrosse lunaire	月亮马车

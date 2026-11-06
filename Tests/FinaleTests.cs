@@ -17,7 +17,7 @@ static class FinaleTests
     {
         var levels=Campaign.CreateLevels();var looks=new HashSet<int>();var craft=new HashSet<string>();
         var catalog=new TextCatalog(System.IO.File.ReadAllText("Assets/OneMoreFloor/Resources/Localization/Strings.txt"));
-        foreach(int number in new[]{10,20,30,40,50})
+        foreach(int number in new[]{10,20,30,40,50,60,70,80,90,100})
         {
             var definition=RooftopFinales.ForLevel(number);
             Check(definition!=null && definition.LevelNumber==number && looks.Add(definition.Appearance) && craft.Add(definition.VehicleAsset) && ReferenceEquals(definition,RooftopFinales.ForAppearance(definition.Appearance)),"unique guest, vehicle and reverse lookup for level "+number);
@@ -75,7 +75,8 @@ static class FinaleTests
             for(int frame=0;frame<3000 && !solo.Finished;frame++){Drive(solo);solo.Tick(.05f);}
             Check(solo.State==PlayState.Won && solo.FinalGuestDelivered && solo.Spawned==1 && solo.Score==10,"one-passenger custom milestone stays valid and pays ordinary points: "+number);
         }
-        for(int number=1;number<=50;number++)
+        Check(looks.Count==10 && craft.Count==10,"all ten milestone guests and aircraft are unique");
+        for(int number=1;number<=Campaign.LevelCount;number++)
         {
             if(number%10==0)continue;
             var tiny=levels[number-1].Copy();tiny.DeliveryGoal=1;
@@ -83,9 +84,9 @@ static class FinaleTests
             for(int frame=0;frame<3000 && !game.Finished;frame++){Drive(game);game.Tick(.05f);special |= Active(game).Any(p=>p.IsFinalGuest);}
             Check(!game.HasRooftopFinale && game.Finale==null && !special && !game.FinalGuestDelivered && game.State==PlayState.Won,"ordinary level never creates a scripted guest: "+number);
         }
-        Check(RooftopFinales.ForLevel(0)==null && RooftopFinales.ForLevel(60)==null && RooftopFinales.ForAppearance(17)==null && RooftopFinales.ForAppearance(23)==null,"catalog does not wrap invalid levels or ordinary appearances");
-        bool rejected=false;try{new Passenger(6,20,finaleAppearance:23);}catch(ArgumentOutOfRangeException){rejected=true;}
+        Check(RooftopFinales.ForLevel(0)==null && RooftopFinales.ForLevel(110)==null && RooftopFinales.ForAppearance(17)==null && RooftopFinales.ForAppearance(28)==null,"catalog does not wrap invalid levels or ordinary appearances");
+        bool rejected=false;try{new Passenger(6,20,finaleAppearance:28);}catch(ArgumentOutOfRangeException){rejected=true;}
         Check(rejected,"unrecognized finale appearance cannot silently become a duplicate human");
-        Console.WriteLine(checks+" five-finale checks passed.");
+        Console.WriteLine(checks+" ten-finale checks passed.");
     }
 }

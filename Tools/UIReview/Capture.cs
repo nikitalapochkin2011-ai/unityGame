@@ -43,6 +43,17 @@ static class Capture
    foreach(var entrance in root.GetComponentsInChildren<UIPanelEntrance>())for(int i=0;i<20;i++)GameObject.Invoke(entrance,"Update");
    foreach(var exit in root.GetComponentsInChildren<UIWindowMotion>())for(int i=0;i<20;i++)GameObject.Invoke(exit,"Update");
    File.WriteAllText(Path.Combine(folder,name+".json"),JsonSerializer.Serialize(Export(root.transform)));}
+  if(args.Length>6 && args[6]=="campaign")
+  {
+   foreach(int completed in new[]{49,50,99,100})
+   {
+    Set(app,"progress",new CampaignProgress(completed));Call(app,"ShowLevels");Save("campaign-after-"+completed);
+   }
+   Set(app,"progress",new CampaignProgress(99));Set(app,"levelPage",10);Call(app,"RenderLevelPage");Save("campaign-page11-complete");
+   Set(app,"levelPage",19);Call(app,"RenderLevelPage");Save("campaign-page20-current");
+   Set(app,"progress",new CampaignProgress(50));Call(app,"ChooseLevel",51);Save("campaign-briefing51");
+   return;
+  }
   if(args.Length>6 && (args[6]=="rooftop" || args[6]=="finale"))
   {
    int number=args[6]=="finale" ? int.Parse(args[7]) : 10;
@@ -58,8 +69,9 @@ static class Capture
    {for(int f=0;f<final.Queues.Floors.Count;f++)if(final.Queues.Floors[f].Count>0){final.SelectFloor(f);break;}Call(app,"Update");}
    Save(prefix+"cabin");
    final.SelectFloor(final.RoofFloor);for(int i=0;i<1000 && !final.Finished;i++)Call(app,"Update");Save(prefix+"boarding");
-   for(int i=0;i<36;i++)Call(app,"Update");Save(prefix+"takeoff");
-   for(int i=0;i<30;i++)Call(app,"Update");foreach(var burst in root.GetComponentsInChildren<UIConfetti>())Set(burst,"age",.45f);Save(prefix+"victory");
+   // Capture the start of takeoff while the full seated silhouette is still in the roof viewport.
+   for(int i=0;i<29;i++)Call(app,"Update");Save(prefix+"takeoff");
+   for(int i=0;i<37;i++)Call(app,"Update");foreach(var burst in root.GetComponentsInChildren<UIConfetti>())Set(burst,"age",.45f);Save(prefix+"victory");
    Console.WriteLine("Captured seven rooftop source-layout previews; not Unity screenshots.");return;
   }
   if(args.Length>6){Set(app,"cosmetics",Cosmetics.Load("2|"+(args[6]=="cooldown"?160:0)+"|1.1.1|0|0|0|"+(args[6]=="cooldown"?DateTimeOffset.UtcNow.ToUnixTimeSeconds()+86399:0)));Call(app,"ShowWheel",null,0);Save("wheel-"+args[6]);return;}

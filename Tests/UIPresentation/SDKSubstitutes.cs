@@ -102,12 +102,19 @@ namespace UnityEngine
  public class Canvas:Behaviour{public RenderMode renderMode;public bool pixelPerfect;public AdditionalCanvasShaderChannels additionalShaderChannels;}
  public class CanvasGroup:Behaviour{public float alpha=1;public bool blocksRaycasts=true,interactable=true;}
  public class CanvasRenderer:Component{public void SetColor(Color color){}}
- public class Sprite:Object{public string AssetName;}
+ public class Sprite:Object{public string AssetName;public Rect rect;}
  public class TextAsset:Object{public string text;public TextAsset(string s){text=s;}}
  public static class Resources
  {
   public static T Load<T>(string path)where T:class
-  {if(typeof(T)==typeof(Sprite))return new Sprite{AssetName=path.Split('/').Last()} as T;if(typeof(T)==typeof(TextAsset))return new TextAsset(File.ReadAllText("Assets/OneMoreFloor/Resources/"+path+".txt")) as T;if(typeof(T)==typeof(TMPro.TMP_FontAsset))return new TMPro.TMP_FontAsset{name=path} as T;return null;}
+  {if(typeof(T)==typeof(Sprite))
+   {
+    // PNG header dimensions make sprite aspect checks use the real committed illustrations.
+    var bytes=File.ReadAllBytes("Assets/OneMoreFloor/Resources/"+path+".png");
+    int w=System.Buffers.Binary.BinaryPrimitives.ReadInt32BigEndian(bytes.AsSpan(16,4));
+    int h=System.Buffers.Binary.BinaryPrimitives.ReadInt32BigEndian(bytes.AsSpan(20,4));
+    return new Sprite{AssetName=path.Split('/').Last(),rect=new Rect(0,0,w,h)} as T;
+   }if(typeof(T)==typeof(TextAsset))return new TextAsset(File.ReadAllText("Assets/OneMoreFloor/Resources/"+path+".txt")) as T;if(typeof(T)==typeof(TMPro.TMP_FontAsset))return new TMPro.TMP_FontAsset{name=path} as T;return null;}
  }
  public static class Screen{public static int width=600,height=1060;public static Rect safeArea=new(0,0,600,1060);public static ScreenOrientation orientation;}
  public static class Application{public static int targetFrameRate;public static string dataPath="Assets";public static bool isFocused=true;}

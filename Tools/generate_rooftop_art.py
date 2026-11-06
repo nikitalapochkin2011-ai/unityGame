@@ -1,5 +1,5 @@
-"""Original rare passengers and rooftop, drawn in the existing game's flat warm style.
-Only these four new PNGs are authored; existing artwork is never rewritten.
+"""Dinosaur and terrace authoring helpers in the existing warm style.
+Production finale character and aircraft PNGs are imported by import_finale_art.sh.
 """
 from pathlib import Path
 from PIL import Image,ImageDraw
@@ -27,32 +27,6 @@ c.l([(23,151),(30,166),(48,176),(79,181),(111,177),(133,167),(142,153)],'#b86d54
 c.l([(25,150),(33,162),(51,171),(79,175),(107,171),(130,162),(139,150)],'#d59770',16)
 for pts in [[(38,158),(48,172)],[(75,167),(76,181)],[(115,161),(108,176)]]:c.l(pts,'#f2dfba',8)
 c.r((132,142,141,150),'#eccea1',3);c.e((135,139,141,145),'#f7e8ca');c.save('person_17')
-# Green visitor with a quiet cream suit, rounded boots and friendly almond eyes.
-c=Canvas(164,240);c.e((25,217,137,233),(20,32,45,38))
-for x in (49,88):c.r((x,168,x+26,214),'#b4c4ae',8);c.r((x-5,207,x+29,222),'#61776c',7)
-c.r((39,99,125,178),'#e1ddc4',18);c.r((47,146,117,183),'#c8d0b8',10)
-c.r((27,110,45,162),'#8faf7f',9);c.r((119,110,138,162),'#8faf7f',9)
-for x in (28,120):c.r((x,143,x+16,162),'#a3bd90',7)
-c.r((64,83,100,112),'#8faf7f',11);c.p([(54,100),(82,121),(111,100)],'#76977a')
-c.e((27,13,139,103),'#94b782');c.e((35,21,132,94),'#a2bf8e')
-c.p([(51,47),(62,46),(73,58),(68,72),(58,69),(48,58)],'#29463d')
-c.p([(113,47),(102,46),(91,58),(96,72),(106,69),(116,58)],'#29463d')
-c.e((55,50,60,55),'#f2ecd1');c.e((104,50,109,55),'#f2ecd1')
-c.e((40,73,53,79),'#c2bd91');c.e((113,73,126,79),'#c2bd91');c.l([(75,83),(82,86),(90,82)],'#5a805e',2)
-c.l([(82,121),(82,169)],'#acb9a1',2);c.r((99,122,114,139),'#b6c7ac',3)
-c.e((57,127,66,136),'#d0af6f');c.e((60,129,64,133),'#f5e3b5');c.save('person_18')
-# Empty saucer waiting on its landing struts. Warm brass, sage metal and a glass canopy.
-c=Canvas(360,150)
-c.l([(77,105),(66,134),(49,137)],'#6b8277',8);c.l([(282,105),(295,134),(311,137)],'#6b8277',8)
-c.l([(74,106),(67,130)],'#a9b7a1',3);c.l([(285,106),(294,131)],'#a9b7a1',3)
-c.e((94,10,267,115),'#5f8476');c.e((104,15,257,108),'#bfd3be')
-c.p([(116,45),(132,26),(164,19),(127,71)],'#f5f0d1');c.e((156,43,212,90),'#709787')
-c.r((170,57,200,89),'#415e56',9);c.r((167,55,203,67),'#8eab95',5)
-c.e((25,63,335,131),'#46695e');c.e((13,56,348,116),'#91ac98');c.e((27,54,334,93),'#b8c8ac')
-c.e((13,73,348,116),'#6d9180');c.l([(26,88),(74,101),(180,108),(285,101),(335,87)],'#ddc08c',6)
-for x in (57,104,153,203,252,299):c.e((x-7,87,x+7,98),'#ead5a2');c.e((x-4,88,x+4,94),'#fff0c8')
-c.r((145,110,216,124),'#35594e',6);c.r((157,114,204,119),'#c0d5ba',3)
-c.save('rooftop_ufo')
 # Full-width terrace with a real open lift headhouse, garden, brass trim and railings.
 c=Canvas(800,160)
 c.r((1,128,798,155),'#8a9c8d',4);c.r((1,126,798,141),'#e9d3ac',4);c.r((1,143,798,154),'#59766a',3)

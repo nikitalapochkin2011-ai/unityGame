@@ -10,7 +10,9 @@ for case,dimensions in [('normal',('600','1060')),('narrow',('360','800')),('not
  for lang in ['ru','en','de','fr','es','tr','zh-Hans']:
   subprocess.run(['dotnet',str(dll),str(dest/(case+'-'+lang)),lang,*dimensions],cwd=root,check=True,stdout=subprocess.DEVNULL)
   if '--finales' in sys.argv:
-   for number in (10,20,30,40,50):
+   campaign=(*dimensions[:2],*(dimensions[2:] if len(dimensions)>2 else ('0','0')),'campaign')
+   subprocess.run(['dotnet',str(dll),str(dest/(case+'-'+lang)),lang,*campaign],cwd=root,check=True,stdout=subprocess.DEVNULL)
+   for number in (10,20,30,40,50,60,70,80,90,100):
     full=(*dimensions[:2],*(dimensions[2:] if len(dimensions)>2 else ('0','0')),'finale',str(number))
     subprocess.run(['dotnet',str(dll),str(dest/(case+'-'+lang)),lang,*full],cwd=root,check=True,stdout=subprocess.DEVNULL)
   elif '--rooftop' in sys.argv:

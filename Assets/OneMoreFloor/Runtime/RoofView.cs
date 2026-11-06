@@ -6,18 +6,17 @@ namespace OneMoreFloor
     {
         public const float BoardingSeconds=1.4f,FlightSeconds=1.45f;
         readonly GameUI ui;
-        readonly RectTransform frame,ship,window;
-        readonly Image vehicle,crew,callLight;
+        readonly RectTransform building,frame,ship;
+        readonly Image vehicle,boarded,callLight;
         readonly AspectRatioFitter aspect;
         readonly CanvasGroup opacity;
-        readonly GameObject occupant;
         GameSession session;
         FinaleDefinition finale;
-        float age,height=.133f;
+        float age;
         public bool Complete { get; private set; }
         public RoofView(GameUI ui,RectTransform root,GameRules rules,System.Action<int> select)
         {
-            this.ui=ui;
+            this.ui=ui;building=root;
             ui.Picture("Rooftop terrace and open headhouse",root,"rooftop_landing",-.005f,.992f,1,1.19f,false);
             ui.Panel("Roof call post",root,.003f,1,.069f,1.175f,GameUI.Ink);
             var landing=ui.Panel("Roof landing tap area",root,.075f,1.005f,.704f,1.16f,new Color(1,1,1,0),false);
@@ -29,34 +28,29 @@ namespace OneMoreFloor
             viewport.gameObject.AddComponent<RectMask2D>();
             frame=ui.Rect("Rooftop vehicle flight",viewport,.265f,1.012f/1.2f,.665f,1.19f/1.2f);
             vehicle=ui.Picture("Waiting flying saucer",frame,"rooftop_ufo",0,0,1,1,false);ship=vehicle.rectTransform;
-            aspect=ship.gameObject.AddComponent<AspectRatioFitter>();aspect.aspectMode=AspectRatioFitter.AspectMode.FitInParent;aspect.aspectRatio=2.4f;
-            window=ui.Rect("Vehicle passenger seat",ship,.40f,.48f,.60f,.84f);window.gameObject.AddComponent<RectMask2D>();
-            crew=ui.Picture("Seated finale guest",window,"person_18",0,-.65f,1,1);crew.color=new Color(.96f,1,.96f,.92f);
-            occupant=window.gameObject;occupant.SetActive(false);
+            aspect=ship.gameObject.AddComponent<AspectRatioFitter>();aspect.aspectMode=AspectRatioFitter.AspectMode.FitInParent;
+            // The complete occupied illustration supplies the hull occlusion and matching seated pose.
+            // Both states have identical canvases; no tiny portrait is pasted over a separate vehicle.
+            boarded=ui.Picture("Boarded rooftop vehicle",ship,"rooftop_ufo_boarded",0,0,1,1,false);
+            boarded.color=new Color(1,1,1,0);
             opacity=ship.gameObject.AddComponent<CanvasGroup>();opacity.blocksRaycasts=false;opacity.interactable=false;
             ship.gameObject.SetActive(false);
         }
         public void Reset()
-        {session=null;finale=null;age=0;Complete=false;opacity.alpha=1;ship.localEulerAngles=Vector3.zero;ship.gameObject.SetActive(false);occupant.SetActive(false);}
+        {session=null;finale=null;age=0;Complete=false;opacity.alpha=1;boarded.color=new Color(1,1,1,0);ship.localEulerAngles=Vector3.zero;ship.gameObject.SetActive(false);}
         void Bind(FinaleDefinition definition)
         {
-            finale=definition;vehicle.sprite=ui.Art(definition.VehicleAsset);crew.sprite=ui.Art("person_"+definition.Appearance);
+            finale=definition;vehicle.sprite=ui.Art(definition.VehicleAsset);boarded.sprite=ui.Art(definition.BoardedAsset);
             vehicle.gameObject.name=definition.LevelNumber==10 ? "Waiting flying saucer" : "Waiting rooftop vehicle";
-            height=.16f;GameUI.Place(crew.rectTransform,0,-.65f,1,1);
-            switch(definition.LevelNumber)
-            {
-                case 10: aspect.aspectRatio=2.4f;height=.133f;GameUI.Place(window,.40f,.48f,.60f,.84f);break;
-                case 20: aspect.aspectRatio=2.25f;height=.15f;GameUI.Place(window,.49f,.43f,.64f,.79f);break;
-                case 30: aspect.aspectRatio=200f/260;height=.175f;GameUI.Place(window,.37f,.44f,.63f,.67f);break;
-                case 40: aspect.aspectRatio=360f/140;height=.15f;GameUI.Place(window,.43f,.26f,.62f,.98f);GameUI.Place(crew.rectTransform,0,-.20f,1,1);break;
-                default: aspect.aspectRatio=2;height=.18f;GameUI.Place(window,.43f,.085f,.65f,.255f);break;
-            }
+            aspect.aspectRatio=vehicle.sprite.rect.width/vehicle.sprite.rect.height;
             ship.gameObject.SetActive(true);PlaceFlight(0,0,0);
         }
         void PlaceFlight(float x,float y,float tilt)
         {
-            // Fixed world landing point for every guest; art is fitted inside the flight frame.
-            float bottom=finale!=null && finale.LevelNumber==10 ? 1.025f : 1.008f;
+            // Ground every silhouette on the terrace, including narrow tall balloons and wide wings.
+            // Derive the frame height from real art and the current viewport instead of hand-tuned seats.
+            float height=Mathf.Min(.16f,.4f*building.rect.width/Mathf.Max(1,building.rect.height)/aspect.aspectRatio);
+            const float bottom=1.025f;
             GameUI.Place(frame,.265f+x,(bottom+y)/1.2f,.665f+x,(bottom+y+height)/1.2f);
             ship.localEulerAngles=new Vector3(0,0,tilt);
         }
@@ -67,14 +61,20 @@ namespace OneMoreFloor
                 game.Lift.CurrentFloor==game.RoofFloor ? GameUI.Teal : GameUI.Hex("355563");
             if(!game.HasRooftopFinale)return;
             if(!game.FinalGuestDelivered){PlaceFlight(0,0,0);return;}
-            age+=dt;occupant.SetActive(age>=BoardingSeconds-.15f);
+            age+=dt;
+            boarded.color=new Color(1,1,1,Mathf.SmoothStep(0,1,Mathf.Clamp01((age-(BoardingSeconds-.18f))/.18f)));
             float flight=Mathf.Clamp01((age-BoardingSeconds)/FlightSeconds),ease=flight*flight,x=0,y=0,tilt=0;
             switch(finale.LevelNumber)
             {
                 case 20: x=ease*.30f;y=ease*.24f;tilt=12*flight;break;
                 case 30: y=ease*.48f;break;
-                case 40: x=ease*.22f;y=ease*.25f+Mathf.Sin(flight*Mathf.PI)*.018f;tilt=flight*9;break;
-                case 50: float drift=Mathf.SmoothStep(0,1,flight);x=drift*.12f;y=drift*.22f;tilt=Mathf.Sin(flight*Mathf.PI)*-3;break;
+                case 40: x=-ease*.22f;y=ease*.25f+Mathf.Sin(flight*Mathf.PI)*.018f;tilt=-flight*9;break;
+                case 50: float drift=Mathf.SmoothStep(0,1,flight);x=-drift*.12f;y=drift*.22f;tilt=Mathf.Sin(flight*Mathf.PI)*-3;break;
+                case 60: x=-ease*.27f;y=ease*.28f;tilt=-7*flight;break;
+                case 70: y=Mathf.SmoothStep(0,1,flight)*.30f;x=Mathf.Sin(flight*Mathf.PI)*.018f;tilt=-2*flight;break;
+                case 80: y=ease*.37f;x=-ease*.06f;tilt=-5*flight;break;
+                case 90: x=-ease*.20f;y=ease*.20f;tilt=Mathf.Sin(flight*Mathf.PI)*-5;break;
+                case 100: x=ease*.10f;y=ease*.40f;tilt=3*flight;break;
                 default: x=ease*.12f;y=ease*.32f;break;
             }
             PlaceFlight(x,y,tilt);

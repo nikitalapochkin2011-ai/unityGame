@@ -61,7 +61,7 @@ static class LocalizationTests
             Check(valid,"all UI translations complete, formatted and free of leaked Russian: "+code);
             var levelNames=new HashSet<string>();
             for(int number=1;number<=Campaign.LevelCount;number++) levelNames.Add(catalog.Get(language,"level."+number));
-            Check(levelNames.Count==50,"all 50 level names translated and distinct: "+code);
+            Check(levelNames.Count==100,"all 100 level names translated and distinct: "+code);
             foreach(TrafficPattern mode in Enum.GetValues(typeof(TrafficPattern)))
                 Check(!string.IsNullOrWhiteSpace(catalog.Get(language,"traffic."+mode)),"traffic explanation: "+code+" "+mode);
         }

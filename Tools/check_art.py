@@ -4,7 +4,7 @@ from PIL import Image
 import re
 root=Path(__file__).resolve().parents[1]
 art=root/'Assets/OneMoreFloor/Resources/Art'
-expected=['panel','circle','triangle','window','plant','skyline','cabin','door','lobby_cabin','gear','hallway']+[f'person_{i}' for i in range(23)]+['roof','rooftop_ufo','rooftop_landing','rooftop_biplane','rooftop_rocket','rooftop_broom','rooftop_airship']+[f'{prefix}_{i}' for prefix in ['background','interior','lift','lobby_lift'] for i in range(10,25)]
+expected=['panel','circle','triangle','window','plant','skyline','cabin','door','lobby_cabin','gear','hallway']+[f'person_{i}' for i in range(28)]+['roof','rooftop_landing']+[f'rooftop_{craft}{state}' for craft in ['ufo','biplane','rocket','broom','airship','ornithopter','balloon','gyrocopter','sailboat','moon'] for state in ['', '_boarded']]+[f'{prefix}_{i}' for prefix in ['background','interior','lift','lobby_lift'] for i in range(10,25)]
 for name in expected:
     p=art/(name+'.png')
     with Image.open(p) as im:
@@ -25,3 +25,9 @@ for p in (root/'Assets').rglob('*.meta'):
 for p in (root/'Assets').rglob('*'):
     if p.suffix!='.meta': assert Path(str(p)+'.meta').exists(),p
 print(f'PASS: {len(expected)} RGBA sprites decode; sprite imports, panel borders, {len(guids)} unique asset GUIDs and metadata checked.')
+
+for craft in ['ufo','biplane','rocket','broom','airship','ornithopter','balloon','gyrocopter','sailboat','moon']:
+    with Image.open(art/f'rooftop_{craft}.png') as empty, Image.open(art/f'rooftop_{craft}_boarded.png') as full:
+        assert empty.size==full.size, f'{craft}: boarding states must share registration canvas'
+        assert empty.tobytes()!=full.tobytes(), f'{craft}: missing occupied state'
+print('PASS: ten distinct aircraft have matching empty/occupied sprite canvases.')

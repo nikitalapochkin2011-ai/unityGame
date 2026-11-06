@@ -38,7 +38,7 @@ static class CampaignTests
     public static void PrintCatalog()
     {
         var culture=System.Globalization.CultureInfo.InvariantCulture;
-        Console.WriteLine("# Баланс 50 уровней\n\nСформировано из Campaign.CreateLevels(). Интервалы меняются на ±15%; пустой дом пополняется примерно за 0.8 секунды. Лимит активных включает ожидающих и едущих людей, независимо от числа мест.\n");
+        Console.WriteLine("# Баланс 100 уровней\n\nСформировано из Campaign.CreateLevels(). Интервалы меняются на ±15%; пустой дом пополняется примерно за 0.8 секунды. Лимит активных включает ожидающих и едущих людей, независимо от числа мест.\n");
         Console.WriteLine("| № | Название | Этажи | Цель | Профиль | Интервал, с | Терпение, с | Коробки | Активных максимум |\n|---|---|---|---:|---|---|---:|---|---:|");
         var levels=Campaign.CreateLevels();
         for(int i=0;i<levels.Length;i++)
@@ -50,7 +50,7 @@ static class CampaignTests
     public static void MainChecks()
     {
         var levels=Campaign.CreateLevels();
-        Check(levels.Length==50 && levels[0].Guided && !levels[1].Guided,"fifty levels with live tutorial only on level one");
+        Check(levels.Length==100 && levels[0].Guided && !levels[1].Guided,"one hundred levels with live tutorial only on level one");
         Check(levels[0].ActiveFloors==3 && levels[1].ActiveFloors==3 && levels[2].ActiveFloors==4 && levels[3].ActiveFloors==5 && levels[4].ActiveFloors==6,"floors 4/5/6 open only on levels 3/4/5");
         Check(levels[0].BoxChance==0 && levels[1].BoxChance==0 && levels[2].BoxChance>0,"boxes begin at level three");
         var progress=new CampaignProgress();
@@ -61,7 +61,7 @@ static class CampaignTests
             Check(progress.Complete(n) && progress.Completed==n && progress.Unlocked==Math.Min(Campaign.LevelCount,n+1),"victory unlocks next level "+n);
             Check(!progress.Complete(n) && progress.Completed==n,"replaying level does not skip unlocks "+n);
         }
-        Check(new CampaignProgress(progress.Completed).Completed==50 && new CampaignProgress(999).Unlocked==50 && new CampaignProgress(-3).Unlocked==1,"saved progress reloads and corrupt values clamp");
+        Check(new CampaignProgress(progress.Completed).Completed==100 && new CampaignProgress(999).Unlocked==100 && new CampaignProgress(-3).Unlocked==1,"saved progress reloads and corrupt values clamp");
         var game=Isolated(); game.SelectFloor(3); game.SelectFloor(5);
         Check(!game.Lift.NextFloor.HasValue,"locked floor taps ignored in model");
         game.SelectFloor(1); Run(game,.02f); game.SelectFloor(2); game.SelectFloor(5);
@@ -201,8 +201,14 @@ static class CampaignTests
 
         Check(new CampaignProgress(5).Unlocked==6,"existing five completed levels immediately unlock level six");
         bool pages=true;
-        for(int n=1;n<=50;n++) pages &= Campaign.PageForLevel(n)==(n-1)/5;
-        Check(pages && Campaign.PageCount==10 && Campaign.PageForLevel(-100)==0 && Campaign.PageForLevel(999)==9,"all 50 level cards fit ten bounded pages");
+        for(int n=1;n<=Campaign.LevelCount;n++) pages &= Campaign.PageForLevel(n)==(n-1)/5;
+        Check(pages && Campaign.PageCount==20 && Campaign.PageForLevel(-100)==0 && Campaign.PageForLevel(999)==19,"all 100 level cards fit twenty bounded pages");
+        Check(new CampaignProgress(50).Completed==50 && new CampaignProgress(50).Unlocked==51,"old completed campaign unlocks level 51 without resetting progress");
+        var oldSeason=new LevelDefinition[50];Array.Copy(levels,oldSeason,50);
+        oldSeason[17]=oldSeason[17].Copy();oldSeason[17].Title="My saved custom level";oldSeason[17].PatienceSeconds=321;
+        var expanded=Campaign.UpgradeLevels(oldSeason,2,6);
+        Check(expanded.Length==100 && expanded[17].Title=="My saved custom level" && expanded[17].PatienceSeconds==321 && expanded[50].Title==levels[50].Title,"50-level saved campaigns retain custom settings and append the complete second season");
+        for(int i=0;i<50;i++)Check(!ReferenceEquals(expanded[i],oldSeason[i]) && expanded[i].DeliveryGoal==oldSeason[i].DeliveryGoal && expanded[i].SpawnSeconds==oldSeason[i].SpawnSeconds,"original level settings survive expansion without aliasing: "+(i+1));
         var old=new LevelDefinition[5];
         float[] oldInitial={9,8,7.8f,7.6f,7.4f},oldFinal={8.5f,7.5f,7.2f,7,6.8f},oldPatience={80,70,74,80,86};
         int[] oldQueue={2,3,4,5,5};
@@ -212,21 +218,21 @@ static class CampaignTests
             old[i].PatienceSeconds=oldPatience[i]; old[i].QueueLimit=oldQueue[i];
         }
         var upgraded=Campaign.UpgradeLevels(old,0,6);
-        Check(upgraded.Length==50 && upgraded[0].SpawnSeconds==levels[0].SpawnSeconds && upgraded[4].SpawnSeconds==levels[4].SpawnSeconds,"untouched old presets automatically gain new fast balance and 45 levels");
+        Check(upgraded.Length==100 && upgraded[0].SpawnSeconds==levels[0].SpawnSeconds && upgraded[4].SpawnSeconds==levels[4].SpawnSeconds,"untouched old presets automatically gain new fast balance and 95 levels");
         old[1].Title="My edited stage"; old[1].DeliveryGoal=19; old[1].MaxActivePassengers=0; old[1].EmptyHouseDelay=0;
         upgraded=Campaign.UpgradeLevels(old,0,6);
         Check(upgraded[1].Title=="My edited stage" && upgraded[1].DeliveryGoal==19 && upgraded[1].MaxActivePassengers==6 && upgraded[1].EmptyHouseDelay==.8f,"upgrade preserves custom levels and repairs missing new fields");
         upgraded[12].SpawnSeconds=6; upgraded[12].FinalSpawnSeconds=5;
         var reloaded=Campaign.UpgradeLevels(upgraded,Campaign.BalanceVersion,6);
-        Check(reloaded[12].SpawnSeconds==6 && reloaded.Length==50 && !ReferenceEquals(reloaded[12],upgraded[12]),"current edited balance survives another load without aliasing");
-        Check(Campaign.UpgradeLevels(null,0,6).Length==50,"missing campaign settings receive full defaults");
+        Check(reloaded[12].SpawnSeconds==6 && reloaded.Length==100 && !ReferenceEquals(reloaded[12],upgraded[12]),"current edited balance survives another load without aliasing");
+        Check(Campaign.UpgradeLevels(null,0,6).Length==100,"missing campaign settings receive full defaults");
         var signatures=new HashSet<string>(); var titles=new HashSet<string>(); var modes=new HashSet<TrafficPattern>();
         foreach(var definition in levels)
         {
             titles.Add(definition.Title); modes.Add(definition.Traffic);
             signatures.Add($"{definition.ActiveFloors}|{definition.DeliveryGoal}|{definition.SpawnSeconds}|{definition.FinalSpawnSeconds}|{definition.PatienceSeconds}|{definition.BoxChance}|{definition.MaxActivePassengers}|{definition.Traffic}");
         }
-        Check(titles.Count==50 && signatures.Count==50 && modes.Count==5,"50 distinct named rule sets alternate five different traffic profiles");
+        Check(titles.Count==100 && signatures.Count==100 && modes.Count==5,"100 distinct named rule sets alternate five different traffic profiles");
         var fastLevel=levels[1].Copy();
         game=new GameSession(new GameRules { SecondsPerFloor=.1f,StopSeconds=.1f },312,fastLevel,2);
         Run(game,.9f); int pickup=-1; Passenger passenger=null;
@@ -245,7 +251,7 @@ static class CampaignTests
         Check(game.Spawned==spawnAtPause && game.Elapsed==elapsed,"pause also freezes accelerated traffic at the active limit");
 
         bool allLevelRandomness=true,profileRoutes=true,burstsSeen=false,allAppearancesRandom=true;
-        for(int number=1;number<=50;number++)
+        for(int number=1;number<=Campaign.LevelCount;number++)
         {
             var probe=levels[number-1].Copy(); probe.Guided=false; probe.DeliveryGoal=1000;
             var observedOrigins=new HashSet<int>(); var observedLooks=new HashSet<int>(); var firstChoices=new HashSet<string>();
@@ -302,6 +308,25 @@ static class CampaignTests
             Console.WriteLine($"SIM level {levelNumber}: {wins}/50 wins; mean seconds {duration/50:F1}; mean losses {losses/50f:F2}");
             Check(wins==50,"modest level "+levelNumber+" beatable across 50 varied attempts by simple driver");
         }
+        // A slower second-season driver with periodic hesitation tests the promised relaxed pace.
+        float slowTotal=0,slowMax=0;int slowLosses=0;
+        for(int number=51;number<=Campaign.LevelCount;number++)
+        {
+            var definition=levels[number-1];
+            Check(definition.DeliveryGoal>=18 && definition.DeliveryGoal<=22 && definition.PatienceSeconds>=170 && definition.MaxActivePassengers<=6,"new level keeps short goals, generous patience and bounded crowds: "+number);
+            for(int seed=0;seed<20;seed++)
+            {
+                game=new GameSession(new GameRules(),seed+900,definition,number);float think=0;int decisions=0;
+                for(int frame=0;frame<18000 && !game.Finished;frame++)
+                {
+                    think-=.05f;if(think<=0){Drive(game);decisions++;think=decisions%11==0 ? 6f : 2.5f;}
+                    game.Tick(.05f);
+                }
+                Check(game.State==PlayState.Won,"relaxed driver with 2.5-second reactions and occasional 6-second hesitation wins: "+number+" seed "+seed);
+                slowTotal+=game.Elapsed;slowMax=Math.Max(slowMax,game.Elapsed);slowLosses+=game.Lost;
+            }
+        }
+        Console.WriteLine($"RELAXED second season: 1000/1000 wins; mean seconds {slowTotal/1000:F1}; max seconds {slowMax:F1}; total losses {slowLosses}");
         Console.WriteLine($"{passed} campaign checks passed; {simulated} simulated campaign frames.");
     }
 }
